@@ -21,7 +21,15 @@ const __dirname = path.resolve();
 // Middleware
 app.use(express.json());
 
-app.use(cors());
+// CORS Configuration
+const corsOptions = {
+  origin: "http://localhost:5173", // Update to Vite's default port
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/register", registrantRoutes);
