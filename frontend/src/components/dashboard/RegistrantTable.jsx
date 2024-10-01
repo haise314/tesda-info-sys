@@ -13,8 +13,6 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/register";
-
 const RegistrantTable = () => {
   const [open, setOpen] = useState(false);
   const [editingRegistrant, setEditingRegistrant] = useState(null);
@@ -23,11 +21,11 @@ const RegistrantTable = () => {
 
   const { data: registrants, isLoading } = useQuery({
     queryKey: ["registrants"],
-    queryFn: () => axios.get(API_URL).then((res) => res.data.data),
+    queryFn: () => axios.get("/api/applicants").then((res) => res.data.data),
   });
 
   const createMutation = useMutation({
-    mutationFn: (newRegistrant) => axios.post(API_URL, newRegistrant),
+    mutationFn: (newRegistrant) => axios.post("/api/applicants", newRegistrant),
     onSuccess: () => {
       queryClient.invalidateQueries("registrants");
       handleClose();
@@ -36,7 +34,10 @@ const RegistrantTable = () => {
 
   const updateMutation = useMutation({
     mutationFn: (updatedRegistrant) =>
-      axios.put(`${API_URL}/${updatedRegistrant._id}`, updatedRegistrant),
+      axios.put(
+        `${"/api/applicants"}/${updatedRegistrant._id}`,
+        updatedRegistrant
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries("registrants");
       handleClose();
@@ -44,7 +45,7 @@ const RegistrantTable = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => axios.delete(`${API_URL}/${id}`),
+    mutationFn: (id) => axios.delete(`${"/api/applicants"}/${id}`),
     onSuccess: () => queryClient.invalidateQueries("registrants"),
   });
 

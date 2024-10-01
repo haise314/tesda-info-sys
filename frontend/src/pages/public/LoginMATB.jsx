@@ -16,10 +16,7 @@ const LoginMATB = ({ onLoginSuccess }) => {
 
   const loginMutation = useMutation({
     mutationFn: (credentials) => {
-      return axios.post(
-        "http://localhost:5000/api/auth/login-registrant",
-        credentials
-      );
+      return axios.post("/api/auth/login-registrant", credentials);
     },
     onSuccess: (data) => {
       onLoginSuccess(data.data._id);

@@ -134,13 +134,9 @@ const ApplicationForm = () => {
     setIsAgreed(event.target.value === "Agree"); // Update state based on selection
   };
 
-  const api = axios.create({
-    baseURL: "http://localhost:5000",
-  });
-
   const mutation = useMutation({
     mutationFn: (newApplicant) => {
-      return api.post("/api/applicants", newApplicant);
+      return axios.post("/api/applicants", newApplicant);
     },
     onSuccess: () => {
       setSnackbar({

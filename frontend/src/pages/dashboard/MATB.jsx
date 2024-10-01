@@ -55,7 +55,7 @@ const MATB = () => {
 
   const mutation = useMutation({
     mutationFn: (newTest) => {
-      return axios.post("http://localhost:5000/api/tests", newTest);
+      return axios.post("/api/tests", newTest);
     },
     onSuccess: (data) => {
       setTestCode(data.data.testCode); // Assuming the server returns the generated test code

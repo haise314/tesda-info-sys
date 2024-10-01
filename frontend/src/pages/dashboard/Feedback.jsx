@@ -30,7 +30,7 @@ ChartJS.register(
 const fetchFeedbackData = async () => {
   console.log("Fetching feedback data...");
   try {
-    const response = await axios.get("http://localhost:5000/api/feedback");
+    const response = await axios.get("/api/feedback");
     console.log("Received data:", response.data);
     return response.data.data; // Access the 'data' property of the response
   } catch (error) {

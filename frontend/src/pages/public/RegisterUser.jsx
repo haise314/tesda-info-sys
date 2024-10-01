@@ -33,8 +33,7 @@ const RegisterUser = () => {
   });
 
   const registerMutation = useMutation({
-    mutationFn: (userData) =>
-      axios.post("http://localhost:5000/api/auth/register", userData),
+    mutationFn: (userData) => axios.post("/api/auth/register", userData),
     onSuccess: () => {
       navigate("/login");
     },

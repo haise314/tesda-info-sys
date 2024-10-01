@@ -35,8 +35,7 @@ const Login = () => {
   });
 
   const loginMutation = useMutation({
-    mutationFn: (credentials) =>
-      axios.post("http://localhost:5000/api/auth/login", credentials),
+    mutationFn: (credentials) => axios.post("/api/auth/login", credentials),
     onSuccess: (response) => {
       console.log("Login response:", response.data);
       login(response.data);

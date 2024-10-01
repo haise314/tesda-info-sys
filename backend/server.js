@@ -21,15 +21,12 @@ const __dirname = path.resolve();
 // Middleware
 app.use(express.json());
 
-// CORS Configuration
-const corsOptions = {
-  origin: "http://localhost:5173", // Update to Vite's default port
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true,
-  optionsSuccessStatus: 204,
-};
-
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin: "https://tesda-info-sys.onrender.com",
+    credentials: true,
+  })
+);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/register", registrantRoutes);

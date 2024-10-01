@@ -95,7 +95,7 @@ const FeedbackForm = () => {
 
   const mutation = useMutation({
     mutationFn: (newFeedback) => {
-      return axios.post("http://localhost:5000/api/feedback", newFeedback);
+      return axios.post("/api/feedback", newFeedback);
     },
   });
 

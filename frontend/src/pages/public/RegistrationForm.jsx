@@ -143,10 +143,7 @@ function RegistrationForm() {
     console.log("Form Data Before Submission:", data);
     try {
       // Handle successful registration (e.g., show success message, redirect)
-      const response = await axios.post(
-        "http://localhost:5000/api/register",
-        data
-      );
+      const response = await axios.post("/api/register", data);
 
       // Check if the response is JSON
       if (response.headers["content-type"].includes("application/json")) {

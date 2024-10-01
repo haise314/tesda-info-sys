@@ -47,10 +47,7 @@ const TestAnswerSheet = ({ registrantId }) => {
 
   const startSessionMutation = useMutation({
     mutationFn: (newSession) => {
-      return axios.post(
-        "http://localhost:5000/api/test-sessions/start",
-        newSession
-      );
+      return axios.post("/api/test-sessions/start", newSession);
     },
     onSuccess: (data) => {
       setSessionId(data.data.data.sessionId);
@@ -65,9 +62,7 @@ const TestAnswerSheet = ({ registrantId }) => {
     queryKey: ["testSession", sessionId],
     queryFn: async () => {
       if (!sessionId) return null;
-      const response = await axios.get(
-        `http://localhost:5000/api/test-sessions/${sessionId}`
-      );
+      const response = await axios.get(`/api/test-sessions/${sessionId}`);
       return response.data.data;
     },
     enabled: !!sessionId,
@@ -75,7 +70,7 @@ const TestAnswerSheet = ({ registrantId }) => {
 
   const submitAnswersMutation = useMutation({
     mutationFn: (answerSheet) => {
-      return axios.post("http://localhost:5000/api/answer-sheets", answerSheet);
+      return axios.post("/api/answer-sheets", answerSheet);
     },
   });
 
