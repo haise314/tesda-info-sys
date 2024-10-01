@@ -25,7 +25,7 @@ const corsOptions = {
   origin:
     process.env.NODE_ENV === "production"
       ? "https://tesda-info-sys.onrender.com/"
-      : "http://localhost:5000", // Replace with your frontend URL
+      : "http://localhost:5173", // Replace with your frontend URL
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
