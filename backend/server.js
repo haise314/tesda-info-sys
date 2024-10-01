@@ -1,7 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
-import cors from "cors";
 import registrantRoutes from "./routes/registrant.route.js";
 import applicantRoutes from "./routes/applicant.route.js";
 import authRoutes from "./routes/auth.route.js";
@@ -19,7 +18,6 @@ const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
 // Middleware
-app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
