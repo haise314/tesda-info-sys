@@ -20,17 +20,8 @@ const __dirname = path.resolve();
 
 // Middleware
 app.use(express.json());
-// CORS configuration
-const corsOptions = {
-  origin:
-    process.env.NODE_ENV === "production"
-      ? "https://tesda-info-sys.onrender.com/"
-      : "http://localhost:5173", // Replace with your frontend URL
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-};
-app.use(cors(corsOptions));
+
+app.use(cors());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/register", registrantRoutes);
