@@ -2,18 +2,18 @@ import { z } from "zod";
 
 // Feedback Validation Schema
 export const feedbackSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  age: z.number().int().positive("Age must be a positive integer"),
-  sex: z.enum(["Male", "Female", "Other"]),
-  address: z.string().min(1, "Address is required"),
-  mobileNumber: z.string(),
-  emailAddress: z.string().email("Invalid email address"),
+  name: z.string().optional(),
+  age: z.union([z.number(), z.string()]).optional(),
+  sex: z.enum(["Male", "Female", "Other", ""]).optional(),
+  address: z.string().optional(),
+  mobileNumber: z.string().optional(),
+  emailAddress: z.string().optional(),
   feedbackQuestions: z.array(
     z.object({
-      question: z.string().min(1, "Question is required"),
+      question: z.string(),
       rating: z.number().int().min(1).max(5),
     })
   ),
-  recommendInstitution: z.boolean(),
+  recommendInstitution: z.boolean().optional(),
   suggestion: z.string().optional(),
 });

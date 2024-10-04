@@ -10,6 +10,7 @@ import feedbackRoutes from "./routes/feedback.route.js";
 import testRoutes from "./routes/test.route.js";
 import answerSheetRoutes from "./routes/answersheet.route.js";
 import testSessionRoutes from "./routes/testSession.route.js";
+import trainingProgramRoutes from "./routes/programs.route.js";
 import path from "path";
 
 dotenv.config();
@@ -35,6 +36,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/tests", testRoutes);
 app.use("/api/answer-sheets", answerSheetRoutes);
 app.use("/api/test-sessions", testSessionRoutes);
+app.use("/api/programs", trainingProgramRoutes);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "/frontend/dist")));

@@ -13,7 +13,7 @@ import {
   Container,
   CircularProgress,
 } from "@mui/material";
-import { userSchema } from "../../components/schema/user.schema";
+import { registrationSchema } from "../../components/schema/user.schema";
 
 const RegisterUser = () => {
   const navigate = useNavigate();
@@ -24,11 +24,11 @@ const RegisterUser = () => {
     setError,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(userSchema),
+    resolver: zodResolver(registrationSchema),
     defaultValues: {
-      name: "",
-      email: "",
+      uli: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
@@ -83,34 +83,17 @@ const RegisterUser = () => {
           sx={{ display: "flex", flexDirection: "column", gap: 2 }}
         >
           <Controller
-            name="name"
+            name="uli"
             control={control}
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Name"
+                label="ULI"
                 variant="outlined"
-                error={!!errors.name}
-                helperText={errors.name?.message}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                  },
-                }}
-              />
-            )}
-          />
-          <Controller
-            name="email"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="Email"
-                type="email"
-                variant="outlined"
-                error={!!errors.email}
-                helperText={errors.email?.message}
+                error={!!errors.uli}
+                helperText={
+                  errors.uli?.message || "Format: XXX-YY-ZZZ-03907-001"
+                }
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "8px",
@@ -130,6 +113,25 @@ const RegisterUser = () => {
                 variant="outlined"
                 error={!!errors.password}
                 helperText={errors.password?.message}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "8px",
+                  },
+                }}
+              />
+            )}
+          />
+          <Controller
+            name="confirmPassword"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Confirm Password"
+                type="password"
+                variant="outlined"
+                error={!!errors.confirmPassword}
+                helperText={errors.confirmPassword?.message}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "8px",

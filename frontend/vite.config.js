@@ -7,9 +7,10 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:5000",
+        target: "http://localhost:5000", // Backend server
         changeOrigin: true,
-        // rewrite: path => path.replace(/^\/api/, '')
+        secure: false, // Set this to false if you’re not using HTTPS on localhost
+        // rewrite: path => path.replace(/^\/api/, ''),  // Uncomment if needed
       },
     },
   },

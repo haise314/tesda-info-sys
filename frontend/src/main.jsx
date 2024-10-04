@@ -29,6 +29,10 @@ import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import ApplicationForm from "./pages/public/ApplicationForm.jsx";
 import RegisterUser from "./pages/public/RegisterUser.jsx";
 import FeedbackForm from "./pages/public/FeedbackForm.jsx";
+import UpdateRegistrant from "./components/dashboard/UpdateRegistrant.jsx";
+import Unauthorized from "./pages/public/UnauthorizedPage.jsx";
+import TrainingProgramList from "./pages/dashboard/TrainingProgramList.jsx";
+import UsersTable from "./components/dashboard/UsersTable.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -69,59 +73,119 @@ const router = createBrowserRouter([
         path: "feedback",
         element: <FeedbackForm />,
       },
+      {
+        path: "unauthorized",
+        element: <Unauthorized />,
+      },
     ],
   },
   {
     path: "/dashboard",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={["client", "admin", "superadmin"]}>
         <DashboardLayout />
       </ProtectedRoute>
     ),
     children: [
       {
         path: "", // Default route for dashboard
-        element: <Dashboard />,
+        element: (
+          <ProtectedRoute allowedRoles={["client", "admin", "superadmin"]}>
+            <Dashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "users",
+        element: <UsersTable />,
       },
       {
         path: "profile",
-        element: <Profile />,
+        element: (
+          <ProtectedRoute allowedRoles={["client", "admin", "superadmin"]}>
+            <Profile />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "clients",
-        element: <Client />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <Client />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "applicants",
-        element: <Applicants />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <Applicants />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "MATB",
-        element: <MATB />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <MATB />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "feedback",
-        element: <Feedback />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <Feedback />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "programs",
-        element: <TrainingPrograms />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <TrainingPrograms />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "settings",
-        element: <Settings />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <UpdateRegistrant />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "notifications",
-        element: <Notifications />,
+        element: (
+          <ProtectedRoute allowedRoles={["client", "admin", "superadmin"]}>
+            <Notifications />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "scheduling",
-        element: <Scheduling />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <Scheduling />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "reports",
-        element: <Reports />,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <Reports />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "training-programs",
+        element: (
+          <ProtectedRoute allowedRoles={["client", "admin", "superadmin"]}>
+            <TrainingProgramList />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

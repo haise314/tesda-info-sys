@@ -13,8 +13,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
+    const userWithRole = {
+      ...userData,
+      role: userData.role || "client", // Ensure role is always set
+    };
+    setUser(userWithRole);
+    localStorage.setItem("user", JSON.stringify(userWithRole));
   };
 
   const logout = () => {

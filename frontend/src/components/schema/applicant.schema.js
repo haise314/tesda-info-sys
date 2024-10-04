@@ -167,15 +167,15 @@ export const applicantDefaultValues = {
   employmentStatus: "", // Assuming first item as default
   birthdate: "", // Defaulting to current date
   birthplace: "",
-  age: 0,
+  age: "",
   workExperience: [
     {
       companyName: "",
       position: "",
       inclusiveDates: { from: "", to: "" },
-      monthlySalary: 0,
+      monthlySalary: "",
       appointmentStatus: "",
-      noOfYearsInWork: 0,
+      noOfYearsInWork: "",
     },
   ],
   trainingSeminarAttended: [
@@ -183,7 +183,7 @@ export const applicantDefaultValues = {
       title: "",
       venue: "",
       inclusiveDates: { from: "", to: "" },
-      numberOfHours: 0,
+      numberOfHours: "",
       conductedBy: "",
     },
   ],
@@ -192,7 +192,7 @@ export const applicantDefaultValues = {
       title: "",
       dateOfExamination: "",
       examinationVenue: "",
-      rating: 0,
+      rating: "",
       remarks: "",
       expiryDate: "",
     },

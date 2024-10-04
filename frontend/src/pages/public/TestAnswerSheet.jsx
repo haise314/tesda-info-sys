@@ -16,9 +16,9 @@ import {
   Grid,
   Stack,
   Paper,
+  Box,
 } from "@mui/material";
 
-// Define the schema for the form
 const answerSheetSchema = z.object({
   sessionId: z.string().min(1, "Session ID is required"),
   answers: z.array(
@@ -29,7 +29,7 @@ const answerSheetSchema = z.object({
   ),
 });
 
-const TestAnswerSheet = ({ registrantId }) => {
+const TestAnswerSheet = ({ uli }) => {
   const [testCode, setTestCode] = useState("");
   const [sessionId, setSessionId] = useState(null);
 
@@ -45,19 +45,54 @@ const TestAnswerSheet = ({ registrantId }) => {
     },
   });
 
-  const startSessionMutation = useMutation({
-    mutationFn: (newSession) => {
-      return axios.post("/api/test-sessions/start", newSession);
+  // Fetch registrant data using ULI
+  const { data: registrantData, isLoading: isLoadingRegistrant } = useQuery({
+    queryKey: ["registrant", uli],
+    queryFn: async () => {
+      try {
+        console.log("Fetching registrant data for ULI:", uli);
+        const response = await axios.get(`/api/register/uli/${uli}`);
+        if (response.data.success) {
+          return response.data.data;
+        } else {
+          throw new Error(
+            response.data.message || "Failed to fetch registrant data"
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching registrant:", error);
+        throw error;
+      }
     },
-    onSuccess: (data) => {
-      setSessionId(data.data.data.sessionId);
+  });
+
+  const startSessionMutation = useMutation({
+    mutationFn: async (newSession) => {
+      if (!registrantData?._id) {
+        throw new Error("Registrant data not available");
+      }
+
+      const payload = {
+        registrantId: registrantData._id,
+        testCode: newSession.testCode,
+      };
+
+      console.log("Starting session with payload:", payload);
+      return axios.post("/api/test-sessions/start", payload);
+    },
+    onSuccess: (response) => {
+      console.log("Session started successfully:", response.data);
+      setSessionId(response.data.data.sessionId);
+    },
+    onError: (error) => {
+      console.error("Error starting session:", error);
     },
   });
 
   const {
     data: testSession,
-    isLoading,
-    error,
+    isLoading: isLoadingSession,
+    error: sessionError,
   } = useQuery({
     queryKey: ["testSession", sessionId],
     queryFn: async () => {
@@ -70,45 +105,68 @@ const TestAnswerSheet = ({ registrantId }) => {
 
   const submitAnswersMutation = useMutation({
     mutationFn: (answerSheet) => {
-      return axios.post("/api/answer-sheets", answerSheet);
+      return axios.post("/api/answer-sheets", {
+        ...answerSheet,
+        registrantId: registrantData._id,
+      });
     },
   });
 
   const handleStartSession = async () => {
-    await startSessionMutation.mutateAsync({ registrantId, testCode });
+    if (!registrantData) {
+      console.error("Registrant data not loaded");
+      return;
+    }
+    await startSessionMutation.mutateAsync({ testCode });
   };
 
   const onSubmit = (data) => {
     submitAnswersMutation.mutate(data);
   };
 
+  if (isLoadingRegistrant) {
+    return <Typography>Loading registrant data...</Typography>;
+  }
+
+  if (!registrantData) {
+    return <Typography>Error: Registrant not found</Typography>;
+  }
+
   if (!sessionId) {
     return (
-      <Paper sx={{ padding: 3 }}>
-        <Typography variant="body" gutterBottom>
+      <Box sx={{ padding: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Welcome, {registrantData.name.firstName}{" "}
+          {registrantData.name.lastName}
+        </Typography>
+        <Typography variant="body1" gutterBottom>
           Enter the provided Test Code to start the test session
         </Typography>
-        <Stack elevation={5} padding={2}>
+        <Stack spacing={2} sx={{ mt: 2 }}>
           <TextField
             label="Test Code"
             value={testCode}
             onChange={(e) => setTestCode(e.target.value)}
+            fullWidth
           />
           <Button
+            variant="contained"
             onClick={handleStartSession}
             disabled={startSessionMutation.isPending}
+            fullWidth
           >
             {startSessionMutation.isPending ? "Starting..." : "Start Test"}
           </Button>
         </Stack>
-      </Paper>
+      </Box>
     );
   }
 
-  if (isLoading) return <Typography>Loading...</Typography>;
-  if (error) return <Typography>Error: {error.message}</Typography>;
+  if (isLoadingSession) return <Typography>Loading test session...</Typography>;
+  if (sessionError)
+    return <Typography>Error: {sessionError.message}</Typography>;
 
-  const { registrant, test } = testSession;
+  const { test } = testSession;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -121,7 +179,7 @@ const TestAnswerSheet = ({ registrantId }) => {
         <Grid item xs={12} sm={4}>
           <TextField
             label="First Name"
-            value={registrant.name.firstName}
+            value={registrantData.name.firstName}
             fullWidth
             InputProps={{ readOnly: true }}
           />
@@ -129,7 +187,7 @@ const TestAnswerSheet = ({ registrantId }) => {
         <Grid item xs={12} sm={4}>
           <TextField
             label="Last Name"
-            value={registrant.name.lastName}
+            value={registrantData.name.lastName}
             fullWidth
             InputProps={{ readOnly: true }}
           />
@@ -137,14 +195,14 @@ const TestAnswerSheet = ({ registrantId }) => {
         <Grid item xs={12} sm={4}>
           <TextField
             label="Middle Name"
-            value={registrant.name.middleName}
+            value={registrantData.name.middleName || ""}
             fullWidth
             InputProps={{ readOnly: true }}
           />
         </Grid>
       </Grid>
 
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
         Test Questions
       </Typography>
 

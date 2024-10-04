@@ -6,26 +6,26 @@ import Registrant from "../models/registrant.model.js";
 
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { uli, password } = req.body;
 
     // Check if user already exists
-    const userExists = await User.findOne({ email: email.toLowerCase() });
+    const userExists = await User.findOne({ uli });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Create user (no need to hash the password here, the model will handle it)
+    // Create user
     const user = await User.create({
-      name,
-      email: email.toLowerCase(),
-      password, // Store raw password, it will be hashed by the model
+      uli,
+      password,
+      // role will be set to "client" by default
     });
 
     if (user) {
       res.status(201).json({
         _id: user._id,
-        name: user.name,
-        email: user.email,
+        uli: user.uli,
+        role: user.role,
         token: generateToken(user._id),
       });
     } else {
@@ -39,35 +39,33 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   try {
-    let { email, password } = req.body;
-    email = email.toLowerCase().trim();
-    password = password.trim(); // Ensure no leading or trailing spaces
+    const { uli, password } = req.body;
 
-    console.log("Login attempt for email:", email);
+    console.log("Login attempt for ULI:", uli);
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ uli });
 
     if (!user) {
       console.log("Login failed: User not found");
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({ message: "Invalid ULI or password" });
     }
 
-    console.log("User found:", user.email);
+    console.log("User found:", user.uli);
 
-    const isMatch = await user.matchPassword(password); // Use the model's method to compare
+    const isMatch = await user.matchPassword(password);
     console.log("Password match result:", isMatch);
 
     if (!isMatch) {
       console.log("Login failed: Password does not match");
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({ message: "Invalid ULI or password" });
     }
 
     const token = generateToken(user._id);
 
     res.json({
       _id: user._id,
-      name: user.name,
-      email: user.email,
+      uli: user.uli,
+      role: user.role,
       token: token,
     });
   } catch (error) {
@@ -127,4 +125,56 @@ const generateToken = (id) => {
   return jwt.sign({ id }, secret, {
     expiresIn: "30d",
   });
+};
+
+export const getUserByUli = async (req, res) => {
+  try {
+    const { uli } = req.params;
+    const user = await User.findOne({ uli });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    const formattedUsers = users.map((user) => ({
+      id: user._id.toString(), // Only need this once
+      uli: user.uli,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }));
+    res.json(formattedUsers);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const { uli } = req.params;
+    const updateData = req.body;
+
+    const user = await User.findOneAndUpdate({ uli }, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 };

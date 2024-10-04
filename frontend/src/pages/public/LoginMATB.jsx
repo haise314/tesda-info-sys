@@ -1,110 +1,128 @@
 import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import axios from "axios";
-import { TextField, Button, Box, Typography } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import {
+  TextField,
+  Button,
+  Box,
+  Typography,
+  CircularProgress,
+} from "@mui/material";
+
+const loginSchema = z.object({
+  uli: z
+    .string()
+    .regex(/^[A-Z]{3}-\d{2}-\d{3}-03907-001$/, "Invalid ULI format"),
+  password: z.string().min(1, "Password is required"),
+});
 
 const LoginMATB = ({ onLoginSuccess }) => {
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = useForm();
-  const [loginError, setLoginError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const loginMutation = useMutation({
-    mutationFn: (credentials) => {
-      return axios.post("/api/auth/login-registrant", credentials);
-    },
-    onSuccess: (data) => {
-      onLoginSuccess(data.data._id);
-    },
-    onError: (error) => {
-      setLoginError(error.response?.data?.message || "Login failed");
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      uli: "",
+      password: "",
     },
   });
 
-  const formatDate = (date) => {
-    if (!(date instanceof Date)) {
-      date = new Date(date);
-    }
-    return date.toISOString().split("T")[0];
-  };
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+    setError("");
 
-  const onSubmit = (data) => {
-    const formattedData = {
-      ...data,
-      email: data.email.trim().toLowerCase(),
-      birthdate: formatDate(data.birthdate),
-    };
-    console.log("Submitting data:", formattedData);
-    loginMutation.mutate(formattedData);
+    try {
+      console.log("Attempting login with data:", { uli: data.uli }); // Don't log password
+
+      const response = await axios.post("/api/auth/login", data);
+      console.log("Login response:", response.data);
+
+      if (response.data) {
+        onLoginSuccess(response.data);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Login failed. Please check your credentials.";
+
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        mt: 1,
-      }}
       component="form"
       onSubmit={handleSubmit(onSubmit)}
+      sx={{
+        width: "100%",
+        maxWidth: 400,
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+      }}
     >
-      <TextField
-        margin="normal"
-        fullWidth
-        label="Email Address"
-        {...register("email", { required: "Email is required" })}
-        error={!!errors.email}
-        helperText={errors.email?.message}
-      />
       <Controller
-        name="birthdate"
+        name="uli"
         control={control}
-        rules={{ required: "Birthdate is required" }}
-        render={({ field, fieldState: { error } }) => (
-          <DatePicker
-            label="Birthdate"
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                fullWidth
-                margin="normal"
-                error={!!error}
-                helperText={error?.message}
-              />
-            )}
+        render={({ field }) => (
+          <TextField
             {...field}
-            onChange={(date) => {
-              field.onChange(date);
-              console.log(
-                "Selected date:",
-                date,
-                "Formatted:",
-                formatDate(date)
-              );
-            }}
+            label="ULI"
+            fullWidth
+            error={!!errors.uli}
+            helperText={errors.uli?.message || "Format: XXX-YY-ZZZ-03907-001"}
+            disabled={isLoading}
           />
         )}
       />
-      <Button
-        type="submit"
-        fullWidth
-        variant="contained"
-        sx={{ mt: 3, mb: 2 }}
-        disabled={loginMutation.isPending}
-      >
-        {loginMutation.isPending ? "Logging in..." : "Log In"}
-      </Button>
-      {loginError && (
-        <Typography color="error" align="center">
-          {loginError}
+
+      <Controller
+        name="password"
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Password"
+            type="password"
+            fullWidth
+            error={!!errors.password}
+            helperText={errors.password?.message}
+            disabled={isLoading}
+          />
+        )}
+      />
+
+      {error && (
+        <Typography color="error" variant="body2">
+          {error}
         </Typography>
       )}
+
+      <Button
+        type="submit"
+        variant="contained"
+        fullWidth
+        disabled={isLoading}
+        sx={{ mt: 2 }}
+      >
+        {isLoading ? (
+          <CircularProgress size={24} sx={{ color: "white" }} />
+        ) : (
+          "Login"
+        )}
+      </Button>
     </Box>
   );
 };

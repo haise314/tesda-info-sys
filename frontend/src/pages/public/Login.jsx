@@ -14,7 +14,15 @@ import {
   Container,
   CircularProgress,
 } from "@mui/material";
-import { loginSchema } from "../../components/schema/user.schema";
+import { z } from "zod";
+
+// Updated login schema
+const loginSchema = z.object({
+  uli: z
+    .string()
+    .regex(/^[A-Z]{3}-\d{2}-\d{3}-03907-001$/, "Invalid ULI format"),
+  password: z.string().min(1, "Password is required"),
+});
 
 const Login = () => {
   const { login } = useAuth();
@@ -29,7 +37,7 @@ const Login = () => {
   } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      uli: "",
       password: "",
     },
   });
@@ -80,16 +88,17 @@ const Login = () => {
           sx={{ display: "flex", flexDirection: "column", gap: 2 }}
         >
           <Controller
-            name="email"
+            name="uli"
             control={control}
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Email"
-                type="email"
+                label="ULI"
                 variant="outlined"
-                error={!!errors.email}
-                helperText={errors.email?.message}
+                error={!!errors.uli}
+                helperText={
+                  errors.uli?.message || "Format: XXX-YY-ZZZ-03907-001"
+                }
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "8px",

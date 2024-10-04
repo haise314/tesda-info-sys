@@ -1,20 +1,65 @@
 import Applicant from "../models/applicant.model.js";
+import DeletedApplicant from "../models/Deleted/deletedApplicant.model.js";
+
+// Function to generate ULI
+const generateULI = (firstName, lastName, middleName, birthYear) => {
+  // Get first letters of names, defaulting to 'X' if undefined
+  const firstInitial = (firstName ? firstName[0] : "X").toUpperCase();
+  const lastInitial = (lastName ? lastName[0] : "X").toUpperCase();
+  const middleInitial = (middleName ? middleName[0] : "X").toUpperCase();
+
+  // Extract last two digits of birth year
+  const yearStr = birthYear.toString();
+  const yearDigits =
+    yearStr.length >= 4 ? yearStr.slice(-2) : yearStr.padStart(2, "0");
+
+  // Generate a random 3-digit number (YYY)
+  const randomNumbers = Math.floor(100 + Math.random() * 900); // Ensures a 3-digit number
+
+  // Combine all parts
+  return `${firstInitial}${lastInitial}${middleInitial}-${yearDigits}-${randomNumbers}-03907-001`;
+};
 
 // Create a new applicant
 export const createApplicant = async (req, res) => {
   try {
-    const applicant = new Applicant(req.body);
+    const applicantData = req.body;
+
+    // Ensure required fields are provided
+    if (
+      !applicantData.name ||
+      !applicantData.birthdate ||
+      !applicantData.trainingCenterName
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
+    }
+
+    // Generate ULI
+    const uli = generateULI(
+      applicantData.name?.firstName,
+      applicantData.name?.lastName,
+      applicantData.name?.middleName,
+      new Date(applicantData.birthdate).getFullYear() // Ensure birthdate is properly formatted
+    );
+
+    // Add ULI to applicant data
+    applicantData.uli = uli;
+
+    // Create new applicant with ULI
+    const applicant = new Applicant(applicantData);
     const savedApplicant = await applicant.save();
+
     res.status(201).json({
       success: true,
-      message: "Applicants retrieved successfully",
+      message: "Applicant created successfully",
       data: savedApplicant,
     });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
 // Get all applicants
 export const getApplicants = async (req, res) => {
   try {
@@ -68,16 +113,31 @@ export const updateApplicant = async (req, res) => {
 // Delete an applicant
 export const deleteApplicant = async (req, res) => {
   try {
-    const deletedApplicant = await Applicant.findByIdAndDelete(req.params.id);
-    if (!deletedApplicant)
+    const { id } = req.params;
+    const applicant = await Applicant.findById(id);
+
+    if (!applicant) {
       return res
         .status(404)
         .json({ success: false, message: "Applicant not found" });
+    }
+
+    // Create deleted record
+    const deletedApplicant = new DeletedApplicant({
+      ...applicant.toObject(),
+      deletedBy: req.user?.name || "Unknown", // Assuming you have req.user from auth middleware
+    });
+
+    await deletedApplicant.save();
+    await Applicant.findByIdAndDelete(id);
+
     res
       .status(200)
-      .json({ success: true, message: "Applicant deleted successfully" });
+      .json({ success: true, message: "Applicant soft-deleted successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Error soft-deleting applicant" });
   }
 };
 
@@ -162,5 +222,20 @@ export const addCompetencyAssessment = async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const getApplicantByUli = async (req, res) => {
+  try {
+    const { uli } = req.params;
+    const applicant = await Applicant.findOne({ uli });
+    if (!applicant) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Applicant not found" });
+    }
+    res.status(200).json({ success: true, data: applicant });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

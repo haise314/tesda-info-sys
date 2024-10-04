@@ -9,9 +9,9 @@ import {
   disabilityCauses,
   scholarTypes,
   civilStatues,
-} from "../utils/registrant.enums.js";
+} from "../../utils/registrant.enums.js";
 
-const registrantSchema = new mongoose.Schema(
+const DeletedRegistrantSchema = new mongoose.Schema(
   {
     uli: {
       type: String,
@@ -205,10 +205,9 @@ const registrantSchema = new mongoose.Schema(
       required: false,
       // default: "",
     },
-    role: {
-      type: String,
-      required: true,
-      default: "client",
+    deletedAt: {
+      type: Date,
+      default: Date.now,
     },
   },
   {
@@ -216,6 +215,6 @@ const registrantSchema = new mongoose.Schema(
   }
 );
 
-const Registrant = mongoose.model("Registrant", registrantSchema);
+const Registrant = mongoose.model("DeletedRegistrant", DeletedRegistrantSchema);
 
 export default Registrant;

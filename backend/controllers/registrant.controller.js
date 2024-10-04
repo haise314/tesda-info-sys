@@ -1,5 +1,25 @@
 import Registrant from "../models/registrant.model.js";
 import mongoose from "mongoose";
+import DeletedRegistrant from "../models/Deleted/deletedRegistrant.model.js";
+
+// Function to generate ULI
+const generateULI = (firstName, lastName, middleName, birthYear) => {
+  // Get first letters of names, defaulting to 'X' if undefined
+  const firstInitial = (firstName ? firstName[0] : "X").toUpperCase();
+  const lastInitial = (lastName ? lastName[0] : "X").toUpperCase();
+  const middleInitial = (middleName ? middleName[0] : "X").toUpperCase();
+
+  // Extract last two digits of birth year
+  const yearStr = birthYear.toString();
+  const yearDigits =
+    yearStr.length >= 4 ? yearStr.slice(-2) : yearStr.padStart(2, "0");
+
+  // Generate a random 3-digit number (YYY)
+  const randomNumbers = Math.floor(100 + Math.random() * 900); // Ensures a 3-digit number
+
+  // Combine all parts
+  return `${firstInitial}${lastInitial}${middleInitial}-${yearDigits}-${randomNumbers}-03907-001`;
+};
 
 // @desc    Get all registrants
 export const getRegistrants = async (req, res) => {
@@ -58,7 +78,7 @@ export const createRegistrant = async (req, res) => {
       scholarType,
     } = req.body;
 
-    // Employment Type is required for the selected Employment Status
+    // Employment Type validation
     if (
       (employmentStatus === "Wage-Employed" ||
         employmentStatus === "Underemployed") &&
@@ -71,8 +91,18 @@ export const createRegistrant = async (req, res) => {
       });
     }
 
-    // Create the new registrant
+    // Generate ULI
+    const birthYear = new Date(personalInformation.birthdate).getFullYear();
+    const uli = generateULI(
+      name.firstName,
+      name.lastName,
+      name.middleName,
+      birthYear
+    );
+
+    // Create the new registrant with ULI
     const newRegistrant = new Registrant({
+      uli, // Add the ULI to the registrant data
       name,
       completeMailingAddress,
       contact,
@@ -101,7 +131,6 @@ export const createRegistrant = async (req, res) => {
   } catch (error) {
     console.error(error);
 
-    // Check for validation error
     if (error instanceof mongoose.Error.ValidationError) {
       return res.status(400).json({
         success: false,
@@ -109,7 +138,6 @@ export const createRegistrant = async (req, res) => {
       });
     }
 
-    // Handle server error
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -121,71 +149,20 @@ export const createRegistrant = async (req, res) => {
 export const updateRegistrant = async (req, res) => {
   const { id } = req.params;
 
-  // Check if the ID is valid
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res
-      .status(404)
+      .status(400)
       .json({ success: false, message: "Invalid Registrant ID" });
   }
 
   try {
-    const {
-      name,
-      completeMailingAddress,
-      contact,
-      nationality,
-      personalInformation,
-      education,
-      parent,
-      clientClassification,
-      disabilityType,
-      disabilityCause,
-      course,
-      scholarType,
-      // consent,
-    } = req.body;
+    console.log("Updating registrant with id:", id);
+    console.log("Update data received:", req.body);
 
-    // Custom validations (if necessary)
-    if (
-      personalInformation &&
-      (personalInformation.employmentStatus === "Wage-Employed" ||
-        personalInformation.employmentStatus === "Underemployed") &&
-      !personalInformation.employmentType
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Employment Type is required for the selected Employment Status",
-      });
-    }
-
-    // if (consent === false || consent === undefined) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Consent is required to proceed",
-    //   });
-    // }
-
-    // Find the registrant by ID and update it
-    const updatedRegistrant = await Registrant.findByIdAndUpdate(
-      id,
-      {
-        name,
-        completeMailingAddress,
-        contact,
-        nationality,
-        personalInformation,
-        education,
-        parent,
-        clientClassification,
-        disabilityType,
-        disabilityCause,
-        course,
-        scholarType,
-        // consent,
-      },
-      { new: true, runValidators: true } // new: true returns the updated document, runValidators ensures Mongoose validations are applied
-    );
+    const updatedRegistrant = await Registrant.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedRegistrant) {
       return res
@@ -193,24 +170,21 @@ export const updateRegistrant = async (req, res) => {
         .json({ success: false, message: "Registrant not found" });
     }
 
-    // Send success response
+    console.log("Updated registrant in database:", updatedRegistrant);
     res.status(200).json({ success: true, data: updatedRegistrant });
   } catch (error) {
-    console.error(error);
-
+    console.error("Update error:", error);
     if (error instanceof mongoose.Error.ValidationError) {
       return res.status(400).json({ success: false, message: error.message });
     }
-
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-// @desc    Delete a registrant
+// @desc    Soft delete a registrant and move to DeletedRegistrant collection
 export const deleteRegistrant = async (req, res) => {
   const { id } = req.params;
 
-  // Check if the ID is valid
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res
       .status(404)
@@ -218,23 +192,71 @@ export const deleteRegistrant = async (req, res) => {
   }
 
   try {
-    // Find and delete the registrant by ID
-    const deletedRegistrant = await Registrant.findByIdAndDelete(id);
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (!deletedRegistrant) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Registrant not found" });
+    try {
+      // Find the registrant
+      const registrant = await Registrant.findById(id).session(session);
+
+      if (!registrant) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(404)
+          .json({ success: false, message: "Registrant not found" });
+      }
+
+      // Create a new DeletedRegistrant document
+      const deletedRegistrant = new DeletedRegistrant(registrant.toObject());
+      await deletedRegistrant.save({ session });
+
+      // Remove the registrant from the main collection
+      await Registrant.findByIdAndDelete(id).session(session);
+
+      await session.commitTransaction();
+      session.endSession();
+
+      res.status(200).json({
+        success: true,
+        message: "Registrant soft deleted successfully",
+        data: deletedRegistrant,
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
     }
-
-    // Send success response
-    res.status(200).json({
-      success: true,
-      message: "Registrant deleted successfully",
-      data: deletedRegistrant,
-    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const getRegistrantByUli = async (req, res) => {
+  try {
+    const { uli } = req.params;
+    console.log("Searching for ULI:", uli);
+
+    const registrant = await Registrant.findOne({ uli: uli });
+    console.log("Found registrant:", registrant);
+
+    if (!registrant) {
+      return res.status(404).json({
+        success: false,
+        message: "Registrant not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: registrant,
+    });
+  } catch (error) {
+    console.error("Error in getRegistrantByUli:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };

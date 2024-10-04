@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -14,12 +14,14 @@ import {
   Checkbox,
   Typography,
   Container,
-  FormLabel,
   Box,
   Grid,
+  Paper,
+  Rating,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import Rating from "@mui/material/Rating";
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
 import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
 import SentimentSatisfiedIcon from "@mui/icons-material/SentimentSatisfied";
@@ -28,33 +30,33 @@ import SentimentVerySatisfiedIcon from "@mui/icons-material/SentimentVerySatisfi
 import { feedbackSchema } from "../../components/schema/feedback.schema";
 
 const StyledRating = styled(Rating)(({ theme }) => ({
-  "& .MuiRating-icon": {
-    fontSize: "3rem", // Set desired size here
+  "& .MuiRating-iconFilled, & .MuiRating-iconHover": {
+    color: theme.palette.primary.main,
   },
-  "& .MuiRating-iconEmpty .MuiSvgIcon-root": {
-    color: theme.palette.action.disabled,
+  "& .MuiRating-icon": {
+    fontSize: "2.5rem",
   },
 }));
 
 const customIcons = {
   1: {
-    icon: <SentimentVeryDissatisfiedIcon color="error" />,
+    icon: <SentimentVeryDissatisfiedIcon />,
     label: "Very Dissatisfied",
   },
   2: {
-    icon: <SentimentDissatisfiedIcon color="error" />,
+    icon: <SentimentDissatisfiedIcon />,
     label: "Dissatisfied",
   },
   3: {
-    icon: <SentimentSatisfiedIcon color="warning" />,
+    icon: <SentimentSatisfiedIcon />,
     label: "Neutral",
   },
   4: {
-    icon: <SentimentSatisfiedAltIcon color="success" />,
+    icon: <SentimentSatisfiedAltIcon />,
     label: "Satisfied",
   },
   5: {
-    icon: <SentimentVerySatisfiedIcon color="success" />,
+    icon: <SentimentVerySatisfiedIcon />,
     label: "Very Satisfied",
   },
 };
@@ -93,11 +95,41 @@ const FeedbackForm = () => {
     },
   });
 
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
   const mutation = useMutation({
     mutationFn: (newFeedback) => {
-      return axios.post("/api/feedback", newFeedback);
+      console.log("New feedback: ", newFeedback);
+      return axios.post("/api/feedback/", newFeedback);
+    },
+    onSuccess: () => {
+      setSnackbar({
+        open: true,
+        message: "Feedback submitted successfully!",
+        severity: "success",
+      });
+      reset();
+    },
+    onError: () => {
+      console.error("Response error:", error.response?.data || error.message);
+      setSnackbar({
+        open: true,
+        message: "Error submitting feedback. Please try again.",
+        severity: "error",
+      });
     },
   });
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   const onSubmit = (data) => {
     console.log(data);
@@ -105,19 +137,13 @@ const FeedbackForm = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ flexGrow: 1 }}>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <Typography variant="h4" gutterBottom>
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Typography variant="h4" gutterBottom align="center" color="primary">
             Feedback Form
           </Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
               <Controller
                 name="name"
@@ -129,7 +155,7 @@ const FeedbackForm = () => {
                     error={!!errors.name}
                     helperText={errors.name?.message}
                     fullWidth
-                    margin="normal"
+                    variant="outlined"
                   />
                 )}
               />
@@ -146,8 +172,12 @@ const FeedbackForm = () => {
                     error={!!errors.age}
                     helperText={errors.age?.message}
                     fullWidth
-                    margin="normal"
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    variant="outlined"
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === "" ? "" : Number(e.target.value)
+                      )
+                    }
                   />
                 )}
               />
@@ -157,9 +187,10 @@ const FeedbackForm = () => {
                 name="sex"
                 control={control}
                 render={({ field }) => (
-                  <FormControl fullWidth margin="normal">
+                  <FormControl fullWidth variant="outlined">
                     <InputLabel>Sex</InputLabel>
-                    <Select {...field} error={!!errors.sex}>
+                    <Select {...field} label="Sex">
+                      <MenuItem value=""></MenuItem>
                       <MenuItem value="Male">Male</MenuItem>
                       <MenuItem value="Female">Female</MenuItem>
                       <MenuItem value="Other">Other</MenuItem>
@@ -168,7 +199,7 @@ const FeedbackForm = () => {
                 )}
               />
             </Grid>
-            <Grid item xs={12} sm={12}>
+            <Grid item xs={12}>
               <Controller
                 name="address"
                 control={control}
@@ -179,7 +210,7 @@ const FeedbackForm = () => {
                     error={!!errors.address}
                     helperText={errors.address?.message}
                     fullWidth
-                    margin="normal"
+                    variant="outlined"
                   />
                 )}
               />
@@ -195,7 +226,7 @@ const FeedbackForm = () => {
                     error={!!errors.mobileNumber}
                     helperText={errors.mobileNumber?.message}
                     fullWidth
-                    margin="normal"
+                    variant="outlined"
                   />
                 )}
               />
@@ -211,80 +242,108 @@ const FeedbackForm = () => {
                     error={!!errors.emailAddress}
                     helperText={errors.emailAddress?.message}
                     fullWidth
-                    margin="normal"
+                    variant="outlined"
                   />
                 )}
               />
             </Grid>
           </Grid>
 
-          <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+          <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2 }}>
             Please rate the following aspects of our service:
           </Typography>
 
-          {control._defaultValues.feedbackQuestions.map((question, index) => (
-            <Controller
-              key={index}
-              name={`feedbackQuestions.${index}.rating`}
-              control={control}
-              render={({ field }) => (
-                <FormControl component="fieldset" margin="normal" fullWidth>
-                  <Typography sx={{ fontSize: "0.8 rem" }}>
+          <Grid container spacing={2}>
+            {control._defaultValues.feedbackQuestions.map((question, index) => (
+              <Grid item xs={12} key={index}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography sx={{ flexGrow: 1, mr: 2 }}>
                     {question.question}
                   </Typography>
-                  <StyledRating
-                    {...field}
-                    name={`rating-${index}`}
-                    defaultValue={3}
-                    IconContainerComponent={IconContainer}
-                    getLabelText={(value) => customIcons[value].label}
-                    highlightSelectedOnly
-                    onChange={(_, newValue) => {
-                      field.onChange(newValue);
-                    }}
+                  <Controller
+                    name={`feedbackQuestions.${index}.rating`}
+                    control={control}
+                    render={({ field }) => (
+                      <StyledRating
+                        {...field}
+                        name={`rating-${index}`}
+                        defaultValue={3}
+                        IconContainerComponent={IconContainer}
+                        getLabelText={(value) => customIcons[value].label}
+                        onChange={(_, newValue) => {
+                          field.onChange(newValue);
+                        }}
+                      />
+                    )}
                   />
-                </FormControl>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Box sx={{ mt: 3 }}>
+            <Controller
+              name="recommendInstitution"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={<Checkbox {...field} color="primary" />}
+                  label="Irerekomenda nyo po ba ang TESDA sa inyong kamag-anak at kaibigan?"
+                />
               )}
             />
-          ))}
+          </Box>
 
-          <Controller
-            name="recommendInstitution"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel
-                control={<Checkbox {...field} />}
-                label="Irerekomenda nyo po ba ang TESDA sa inyong kamag-anak at kaibigan?"
-              />
-            )}
-          />
+          <Box sx={{ mt: 3 }}>
+            <Controller
+              name="suggestion"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Suggestions"
+                  multiline
+                  rows={4}
+                  fullWidth
+                  variant="outlined"
+                />
+              )}
+            />
+          </Box>
 
-          <Controller
-            name="suggestion"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="Suggestions"
-                multiline
-                rows={4}
-                fullWidth
-                margin="normal"
-              />
-            )}
-          />
-
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={mutation.isLoading}
-            sx={{ mt: 2 }}
-          >
-            {mutation.isLoading ? "Submitting..." : "Submit Feedback"}
-          </Button>
-        </Box>
-      </form>
+          <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={mutation.isLoading}
+              size="large"
+            >
+              {mutation.isLoading ? "Submitting..." : "Submit Feedback"}
+            </Button>
+          </Box>
+        </form>
+      </Paper>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

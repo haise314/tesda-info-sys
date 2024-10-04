@@ -3,11 +3,11 @@ import mongoose from "mongoose";
 const questionSchema = new mongoose.Schema({
   question: {
     type: String,
-    required: true,
+    required: false,
   },
   rating: {
     type: Number,
-    required: true,
+    required: false,
     min: 1,
     max: 5,
   },
@@ -17,34 +17,39 @@ const feedbackSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: false,
     },
     age: {
-      type: Number,
-      required: true,
-      min: 0,
+      type: mongoose.Schema.Types.Mixed,
+      required: false,
+      validate: {
+        validator: function (v) {
+          return v === "" || (Number.isInteger(v) && v >= 0);
+        },
+        message: (props) => `${props.value} is not a valid age!`,
+      },
     },
     sex: {
       type: String,
-      enum: ["Male", "Female", "Other"],
-      required: true,
+      enum: ["Male", "Female", "Other", ""],
+      required: false,
     },
     address: {
       type: String,
-      required: true,
+      required: false,
     },
     mobileNumber: {
       type: String,
-      required: true,
+      required: false,
     },
     emailAddress: {
       type: String,
-      required: true,
+      required: false,
     },
     feedbackQuestions: [questionSchema],
     recommendInstitution: {
       type: Boolean,
-      required: true,
+      required: false,
     },
     suggestion: {
       type: String,

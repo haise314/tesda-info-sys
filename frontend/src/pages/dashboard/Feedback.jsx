@@ -1,15 +1,16 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { Bar } from "react-chartjs-2";
+import { Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
+  PieController,
   Title,
   Tooltip,
   Legend,
+  ArcElement,
 } from "chart.js";
 import {
   Container,
@@ -17,22 +18,24 @@ import {
   Grid,
   CircularProgress,
   Box,
+  Divider,
+  Paper,
 } from "@mui/material";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
+  PieController,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ArcElement
 );
+
 const fetchFeedbackData = async () => {
-  console.log("Fetching feedback data...");
   try {
     const response = await axios.get("/api/feedback");
-    console.log("Received data:", response.data);
-    return response.data.data; // Access the 'data' property of the response
+    return response.data.data;
   } catch (error) {
     console.error("Error fetching data:", error);
     throw error;
@@ -40,15 +43,12 @@ const fetchFeedbackData = async () => {
 };
 
 const processFeedbackData = (feedbacks) => {
-  console.log("Processing feedback data:", feedbacks);
   if (!feedbacks || feedbacks.length === 0) {
-    console.log("No feedbacks to process");
     return [];
   }
 
   const questions =
     feedbacks[0]?.feedbackQuestions?.map((q) => q.question) || [];
-  console.log("Questions:", questions);
 
   return questions.map((question, index) => {
     const ratings = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -59,8 +59,6 @@ const processFeedbackData = (feedbacks) => {
       }
     });
 
-    console.log(`Processed data for question "${question}":`, ratings);
-
     return {
       question,
       data: {
@@ -69,7 +67,20 @@ const processFeedbackData = (feedbacks) => {
           {
             label: "Number of Ratings",
             data: Object.values(ratings),
-            backgroundColor: "rgba(75, 192, 192, 0.6)",
+            backgroundColor: [
+              "#FF6384",
+              "#36A2EB",
+              "#FFCE56",
+              "#4BC0C0",
+              "#9966FF",
+            ],
+            hoverBackgroundColor: [
+              "#FF6384",
+              "#36A2EB",
+              "#FFCE56",
+              "#4BC0C0",
+              "#9966FF",
+            ],
           },
         ],
       },
@@ -83,12 +94,18 @@ const options = {
     legend: {
       position: "top",
     },
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      ticks: {
-        stepSize: 1,
+    tooltip: {
+      callbacks: {
+        label: function (tooltipItem) {
+          const dataset = tooltipItem.dataset;
+          const total = dataset.data.reduce((a, b) => a + b, 0);
+          const currentValue = dataset.data[tooltipItem.dataIndex];
+          const percentage = Math.floor((currentValue / total) * 100 + 0.5);
+
+          return `${
+            dataset.labels[tooltipItem.dataIndex]
+          }: ${percentage}% (${currentValue})`;
+        },
       },
     },
   },
@@ -103,15 +120,15 @@ const FeedbackCharts = () => {
   } = useQuery({
     queryKey: ["feedbackData"],
     queryFn: fetchFeedbackData,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: true, // Add this to refetch when component mounts
+    refetchOnWindowFocus: true, // Add this to refetch when window gains focus
+    cacheTime: 0, // Disable caching
+    staleTime: 0, // Data is immediately considered stale
   });
 
   const chartData = React.useMemo(() => {
-    console.log("Feedback data in useMemo:", feedbackData);
     return processFeedbackData(feedbackData);
   }, [feedbackData]);
-
-  console.log("Rendered chart data:", chartData);
 
   if (isLoading) {
     return (
@@ -150,11 +167,33 @@ const FeedbackCharts = () => {
       {chartData.length > 0 ? (
         <Grid container spacing={3}>
           {chartData.map((chart, index) => (
-            <Grid item xs={12} md={6} key={index}>
-              <Typography variant="h6" gutterBottom>
-                {chart.question}
-              </Typography>
-              <Bar options={options} data={chart.data} />
+            <Grid item xs={6} md={3} key={index}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  aspectRatio: "1/1",
+                }}
+                elevation={2}
+              >
+                <Typography
+                  variant="label"
+                  gutterBottom
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  {chart.question}
+                </Typography>
+                <Divider />
+                <Pie options={options} data={chart.data} />
+              </Paper>
             </Grid>
           ))}
         </Grid>

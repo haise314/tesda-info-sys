@@ -1,133 +1,64 @@
 import mongoose from "mongoose";
-
 import {
   assessmentTypes,
   civilStatues,
   clientTypes,
   employmentStatuses,
   highestEducationalAttainments,
-} from "../utils/applicant.enums.js";
+} from "../../utils/applicant.enums.js";
 
+// Define schemas for work experience, training, licensure, and competency as used in Applicant
 const workExperienceSchema = new mongoose.Schema({
-  companyName: {
-    type: String,
-    required: false,
-  },
-  position: {
-    type: String,
-    required: false,
-  },
+  companyName: String,
+  position: String,
   inclusiveDates: {
-    from: {
-      type: Date,
-      required: false,
-    },
-    to: {
-      type: Date,
-      required: false,
-    },
+    from: Date,
+    to: Date,
   },
   monthlySalary: {
     type: Number,
-    required: false,
     min: 0,
   },
-  appointmentStatus: {
-    type: String,
-    required: false,
-  },
-  noOfYearsInWork: {
-    type: Number,
-    required: false,
-  },
+  appointmentStatus: String,
+  noOfYearsInWork: Number,
 });
 
 const trainingSeminarAttendedSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: false,
-  },
-  venue: {
-    type: String,
-    required: false,
-  },
+  title: String,
+  venue: String,
   inclusiveDates: {
-    from: {
-      type: Date,
-      required: false,
-    },
-    to: {
-      type: Date,
-      required: false,
-    },
+    from: Date,
+    to: Date,
   },
   numberOfHours: {
     type: Number,
-    required: false,
     min: 0,
   },
-  conductedBy: {
-    type: String,
-    required: false,
-  },
+  conductedBy: String,
 });
 
 const licensureExaminationPassedSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: false,
-  },
-  dateOfExamination: {
-    type: Date,
-    required: false,
-  },
-  examinationVenue: {
-    type: String,
-    required: false,
-  },
+  title: String,
+  dateOfExamination: Date,
+  examinationVenue: String,
   rating: {
     type: Number,
-    required: false,
     min: 0,
   },
-  remarks: {
-    type: String,
-    required: false,
-  },
-  expiryDate: {
-    type: Date,
-    required: false,
-  },
+  remarks: String,
+  expiryDate: Date,
 });
 
 const competencyAssessmentSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: false,
-  },
-  qualificationLevel: {
-    type: String,
-    required: false,
-  },
-  industrySector: {
-    type: String,
-    required: false,
-  },
-  certificateNumber: {
-    type: String,
-    required: false,
-  },
-  dateIssued: {
-    type: Date,
-    required: false,
-  },
-  expirationDate: {
-    type: Date,
-    required: false,
-  },
+  title: String,
+  qualificationLevel: String,
+  industrySector: String,
+  certificateNumber: String,
+  dateIssued: Date,
+  expirationDate: Date,
 });
 
-const applicantSchema = new mongoose.Schema(
+const deletedApplicantSchema = new mongoose.Schema(
   {
     uli: {
       type: String,
@@ -163,7 +94,6 @@ const applicantSchema = new mongoose.Schema(
       },
       middleName: {
         type: String,
-        required: false,
         default: "",
       },
       lastName: {
@@ -172,7 +102,6 @@ const applicantSchema = new mongoose.Schema(
       },
       extension: {
         type: String,
-        required: false,
         default: "",
       },
     },
@@ -213,7 +142,6 @@ const applicantSchema = new mongoose.Schema(
       },
       middleName: {
         type: String,
-        required: false,
         default: "",
       },
       lastName: {
@@ -222,7 +150,6 @@ const applicantSchema = new mongoose.Schema(
       },
       extension: {
         type: String,
-        required: false,
         default: "",
       },
     },
@@ -233,7 +160,6 @@ const applicantSchema = new mongoose.Schema(
       },
       middleName: {
         type: String,
-        required: false,
         default: "",
       },
       lastName: {
@@ -242,7 +168,6 @@ const applicantSchema = new mongoose.Schema(
       },
       extension: {
         type: String,
-        required: false,
         default: "",
       },
     },
@@ -257,26 +182,11 @@ const applicantSchema = new mongoose.Schema(
       required: true,
     },
     contact: {
-      telephoneNumber: {
-        type: String,
-        required: false,
-      },
-      mobileNumber: {
-        type: String,
-        required: false,
-      },
-      email: {
-        type: String,
-        required: false,
-      },
-      fax: {
-        type: String,
-        required: false,
-      },
-      others: {
-        type: String,
-        required: false,
-      },
+      telephoneNumber: String,
+      mobileNumber: String,
+      email: String,
+      fax: String,
+      others: String,
     },
     highestEducationalAttainment: {
       type: String,
@@ -301,26 +211,19 @@ const applicantSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
-    workExperience: {
-      type: [workExperienceSchema],
-      required: false,
+    workExperience: [workExperienceSchema],
+    trainingSeminarAttended: [trainingSeminarAttendedSchema],
+    licensureExaminationPassed: [licensureExaminationPassedSchema],
+    competencyAssessment: [competencyAssessmentSchema],
+
+    // Additional fields for deletion tracking
+    deletedAt: {
+      type: Date,
+      default: Date.now,
     },
-    trainingSeminarAttended: {
-      type: [trainingSeminarAttendedSchema],
-      required: false,
-    },
-    licensureExaminationPassed: {
-      type: [licensureExaminationPassedSchema],
-      required: false,
-    },
-    competencyAssessment: {
-      type: [competencyAssessmentSchema],
-      required: false,
-    },
-    role: {
+    deletedBy: {
       type: String,
       required: true,
-      default: "client",
     },
   },
   {
@@ -328,6 +231,9 @@ const applicantSchema = new mongoose.Schema(
   }
 );
 
-const Applicant = mongoose.model("Applicant", applicantSchema);
+const DeletedApplicant = mongoose.model(
+  "DeletedApplicant",
+  deletedApplicantSchema
+);
 
-export default Applicant;
+export default DeletedApplicant;

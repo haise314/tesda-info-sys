@@ -1,7 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { DataGrid } from "@mui/x-data-grid";
 import {
+  DataGrid,
+  GridActionsCellItem,
+  GridToolbar,
+  useGridApiRef,
+} from "@mui/x-data-grid";
+import {
+  Box,
   Button,
   Dialog,
   DialogTitle,
@@ -9,215 +15,240 @@ import {
   DialogActions,
   TextField,
 } from "@mui/material";
-import { useForm, Controller } from "react-hook-form";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
+import { applicantColumns } from "../utils/applicant.column.js";
+import flattenApplicantData from "../utils/applicant.flatten.js";
+
+const fetchApplicants = async () => {
+  const response = await axios.get("/api/applicants");
+  return Array.isArray(response.data.data)
+    ? response.data.data.map(flattenApplicantData)
+    : [flattenApplicantData(response.data.data)];
+};
+
+const getDefaultColumnVisibility = (columns) => {
+  const visibility = {};
+  columns.forEach((col) => {
+    visibility[col.field] = false;
+  });
+  return visibility;
+};
 
 const ApplicantTable = () => {
-  const [open, setOpen] = useState(false);
-  const [editingApplicant, setEditingApplicant] = useState(null);
   const queryClient = useQueryClient();
-  const { control, handleSubmit, reset } = useForm();
-
-  const { data: applicants, isLoading } = useQuery({
+  const apiRef = useGridApiRef();
+  const [rows, setRows] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const {
+    data: applicants,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["applicants"],
-    queryFn: () => axios.get("/api/applicants").then((res) => res.data.data),
+    queryFn: fetchApplicants,
   });
 
-  const createMutation = useMutation({
-    mutationFn: (newApplicant) => axios.post("/api/applicants", newApplicant),
+  useEffect(() => {
+    if (applicants) {
+      setRows(applicants);
+    }
+  }, [applicants]);
+
+  const updateApplicantMutation = useMutation({
+    mutationFn: (updatedApplicant) => {
+      const { _id, ...applicantData } = updatedApplicant;
+      return axios.put(`/api/applicants/${_id}`, applicantData);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries("applicants");
-      handleClose();
+      queryClient.invalidateQueries(["applicants"]);
+    },
+    onError: (error) => {
+      alert("Failed to update applicant. Please try again.");
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: (updatedApplicant) =>
-      axios.put(
-        `${"/api/applicants"}/${updatedApplicant._id}`,
-        updatedApplicant
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries("applicants");
-      handleClose();
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id) => axios.delete(`${"/api/applicants"}/${id}`),
-    onSuccess: () => queryClient.invalidateQueries("applicants"),
-  });
-
-  const handleOpen = (applicant = null) => {
-    setEditingApplicant(applicant);
-    reset(applicant || {});
-    setOpen(true);
+  const handleEditClick = (id) => () => {
+    const rowToEdit = applicants.find((row) => row._id === id);
+    setSelectedRow(rowToEdit);
+    setOpenDialog(true);
   };
 
-  const handleClose = () => {
-    setEditingApplicant(null);
-    reset();
-    setOpen(false);
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+    setSelectedRow(null);
   };
 
-  const onSubmit = (data) => {
-    if (editingApplicant) {
-      updateMutation.mutate({ ...data, _id: editingApplicant._id });
-    } else {
-      createMutation.mutate(data);
+  const handleDialogSave = () => {
+    if (selectedRow) {
+      updateApplicantMutation.mutate(selectedRow);
+      handleDialogClose();
     }
   };
 
-  const columns = [
-    { field: "trainingCenterName", headerName: "Training Center", flex: 1 },
-    { field: "assessmentTitle", headerName: "Assessment Title", flex: 1 },
-    { field: "assessmentType", headerName: "Assessment Type", flex: 1 },
-    { field: "clientType", headerName: "Client Type", flex: 1 },
-    {
-      field: "name",
-      headerName: "Full Name",
-      flex: 1,
-      renderCell: (params) => {
-        return `${params.row?.name?.firstName} ${params.row?.name?.lastName}`;
+  const handleFieldChange = (field, value) => {
+    setSelectedRow((prev) => {
+      const newRow = { ...prev };
+      const fields = field.split(".");
+      let current = newRow;
+      for (let i = 0; i < fields.length - 1; i++) {
+        if (!current[fields[i]]) current[fields[i]] = {};
+        current = current[fields[i]];
+      }
+      current[fields[fields.length - 1]] = value;
+      return newRow;
+    });
+  };
+
+  const deleteApplicantMutation = useMutation({
+    mutationFn: (id) => axios.delete(`/api/applicants/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["applicants"]);
+    },
+  });
+
+  const handleDeleteClick = (id) => () => {
+    if (window.confirm("Are you sure you want to delete this applicant?")) {
+      deleteApplicantMutation.mutate(id);
+    }
+  };
+
+  const columns = React.useMemo(
+    () => [
+      ...applicantColumns.map((col) => ({
+        ...col,
+        editable: false,
+      })),
+      {
+        field: "actions",
+        type: "actions",
+        headerName: "Actions",
+        width: 100,
+        getActions: ({ id }) => [
+          <GridActionsCellItem
+            icon={<EditIcon />}
+            label="Edit"
+            onClick={handleEditClick(id)}
+            color="inherit"
+          />,
+          <GridActionsCellItem
+            icon={<DeleteIcon />}
+            label="Delete"
+            onClick={handleDeleteClick(id)}
+            color="inherit"
+          />,
+        ],
       },
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      flex: 1,
-      renderCell: (params) => (
-        <>
-          <Button onClick={() => handleOpen(params.row)}>Edit</Button>
-          <Button onClick={() => deleteMutation.mutate(params.row._id)}>
-            Delete
-          </Button>
-        </>
-      ),
-    },
-  ];
+    ],
+    []
+  );
+
+  const handleAddClick = () => {
+    console.log("Add new applicant");
+  };
 
   if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading data: {error.message}</div>;
 
   return (
-    <div style={{ height: 400, width: "100%" }}>
-      <Button onClick={() => handleOpen()}>Add Applicant</Button>
+    <Box sx={{ height: 400, width: "100%" }}>
+      <Button startIcon={<AddIcon />} onClick={handleAddClick}>
+        Add Applicant
+      </Button>
       <DataGrid
-        rows={applicants}
+        apiRef={apiRef}
+        rows={rows}
         columns={columns}
-        pageSize={5}
-        rowsPerPageOptions={[5]}
+        slots={{ toolbar: GridToolbar }}
         getRowId={(row) => row._id}
+        initialState={{
+          columns: {
+            columnVisibilityModel: {
+              ...getDefaultColumnVisibility(applicantColumns),
+              uli: true,
+              fullName: true,
+              email: true,
+              mobileNumber: true,
+              createdAt: true,
+              updatedAt: true,
+              actions: true,
+            },
+          },
+        }}
       />
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>
-          {editingApplicant ? "Edit Applicant" : "Add Applicant"}
-        </DialogTitle>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogContent>
-            <Controller
-              name="trainingCenterName"
-              control={control}
-              defaultValue=""
-              rules={{ required: "This field is required" }}
-              render={({ field, fieldState: { error } }) => (
-                <TextField
-                  {...field}
-                  label="Training Center Name"
-                  fullWidth
-                  margin="normal"
-                  error={!!error}
-                  helperText={error?.message}
-                />
-              )}
-            />
-            <Controller
-              name="assessmentTitle"
-              control={control}
-              defaultValue=""
-              rules={{ required: "This field is required" }}
-              render={({ field, fieldState: { error } }) => (
-                <TextField
-                  {...field}
-                  label="Assessment Title"
-                  fullWidth
-                  margin="normal"
-                  error={!!error}
-                  helperText={error?.message}
-                />
-              )}
-            />
-            <Controller
-              name="assessmentType"
-              control={control}
-              defaultValue=""
-              rules={{ required: "This field is required" }}
-              render={({ field, fieldState: { error } }) => (
-                <TextField
-                  {...field}
-                  label="Assessment Type"
-                  fullWidth
-                  margin="normal"
-                  error={!!error}
-                  helperText={error?.message}
-                />
-              )}
-            />
-            <Controller
-              name="clientType"
-              control={control}
-              defaultValue=""
-              rules={{ required: "This field is required" }}
-              render={({ field, fieldState: { error } }) => (
-                <TextField
-                  {...field}
-                  label="Client Type"
-                  fullWidth
-                  margin="normal"
-                  error={!!error}
-                  helperText={error?.message}
-                />
-              )}
-            />
-            <Controller
-              name="name.firstName"
-              control={control}
-              defaultValue=""
-              rules={{ required: "This field is required" }}
-              render={({ field, fieldState: { error } }) => (
-                <TextField
-                  {...field}
-                  label="First Name"
-                  fullWidth
-                  margin="normal"
-                  error={!!error}
-                  helperText={error?.message}
-                />
-              )}
-            />
-            <Controller
-              name="name.lastName"
-              control={control}
-              defaultValue=""
-              rules={{ required: "This field is required" }}
-              render={({ field, fieldState: { error } }) => (
-                <TextField
-                  {...field}
-                  label="Last Name"
-                  fullWidth
-                  margin="normal"
-                  error={!!error}
-                  helperText={error?.message}
-                />
-              )}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose}>Cancel</Button>
-            <Button type="submit">Save</Button>
-          </DialogActions>
-        </form>
+
+      <Dialog open={openDialog} onClose={handleDialogClose}>
+        <DialogTitle>Edit Applicant</DialogTitle>
+
+        <DialogContent>
+          {selectedRow && (
+            <>
+              <TextField
+                margin="dense"
+                label="First Name"
+                fullWidth
+                value={selectedRow?.firstName || ""}
+                onChange={(e) => handleFieldChange("firstName", e.target.value)}
+              />
+              <TextField
+                margin="dense"
+                label="Last Name"
+                fullWidth
+                value={selectedRow?.lastName || ""}
+                onChange={(e) => handleFieldChange("lastName", e.target.value)}
+              />
+              <TextField
+                margin="dense"
+                label="Email"
+                fullWidth
+                value={selectedRow?.email || ""}
+                onChange={(e) =>
+                  handleFieldChange("contact.email", e.target.value)
+                }
+              />
+              <TextField
+                margin="dense"
+                label="Mobile Number"
+                fullWidth
+                value={selectedRow?.mobileNumber || ""}
+                onChange={(e) =>
+                  handleFieldChange("contact.mobileNumber", e.target.value)
+                }
+              />
+              <TextField
+                margin="dense"
+                label="Employment Status"
+                fullWidth
+                value={selectedRow?.employmentStatus || ""}
+                onChange={(e) =>
+                  handleFieldChange("employmentStatus", e.target.value)
+                }
+              />
+              <TextField
+                margin="dense"
+                label="Highest Educational Attainment"
+                fullWidth
+                value={selectedRow?.highestEducationalAttainment || ""}
+                onChange={(e) =>
+                  handleFieldChange(
+                    "highestEducationalAttainment",
+                    e.target.value
+                  )
+                }
+              />
+            </>
+          )}
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Cancel</Button>
+          <Button onClick={handleDialogSave}>Save</Button>
+        </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   );
 };
 

@@ -20,59 +20,87 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
+import { useAuth } from "../../context/AuthContext"; // Import useAuth hook
 
 const drawerWidth = 240;
 
 const Sidebar = () => {
+  const { user } = useAuth(); // Get user from AuthContext
+  const role = user?.role || "client"; // Default to client if role is not available
+
   const menuItems = [
-    { title: "Profile", path: "profile", icon: <AccountBoxIcon /> },
-    { title: "Clients", path: "clients", icon: <PeopleIcon /> },
+    {
+      title: "Profile",
+      path: "profile",
+      icon: <AccountBoxIcon />,
+      roles: ["client", "admin", "superadmin"],
+    },
+    {
+      title: "Clients",
+      path: "clients",
+      icon: <PeopleIcon />,
+      roles: ["admin", "superadmin"],
+    },
     {
       title: "Applicants",
       path: "applicants",
       icon: <PeopleIcon />,
+      roles: ["admin", "superadmin"],
+    },
+    {
+      title: "Create Training Programs",
+      path: "programs",
+      icon: <FeedIcon />,
+      roles: ["admin", "superadmin"],
     },
     {
       title: "Training Programs",
-      path: "programs",
+      path: "training-programs",
       icon: <FeedIcon />,
+      roles: ["client", "admin", "superadmin"],
     },
     {
       title: "MATB",
       path: "MATB",
       icon: <Quiz />,
+      roles: ["admin", "superadmin"],
     },
     {
       title: "Feedback",
       path: "feedback",
       icon: <FeedbackIcon />,
+      roles: ["admin", "superadmin"],
     },
     {
       title: "Notifications",
       path: "notifications",
       icon: <NotificationsIcon />,
+      roles: ["client", "admin", "superadmin"],
     },
     {
       title: "Scheduling",
       path: "scheduling",
       icon: <CalendarMonthIcon />,
+      roles: ["admin", "superadmin"],
     },
     {
       title: "Reports",
       path: "reports",
       icon: <AssessmentIcon />,
+      roles: ["admin", "superadmin"],
     },
     {
       title: "Settings",
       path: "settings",
       icon: <SettingsIcon />,
+      roles: ["admin", "superadmin"],
     },
     {
       title: "Logout",
       path: "../",
       icon: <LogoutIcon />,
+      roles: ["client", "admin", "superadmin"],
     },
-    // Add more items as needed
   ];
 
   return (
@@ -86,14 +114,16 @@ const Sidebar = () => {
     >
       <Toolbar />
       <List>
-        {menuItems.map(({ title, path, icon }) => (
-          <ListItem key={title} disablePadding>
-            <ListItemButton component={NavLink} to={`/dashboard/${path}`}>
-              <ListItemIcon>{icon}</ListItemIcon>
-              <ListItemText primary={title} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        {menuItems
+          .filter((item) => item.roles.includes(role)) // Filter menu items by user role
+          .map(({ title, path, icon }) => (
+            <ListItem key={title} disablePadding>
+              <ListItemButton component={NavLink} to={`/dashboard/${path}`}>
+                <ListItemIcon>{icon}</ListItemIcon>
+                <ListItemText primary={title} />
+              </ListItemButton>
+            </ListItem>
+          ))}
       </List>
     </Drawer>
   );
