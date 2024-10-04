@@ -187,7 +187,7 @@ const LandingPage = () => {
                     <React.Fragment key={index}>
                       <ListItem alignItems="flex-start">
                         <ListItemAvatar>
-                          <Avatar alt="News" src={`/api/placeholder/100/100`} />
+                          <Avatar alt="News" />
                         </ListItemAvatar>
                         <ListItemText
                           primary={item.title}
