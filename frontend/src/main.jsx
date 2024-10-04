@@ -33,6 +33,7 @@ import UpdateRegistrant from "./components/dashboard/UpdateRegistrant.jsx";
 import Unauthorized from "./pages/public/UnauthorizedPage.jsx";
 import TrainingProgramList from "./pages/dashboard/TrainingProgramList.jsx";
 import UsersTable from "./components/dashboard/UsersTable.jsx";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -191,14 +192,18 @@ const router = createBrowserRouter([
   },
 ]);
 
+const theme = createTheme();
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <RouterProvider router={router} />
-        </LocalizationProvider>
-      </QueryClientProvider>
-    </AuthProvider>
+    <ThemeProvider theme={theme}>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <RouterProvider router={router} />
+          </LocalizationProvider>
+        </QueryClientProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </StrictMode>
 );

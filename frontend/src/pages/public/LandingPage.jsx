@@ -82,6 +82,7 @@ const LandingPage = () => {
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
           backgroundImage: `url(${heroImage})`,
+          height: { xs: "300px", md: "auto" }, // Added responsive height
         }}
       >
         <Box
@@ -95,7 +96,9 @@ const LandingPage = () => {
           }}
         />
         <Grid container>
-          <Grid item md={6}>
+          <Grid item xs={12} md={6}>
+            {" "}
+            {/* Changed md={6} to xs={12} md={6} for mobile responsiveness */}
             <Box
               sx={{
                 position: "relative",
@@ -127,7 +130,9 @@ const LandingPage = () => {
         {/* Quick Access Section */}
         <Grid container spacing={4} sx={{ mb: 4 }}>
           {cardItems.map((item, index) => (
-            <Grid item xs={12} md={4} key={index}>
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              {" "}
+              {/* Changed md={4} to xs={12} sm={6} md={4} for better responsiveness */}
               <Card
                 sx={{
                   height: "100%",
