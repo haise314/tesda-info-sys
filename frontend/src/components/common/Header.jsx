@@ -12,15 +12,19 @@ import {
   Toolbar,
   Typography,
   useMediaQuery,
+  Divider,
+  Avatar,
 } from "@mui/material";
 import { useTheme } from "@emotion/react";
 import { Link } from "react-router-dom";
-import MenuIcon from "@mui/icons-material/Menu"; // Use MenuIcon instead of GridMenuIcon
+import MenuIcon from "@mui/icons-material/Menu";
 import SchoolIcon from "@mui/icons-material/School";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import LoginIcon from "@mui/icons-material/Login";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useState } from "react";
+import tesdaIcon from "../../assets/tesda_icon.png";
 
 const Header = () => {
   const theme = useTheme();
@@ -44,6 +48,39 @@ const Header = () => {
     { title: "MATB", path: "/MATB", icon: <ReceiptIcon /> },
     { title: "Login", path: "/login", icon: <LoginIcon /> },
   ];
+
+  const DrawerHeader = () => (
+    <Box
+      sx={{
+        p: 2,
+        bgcolor: "#0038a8",
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Avatar
+          src={tesdaIcon}
+          alt="Tesda Logo"
+          sx={{
+            width: 40,
+            height: 40,
+            mr: 2,
+            bgcolor: "white",
+            p: 0.5,
+          }}
+        />
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          TESDA Menu
+        </Typography>
+      </Box>
+      <IconButton onClick={toggleDrawer(false)} sx={{ color: "white" }}>
+        <ChevronRightIcon />
+      </IconButton>
+    </Box>
+  );
 
   return (
     <AppBar position="static" sx={{ bgcolor: "#0038a8" }}>
@@ -87,27 +124,50 @@ const Header = () => {
                 anchor="right"
                 open={drawerOpen}
                 onClose={toggleDrawer(false)}
+                PaperProps={{
+                  sx: {
+                    width: 280,
+                    bgcolor: "background.default",
+                  },
+                }}
               >
-                <Box
-                  sx={{ width: 250, bgcolor: "#f5f5f5", color: "#000" }}
-                  role="presentation"
-                  onClick={toggleDrawer(false)}
-                  onKeyDown={toggleDrawer(false)}
-                >
-                  <List>
-                    {menuItems.map((item) => (
-                      <ListItem
-                        button
-                        component={Link}
-                        to={item.path}
-                        key={item.title}
+                <DrawerHeader />
+                <Divider />
+                <List sx={{ pt: 1 }}>
+                  {menuItems.map((item, index) => (
+                    <ListItem
+                      button
+                      component={Link}
+                      to={item.path}
+                      key={item.title}
+                      sx={{
+                        py: 1.5,
+                        "&:hover": {
+                          bgcolor: "action.hover",
+                        },
+                        "& .MuiListItemIcon-root": {
+                          color: "primary.main",
+                        },
+                      }}
+                    >
+                      <ListItemIcon
+                        sx={{
+                          minWidth: 40,
+                        }}
                       >
-                        <ListItemIcon>{item.icon}</ListItemIcon>
-                        <ListItemText primary={item.title} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Box>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={item.title}
+                        primaryTypographyProps={{
+                          sx: {
+                            fontWeight: 500,
+                          },
+                        }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
               </Drawer>
             </>
           ) : (

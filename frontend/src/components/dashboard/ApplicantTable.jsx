@@ -14,6 +14,8 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  useMediaQuery,
+  Stack,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -21,6 +23,8 @@ import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
 import { applicantColumns } from "../utils/applicant.column.js";
 import flattenApplicantData from "../utils/applicant.flatten.js";
+import { useTheme } from "@emotion/react";
+import { TableContainer } from "../../layouts/TableContainer";
 
 const fetchApplicants = async () => {
   const response = await axios.get("/api/applicants");
@@ -38,6 +42,8 @@ const getDefaultColumnVisibility = (columns) => {
 };
 
 const ApplicantTable = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const queryClient = useQueryClient();
   const apiRef = useGridApiRef();
   const [rows, setRows] = useState([]);
@@ -154,15 +160,36 @@ const ApplicantTable = () => {
   if (error) return <div>Error loading data: {error.message}</div>;
 
   return (
-    <Box sx={{ height: 400, width: "100%" }}>
-      <Button startIcon={<AddIcon />} onClick={handleAddClick}>
-        Add Applicant
-      </Button>
+    <TableContainer>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        sx={{ mb: 2 }}
+        alignItems={{ xs: "stretch", sm: "center" }}
+      >
+        <Button
+          fullWidth={isMobile}
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleAddClick}
+        >
+          Add Applicant
+        </Button>
+      </Stack>
+
       <DataGrid
         apiRef={apiRef}
         rows={rows}
         columns={columns}
-        slots={{ toolbar: GridToolbar }}
+        slots={{
+          toolbar: GridToolbar,
+        }}
+        slotProps={{
+          toolbar: {
+            showQuickFilter: true,
+            quickFilterProps: { debounceMs: 500 },
+          },
+        }}
         getRowId={(row) => row._id}
         initialState={{
           columns: {
@@ -170,17 +197,30 @@ const ApplicantTable = () => {
               ...getDefaultColumnVisibility(applicantColumns),
               uli: true,
               fullName: true,
-              email: true,
-              mobileNumber: true,
-              createdAt: true,
-              updatedAt: true,
+              email: !isMobile,
+              mobileNumber: !isMobile,
+              employmentStatus: !isMobile,
+              highestEducationalAttainment: !isMobile,
+              createdAt: !isMobile,
+              updatedAt: !isMobile,
               actions: true,
             },
           },
+          pagination: {
+            paginationModel: { pageSize: isMobile ? 5 : 10 },
+          },
         }}
+        pageSizeOptions={isMobile ? [5, 10] : [10, 25, 50]}
+        density={isMobile ? "compact" : "standard"}
       />
 
-      <Dialog open={openDialog} onClose={handleDialogClose}>
+      <Dialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        fullScreen={isMobile}
+        maxWidth="md"
+        fullWidth
+      >
         <DialogTitle>Edit Applicant</DialogTitle>
 
         <DialogContent>
@@ -248,7 +288,7 @@ const ApplicantTable = () => {
           <Button onClick={handleDialogSave}>Save</Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </TableContainer>
   );
 };
 

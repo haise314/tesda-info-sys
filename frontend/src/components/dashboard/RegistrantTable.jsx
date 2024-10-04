@@ -7,24 +7,26 @@ import {
   useGridApiRef,
 } from "@mui/x-data-grid";
 import {
-  Box,
   Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
+  useMediaQuery,
+  Stack,
 } from "@mui/material";
+import { useTheme } from "@emotion/react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
 import { registrantColumns } from "../utils/registrant.column.js";
 import flattenRegistrantData from "../utils/registrant.flatten.js";
+import { TableContainer } from "../../layouts/TableContainer";
 
 const fetchRegistrants = async () => {
   const response = await axios.get("/api/register");
-
   return Array.isArray(response.data.data)
     ? response.data.data.map(flattenRegistrantData)
     : [flattenRegistrantData(response.data.data)];
@@ -35,16 +37,18 @@ const getDefaultColumnVisibility = (columns) => {
   columns.forEach((col) => {
     visibility[col.field] = false;
   });
-
   return visibility;
 };
 
 const RegistrantTable = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const queryClient = useQueryClient();
   const apiRef = useGridApiRef();
   const [rows, setRows] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
+
   const {
     data: registrants,
     isLoading,
@@ -62,18 +66,14 @@ const RegistrantTable = () => {
 
   const updateRegistrantMutation = useMutation({
     mutationFn: (updatedRegistrant) => {
-      console.log("Sending update to server:", updatedRegistrant);
       const { _id, ...registrantData } = updatedRegistrant;
       return axios.put(`/api/register/${_id}`, registrantData);
     },
-    onSuccess: (response, variables) => {
-      console.log("Update successful. Server response:", response.data);
+    onSuccess: () => {
       queryClient.invalidateQueries(["registrants"]);
     },
-    onError: (error, variables) => {
-      console.error("Update failed:", error);
+    onError: (error) => {
       alert("Failed to update registrant. Please try again.");
-      // Implement user feedback here (e.g., show an error message)
     },
   });
 
@@ -111,15 +111,8 @@ const RegistrantTable = () => {
 
   const deleteRegistrantMutation = useMutation({
     mutationFn: (id) => axios.delete(`/api/register/${id}`),
-
     onSuccess: () => {
       queryClient.invalidateQueries(["registrants"]);
-    },
-
-    onError: (error) => {
-      console.error("Error deleting registrant:", error);
-
-      // Implement user feedback here (e.g., show an error message)
     },
   });
 
@@ -140,8 +133,6 @@ const RegistrantTable = () => {
         type: "actions",
         headerName: "Actions",
         width: 100,
-        cellClassName: "actions",
-
         getActions: ({ id }) => [
           <GridActionsCellItem
             icon={<EditIcon />}
@@ -149,7 +140,6 @@ const RegistrantTable = () => {
             onClick={handleEditClick(id)}
             color="inherit"
           />,
-
           <GridActionsCellItem
             icon={<DeleteIcon />}
             label="Delete"
@@ -159,12 +149,10 @@ const RegistrantTable = () => {
         ],
       },
     ],
-
     []
   );
 
   const handleAddClick = () => {
-    // This is a placeholder. You'll need to implement the actual logic to add a new registrant
     console.log("Add new registrant");
   };
 
@@ -172,16 +160,35 @@ const RegistrantTable = () => {
   if (error) return <div>Error loading data: {error.message}</div>;
 
   return (
-    <Box sx={{ height: 400, width: "100%" }}>
-      <Button startIcon={<AddIcon />} onClick={handleAddClick}>
-        Add Registrant
-      </Button>
+    <TableContainer>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        sx={{ mb: 2 }}
+        alignItems={{ xs: "stretch", sm: "center" }}
+      >
+        <Button
+          fullWidth={isMobile}
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleAddClick}
+        >
+          Add Registrant
+        </Button>
+      </Stack>
+
       <DataGrid
         apiRef={apiRef}
         rows={rows}
         columns={columns}
         slots={{
           toolbar: GridToolbar,
+        }}
+        slotProps={{
+          toolbar: {
+            showQuickFilter: true,
+            quickFilterProps: { debounceMs: 500 },
+          },
         }}
         getRowId={(row) => row._id}
         initialState={{
@@ -190,23 +197,33 @@ const RegistrantTable = () => {
               ...getDefaultColumnVisibility(registrantColumns),
               uli: true,
               fullName: true,
-              email: true,
-              mobileNumber: true,
-              clientClassification: true,
-              course: true,
-              hasScholarType: true,
-              scholarType: true,
-              createdAt: true,
-              updatedAt: true,
+              email: !isMobile,
+              mobileNumber: !isMobile,
+              clientClassification: !isMobile,
+              course: !isMobile,
+              hasScholarType: !isMobile,
+              scholarType: !isMobile,
+              createdAt: !isMobile,
+              updatedAt: !isMobile,
               actions: true,
             },
           },
+          pagination: {
+            paginationModel: { pageSize: isMobile ? 5 : 10 },
+          },
         }}
+        pageSizeOptions={isMobile ? [5, 10] : [10, 25, 50]}
+        density={isMobile ? "compact" : "standard"}
       />
 
-      <Dialog open={openDialog} onClose={handleDialogClose}>
+      <Dialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        fullScreen={isMobile}
+        maxWidth="md"
+        fullWidth
+      >
         <DialogTitle>Edit Registrant</DialogTitle>
-
         <DialogContent>
           {selectedRow && (
             <>
@@ -217,7 +234,6 @@ const RegistrantTable = () => {
                 value={selectedRow?.firstName || ""}
                 onChange={(e) => handleFieldChange("firstName", e.target.value)}
               />
-
               <TextField
                 margin="dense"
                 label="Middle Name"
@@ -227,7 +243,6 @@ const RegistrantTable = () => {
                   handleFieldChange("middleName", e.target.value)
                 }
               />
-
               <TextField
                 margin="dense"
                 label="Last Name"
@@ -235,7 +250,6 @@ const RegistrantTable = () => {
                 value={selectedRow?.lastName || ""}
                 onChange={(e) => handleFieldChange("lastName", e.target.value)}
               />
-
               <TextField
                 margin="dense"
                 label="Extension"
@@ -243,7 +257,6 @@ const RegistrantTable = () => {
                 value={selectedRow?.extension || ""}
                 onChange={(e) => handleFieldChange("extension", e.target.value)}
               />
-
               <TextField
                 margin="dense"
                 label="Email"
@@ -251,7 +264,6 @@ const RegistrantTable = () => {
                 value={selectedRow?.email || ""}
                 onChange={(e) => handleFieldChange("email", e.target.value)}
               />
-
               <TextField
                 margin="dense"
                 label="Mobile Number"
@@ -261,12 +273,11 @@ const RegistrantTable = () => {
                   handleFieldChange("mobileNumber", e.target.value)
                 }
               />
-
               <TextField
                 margin="dense"
                 label="Client Classification"
                 fullWidth
-                value={selectedRow.clientClassification || ""}
+                value={selectedRow?.clientClassification || ""}
                 onChange={(e) =>
                   handleFieldChange("clientClassification", e.target.value)
                 }
@@ -275,24 +286,23 @@ const RegistrantTable = () => {
                 margin="dense"
                 label="Course"
                 fullWidth
-                value={selectedRow.course || ""}
+                value={selectedRow?.course || ""}
                 onChange={(e) => handleFieldChange("course", e.target.value)}
               />
               <TextField
                 margin="dense"
-                label="has Scholar?"
+                label="Has Scholar?"
                 fullWidth
-                value={selectedRow.hasScholarType || ""}
+                value={selectedRow?.hasScholarType || ""}
                 onChange={(e) =>
                   handleFieldChange("hasScholarType", e.target.value)
                 }
               />
-
               <TextField
                 margin="dense"
                 label="Scholar Type"
                 fullWidth
-                value={selectedRow.scholarType || ""}
+                value={selectedRow?.scholarType || ""}
                 onChange={(e) =>
                   handleFieldChange("scholarType", e.target.value)
                 }
@@ -300,13 +310,12 @@ const RegistrantTable = () => {
             </>
           )}
         </DialogContent>
-
         <DialogActions>
           <Button onClick={handleDialogClose}>Cancel</Button>
           <Button onClick={handleDialogSave}>Save</Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </TableContainer>
   );
 };
 

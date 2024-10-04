@@ -1,32 +1,40 @@
-// Sidebar.jsx
 import React from "react";
 import {
   Drawer,
+  Box,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  useTheme,
+  useMediaQuery,
   Toolbar,
+  IconButton,
 } from "@mui/material";
 import { NavLink } from "react-router-dom";
-import AccountBoxIcon from "@mui/icons-material/AccountBox";
-import PeopleIcon from "@mui/icons-material/People";
-import FeedIcon from "@mui/icons-material/Feed";
-import Quiz from "@mui/icons-material/Quiz";
-import FeedbackIcon from "@mui/icons-material/Feedback";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import AssessmentIcon from "@mui/icons-material/Assessment";
-import SettingsIcon from "@mui/icons-material/Settings";
-import LogoutIcon from "@mui/icons-material/Logout";
-import { useAuth } from "../../context/AuthContext"; // Import useAuth hook
+import { useAuth } from "../../context/AuthContext";
+import {
+  AccountBox as AccountBoxIcon,
+  People as PeopleIcon,
+  Feed as FeedIcon,
+  Quiz,
+  Feedback as FeedbackIcon,
+  Notifications as NotificationsIcon,
+  CalendarMonth as CalendarMonthIcon,
+  Assessment as AssessmentIcon,
+  Settings as SettingsIcon,
+  Logout as LogoutIcon,
+  Close as CloseIcon,
+} from "@mui/icons-material";
 
 const drawerWidth = 240;
 
-const Sidebar = () => {
-  const { user } = useAuth(); // Get user from AuthContext
-  const role = user?.role || "client"; // Default to client if role is not available
+const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
+  const { user } = useAuth();
+  const theme = useTheme();
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
+  const role = user?.role || "client";
 
   const menuItems = [
     {
@@ -103,29 +111,104 @@ const Sidebar = () => {
     },
   ];
 
-  return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: "border-box" },
-      }}
-    >
-      <Toolbar />
+  const drawer = (
+    <Box>
+      <Toolbar /> {/* This creates space for the AppBar */}
       <List>
         {menuItems
-          .filter((item) => item.roles.includes(role)) // Filter menu items by user role
+          .filter((item) => item.roles.includes(role))
           .map(({ title, path, icon }) => (
             <ListItem key={title} disablePadding>
-              <ListItemButton component={NavLink} to={`/dashboard/${path}`}>
-                <ListItemIcon>{icon}</ListItemIcon>
-                <ListItemText primary={title} />
+              <ListItemButton
+                component={NavLink}
+                to={`/dashboard/${path}`}
+                onClick={!isSmUp ? onDrawerToggle : undefined}
+                sx={{
+                  minHeight: 48,
+                  "&.active": {
+                    bgcolor: "action.selected",
+                    "& .MuiListItemIcon-root": {
+                      color: "primary.main",
+                    },
+                    "& .MuiListItemText-primary": {
+                      color: "primary.main",
+                      fontWeight: 600,
+                    },
+                  },
+                  "&:hover": {
+                    bgcolor: "action.hover",
+                  },
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 40,
+                    color: "text.secondary",
+                  }}
+                >
+                  {icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={title}
+                  sx={{
+                    "& .MuiTypography-root": {
+                      fontSize: "0.875rem",
+                      fontWeight: 500,
+                    },
+                  }}
+                />
               </ListItemButton>
             </ListItem>
           ))}
       </List>
-    </Drawer>
+    </Box>
+  );
+
+  return (
+    <Box
+      component="nav"
+      sx={{
+        width: { sm: drawerWidth },
+        flexShrink: { sm: 0 },
+      }}
+      aria-label="dashboard navigation"
+    >
+      {/* Mobile drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onDrawerToggle}
+        ModalProps={{
+          keepMounted: true,
+        }}
+        sx={{
+          display: { xs: "block", sm: "none" },
+          "& .MuiDrawer-paper": {
+            boxSizing: "border-box",
+            width: drawerWidth,
+            bgcolor: "background.default",
+          },
+        }}
+      >
+        {drawer}
+      </Drawer>
+
+      {/* Desktop drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: "none", sm: "block" },
+          "& .MuiDrawer-paper": {
+            boxSizing: "border-box",
+            width: drawerWidth,
+            bgcolor: "background.default",
+          },
+        }}
+        open
+      >
+        {drawer}
+      </Drawer>
+    </Box>
   );
 };
 

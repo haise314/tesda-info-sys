@@ -1,5 +1,4 @@
 import React from "react";
-import { useAuth } from "../../context/AuthContext"; // Import AuthContext to access the user and logout
 import {
   AppBar,
   Toolbar,
@@ -8,85 +7,114 @@ import {
   Menu,
   MenuItem,
   Avatar,
-  Tooltip,
   Box,
-  Stack,
   Badge,
+  useTheme,
+  Stack,
 } from "@mui/material";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import LogoutIcon from "@mui/icons-material/Logout";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import {
+  Menu as MenuIcon,
+  Notifications as NotificationsIcon,
+  AccountCircle as AccountCircleIcon,
+  Logout as LogoutIcon,
+} from "@mui/icons-material";
+import { useAuth } from "../../context/AuthContext";
+import tesdaIcon from "../../assets/tesda_icon.png";
 
-const TopBar = () => {
-  const { user, logout } = useAuth(); // Get user info and logout function
-  const [anchorEl, setAnchorEl] = React.useState(null); // State for menu anchor
+const TopBar = ({ onDrawerToggle }) => {
+  const { user, logout } = useAuth();
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const theme = useTheme();
 
-  // Handle opening and closing of the user menu
-  const handleMenuOpen = (event) => {
+  const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
   };
-  const handleMenuClose = () => {
+
+  const handleClose = () => {
     setAnchorEl(null);
   };
 
-  // Function to handle logout
   const handleLogout = () => {
-    logout(); // Call logout from AuthContext
+    handleClose();
+    logout();
   };
-
-  // Determine the dashboard title based on user role
-  const dashboardTitle =
-    user?.role === "admin" || user?.role === "superadmin"
-      ? "Admin Dashboard"
-      : "Client Dashboard";
 
   return (
     <AppBar
       position="fixed"
-      sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, bgcolor: "#0038a8" }}
+      sx={{
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+        bgcolor: "#0038a8",
+      }}
     >
       <Toolbar>
-        {/* Logo */}
-        <img src="../tesda_icon.svg" alt="Tesda Logo" width="40px" />
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={onDrawerToggle}
+          sx={{
+            mr: 2,
+            display: { sm: "none" },
+            zIndex: (theme) => theme.zIndex.drawer + 2,
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
 
-        {/* Dynamically change dashboard title based on role */}
-        <Typography variant="h6" sx={{ flexGrow: 1, ml: 2 }}>
-          {dashboardTitle}
+        <Box
+          component="img"
+          src={tesdaIcon}
+          alt="Tesda Logo"
+          sx={{
+            width: 40,
+            height: 40,
+            mr: 2,
+          }}
+        />
+
+        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          {user?.role?.includes("admin")
+            ? "Admin Dashboard"
+            : "Client Dashboard"}
         </Typography>
 
-        {/* Right-side actions: Notifications, User Avatar */}
-        <Stack direction="row" spacing={2}>
-          {/* Notifications (placeholder) */}
+        <Stack direction="row" spacing={1} alignItems="center">
           <IconButton color="inherit">
             <Badge badgeContent={4} color="error">
               <NotificationsIcon />
             </Badge>
           </IconButton>
 
-          {/* User Avatar with Menu */}
-          <Tooltip title="Account settings">
-            <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
-              <Avatar sx={{ bgcolor: "secondary.main" }}>
-                {user?.name?.charAt(0) || user?.role?.charAt(0) || "A"}
-              </Avatar>
-            </IconButton>
-          </Tooltip>
+          <IconButton
+            onClick={handleMenu}
+            color="inherit"
+            sx={{
+              ml: 1,
+              "&:hover": {
+                bgcolor: "rgba(255, 255, 255, 0.1)",
+              },
+            }}
+          >
+            <Avatar
+              sx={{
+                bgcolor: theme.palette.secondary.main,
+                width: 32,
+                height: 32,
+              }}
+            >
+              {user?.name?.charAt(0) || user?.role?.charAt(0) || "A"}
+            </Avatar>
+          </IconButton>
 
-          {/* Menu that appears when avatar is clicked */}
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-            anchorOrigin={{
-              vertical: "top",
-              horizontal: "right",
-            }}
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "right",
-            }}
+            onClose={handleClose}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
           >
-            <MenuItem onClick={handleMenuClose}>
+            <MenuItem onClick={handleClose}>
               <AccountCircleIcon sx={{ mr: 1 }} /> Profile
             </MenuItem>
             <MenuItem onClick={handleLogout}>
