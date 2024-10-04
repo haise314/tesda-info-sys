@@ -205,139 +205,144 @@ function RegistrationForm() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          bgcolor: "#f5f5f5",
+          borderRadius: 2,
+          pt: 2,
         }}
         bgcolor={"#f5f5f5"}
       >
-        <Typography variant="h6">Learner/Manpower Profile</Typography>
+        <Typography variant="h6" sx={{ fontWeight: "bold", marginBottom: 1 }}>
+          Learner/Manpower Profile
+        </Typography>
+        {/* Name */}
+        <Paper
+          elevation={2}
+          sx={{
+            padding: 3,
+            margin: 2,
+            width: "100%",
+          }}
+        >
+          <Typography variant="h6">Name</Typography>
+          <Stack
+            direction={{ xs: "column", md: "row" }} // Stack direction changes based on screen size
+            spacing={2}
+          >
+            <TextField
+              {...register("name.firstName")}
+              label="First Name"
+              helperText={errors.name?.firstName?.message}
+              error={Boolean(errors.name?.firstName)}
+              fullWidth
+            />
+
+            <TextField
+              {...register("name.middleName")}
+              label="Middle Name"
+              helperText={errors.name?.middleName?.message}
+              error={Boolean(errors.name?.middleName)}
+              fullWidth
+            />
+
+            <TextField
+              {...register("name.lastName")}
+              label="Last Name"
+              helperText={errors.name?.lastName?.message}
+              error={Boolean(errors.name?.lastName)}
+              fullWidth
+            />
+
+            <TextField
+              {...register("name.extension")}
+              label="Extension"
+              helperText={errors.name?.extension?.message}
+              error={Boolean(errors.name?.extension)}
+              fullWidth
+            />
+          </Stack>
+
+          {/* Complete Mailing Address */}
+          <Divider sx={{ margin: 3 }} />
+          <Typography variant="h6">Complete Mailing Address</Typography>
+
+          <Grid2 container spacing={2}>
+            <Grid2 size={{ xs: 12, md: 4 }}>
+              <TextField
+                {...register("completeMailingAddress.street")}
+                label="Street"
+                helperText={errors.completeMailingAddress?.street?.message}
+                error={Boolean(errors.completeMailingAddress?.street)}
+                fullWidth
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 4 }}>
+              <TextField
+                {...register("completeMailingAddress.barangay")}
+                label="Barangay"
+                helperText={errors.completeMailingAddress?.barangay?.message}
+                error={Boolean(errors.completeMailingAddress?.barangay)}
+                fullWidth
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 4 }}>
+              <TextField
+                {...register("completeMailingAddress.district")}
+                label="District"
+                helperText={errors.completeMailingAddress?.district?.message}
+                error={Boolean(errors.completeMailingAddress?.district)}
+                fullWidth
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 4 }}>
+              <TextField
+                {...register("completeMailingAddress.city")}
+                label="City/Municipality"
+                helperText={errors.completeMailingAddress?.city?.message}
+                error={Boolean(errors.completeMailingAddress?.city)}
+                fullWidth
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 4 }}>
+              <TextField
+                {...register("completeMailingAddress.province")}
+                label="Province"
+                helperText={errors.completeMailingAddress?.province?.message}
+                error={Boolean(errors.completeMailingAddress?.province)}
+                fullWidth
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 4 }}>
+              <TextField
+                {...register("completeMailingAddress.region")}
+                label="Region"
+                helperText={errors.completeMailingAddress?.region?.message}
+                error={Boolean(errors.completeMailingAddress?.region)}
+                fullWidth
+              />
+            </Grid2>
+          </Grid2>
+
+          {/* Contact Information */}
+          <Divider sx={{ margin: 3 }} />
+          <Typography variant="h6">Contact Information</Typography>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <TextField
+              {...register("contact.email")}
+              label="Email"
+              helperText={errors.contact?.email?.message}
+              error={Boolean(errors.contact?.email)}
+              fullWidth
+            />
+            <TextField
+              {...register("contact.mobileNumber")}
+              label="Mobile Number"
+              helperText={errors.contact?.mobileNumber?.message}
+              error={Boolean(errors.contact?.mobileNumber)}
+              fullWidth
+            />
+          </Stack>
+        </Paper>
       </Box>
-
-      {/* Name */}
-      <Paper
-        elevation={2}
-        sx={{
-          padding: 3,
-          margin: 2,
-          width: "100%",
-        }}
-      >
-        <Typography variant="h6">Name</Typography>
-        <Stack direction={"row"} spacing={2}>
-          <TextField
-            {...register("name.firstName")}
-            label="First Name"
-            helperText={errors.name?.firstName?.message}
-            error={Boolean(errors.name?.firstName)}
-            fullWidth
-          />
-
-          <TextField
-            {...register("name.middleName")}
-            label="Middle Name"
-            helperText={errors.name?.middleName?.message}
-            error={Boolean(errors.name?.middleName)}
-            fullWidth
-          />
-
-          <TextField
-            {...register("name.lastName")}
-            label="Last Name"
-            helperText={errors.name?.lastName?.message}
-            error={Boolean(errors.name?.lastName)}
-            fullWidth
-          />
-
-          <TextField
-            {...register("name.extension")}
-            label="Extension"
-            helperText={errors.name?.extension?.message}
-            error={Boolean(errors.name?.extension)}
-            fullWidth
-          />
-        </Stack>
-      </Paper>
-
-      {/* Complete Mailing Address */}
-      <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
-        <Typography variant="h6">Complete Mailing Address</Typography>
-
-        <Grid2 container spacing={2}>
-          <Grid2 size={{ xs: 6, md: 4 }}>
-            <TextField
-              {...register("completeMailingAddress.street")}
-              label="Street"
-              helperText={errors.completeMailingAddress?.street?.message}
-              error={Boolean(errors.completeMailingAddress?.street)}
-              fullWidth
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 6, md: 4 }}>
-            <TextField
-              {...register("completeMailingAddress.barangay")}
-              label="Barangay"
-              helperText={errors.completeMailingAddress?.barangay?.message}
-              error={Boolean(errors.completeMailingAddress?.barangay)}
-              fullWidth
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 6, md: 4 }}>
-            <TextField
-              {...register("completeMailingAddress.district")}
-              label="District"
-              helperText={errors.completeMailingAddress?.district?.message}
-              error={Boolean(errors.completeMailingAddress?.district)}
-              fullWidth
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 6, md: 4 }}>
-            <TextField
-              {...register("completeMailingAddress.city")}
-              label="City/Municipality"
-              helperText={errors.completeMailingAddress?.city?.message}
-              error={Boolean(errors.completeMailingAddress?.city)}
-              fullWidth
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 6, md: 4 }}>
-            <TextField
-              {...register("completeMailingAddress.province")}
-              label="Province"
-              helperText={errors.completeMailingAddress?.province?.message}
-              error={Boolean(errors.completeMailingAddress?.province)}
-              fullWidth
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 6, md: 4 }}>
-            <TextField
-              {...register("completeMailingAddress.region")}
-              label="Region"
-              helperText={errors.completeMailingAddress?.region?.message}
-              error={Boolean(errors.completeMailingAddress?.region)}
-              fullWidth
-            />
-          </Grid2>
-        </Grid2>
-      </Paper>
-
-      {/* Contact Information */}
-      <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
-        <Typography variant="h6">Contact Information</Typography>
-        <Stack direction={"row"} spacing={2}>
-          <TextField
-            {...register("contact.email")}
-            label="Email"
-            helperText={errors.contact?.email?.message}
-            error={Boolean(errors.contact?.email)}
-            fullWidth
-          />
-          <TextField
-            {...register("contact.mobileNumber")}
-            label="Mobile Number"
-            helperText={errors.contact?.mobileNumber?.message}
-            error={Boolean(errors.contact?.mobileNumber)}
-            fullWidth
-          />
-        </Stack>
-      </Paper>
 
       {/* Personal Information */}
       <Box
@@ -347,392 +352,403 @@ function RegistrationForm() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          bgcolor: "#f5f5f5",
+          borderRadius: 2,
+          pt: 2,
         }}
         bgcolor={"#f5f5f5"}
       >
-        <Typography variant="h6">Personal Information</Typography>
-      </Box>
-
-      {/* Personal Information 2 */}
-      <Paper
-        elevation={3}
-        sx={{
-          padding: 3,
-          margin: 2,
-          width: "100%",
-          display: "flex",
-        }}
-      >
-        {/* Sex */}
-        <FormControl
-          sx={{ flexGrow: 1, marginRight: 1 }}
-          error={Boolean(errors.personalInformation?.sex)}
-        >
-          <FormLabel>Sex</FormLabel>
-          <Controller
-            control={control}
-            name="personalInformation.sex"
-            render={({ field }) => (
-              <RadioGroup {...field} row>
-                <FormControlLabel
-                  value="Male"
-                  control={<Radio />}
-                  label="Male"
-                />
-                <FormControlLabel
-                  value="Female"
-                  control={<Radio />}
-                  label="Female"
-                />
-                <FormControlLabel
-                  value="Others"
-                  control={<Radio />}
-                  label="Others"
-                />
-              </RadioGroup>
-            )}
-          />
-          {errors.personalInformation?.sex && (
-            <FormHelperText error>
-              {errors.personalInformation.sex.message}
-            </FormHelperText>
-          )}
-        </FormControl>
-        {/* Civil Status */}
-        <FormControl
-          sx={{ flexGrow: 1, marginRight: 1 }}
-          error={Boolean(errors.personalInformation?.civilStatus)}
-        >
-          <InputLabel id="civil-status-label">Civil Status</InputLabel>
-          <Controller
-            control={control}
-            name="personalInformation.civilStatus"
-            render={({ field }) => (
-              <Select
-                {...field}
-                labelId="civil-status-label"
-                id="civil-status-select"
-                label="Civil Status"
-              >
-                {civilStatues.map((status, index) => (
-                  <MenuItem key={index} value={status}>
-                    {status}
-                  </MenuItem>
-                ))}
-              </Select>
-            )}
-          />
-          {errors.personalInformation?.civilStatus && (
-            <FormHelperText>
-              {errors.personalInformation.civilStatus.message}
-            </FormHelperText>
-          )}
-        </FormControl>
-        {/* Nationality */}
-        <TextField
-          sx={{ flexGrow: 1, marginRight: 1 }}
-          {...register("personalInformation.nationality")}
-          label="Nationality"
-          helperText={errors.personalInformation?.nationality?.message}
-          error={Boolean(errors.personalInformation?.nationality)}
-        />
-      </Paper>
-
-      {/* Employment Information */}
-      <Paper
-        elevation={3}
-        sx={{
-          padding: 3,
-          margin: 2,
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <Typography variant="h6">
-          Employment Information (Before Training)
+        <Typography variant="h6" sx={{ fontWeight: "bold", marginBottom: 1 }}>
+          Personal Information
         </Typography>
-        <FormControl
-          sx={{ flexGrow: 1 }}
-          error={Boolean(errors.employmentStatus)}
-        >
-          <FormLabel>Employment Status</FormLabel>
-          <Controller
-            name="employmentStatus"
-            control={control}
-            defaultValue=""
-            rules={{ required: "Employment Status is required client" }}
-            render={({ field }) => (
-              <RadioGroup {...field} row>
-                {employmentStatuses.map((status) => (
-                  <FormControlLabel
-                    key={status}
-                    value={status}
-                    control={<Radio />}
-                    label={status}
-                  />
-                ))}
-              </RadioGroup>
-            )}
-          />
-          {errors.employmentStatus && (
-            <FormHelperText error>
-              {errors.employmentStatus?.message}
-            </FormHelperText>
-          )}
-        </FormControl>
 
-        {showEmploymentType && (
-          <FormControl
-            sx={{ flexGrow: 1 }}
-            error={Boolean(errors.employmentType)}
+        {/* Personal Information 2 */}
+        <Paper
+          elevation={3}
+          sx={{
+            padding: 3,
+            margin: 2,
+            width: "100%",
+          }}
+        >
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={2}
+            sx={{ width: "100%" }}
           >
-            <InputLabel id="employment-type-label">Employment Type</InputLabel>
+            {/* Sex */}
+            <FormControl
+              sx={{ flexGrow: 1, marginRight: 1, width: "100%" }}
+              error={Boolean(errors.personalInformation?.sex)}
+              fullWidth
+            >
+              <FormLabel>Sex</FormLabel>
+              <Controller
+                control={control}
+                name="personalInformation.sex"
+                render={({ field }) => (
+                  <RadioGroup {...field} row>
+                    <FormControlLabel
+                      value="Male"
+                      control={<Radio />}
+                      label="Male"
+                    />
+                    <FormControlLabel
+                      value="Female"
+                      control={<Radio />}
+                      label="Female"
+                    />
+                    <FormControlLabel
+                      value="Others"
+                      control={<Radio />}
+                      label="Others"
+                    />
+                  </RadioGroup>
+                )}
+              />
+              {errors.personalInformation?.sex && (
+                <FormHelperText error>
+                  {errors.personalInformation.sex.message}
+                </FormHelperText>
+              )}
+            </FormControl>
+            {/* Civil Status */}
+            <FormControl
+              sx={{ flexGrow: 1, marginRight: 1 }}
+              error={Boolean(errors.personalInformation?.civilStatus)}
+              fullWidth
+            >
+              <InputLabel id="civil-status-label">Civil Status</InputLabel>
+              <Controller
+                control={control}
+                name="personalInformation.civilStatus"
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    labelId="civil-status-label"
+                    id="civil-status-select"
+                    label="Civil Status"
+                  >
+                    {civilStatues.map((status, index) => (
+                      <MenuItem key={index} value={status}>
+                        {status}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                )}
+              />
+              {errors.personalInformation?.civilStatus && (
+                <FormHelperText>
+                  {errors.personalInformation.civilStatus.message}
+                </FormHelperText>
+              )}
+            </FormControl>
+            {/* Nationality */}
+            <TextField
+              sx={{ flexGrow: 1, marginRight: 1 }}
+              {...register("personalInformation.nationality")}
+              label="Nationality"
+              helperText={errors.personalInformation?.nationality?.message}
+              error={Boolean(errors.personalInformation?.nationality)}
+            />
+          </Stack>
+
+          <Divider sx={{ margin: 3 }} />
+          {/* Employment Information */}
+
+          <Typography variant="h6">
+            Employment Information (Before Training)
+          </Typography>
+          <Stack direction={{ xs: "column", md: "column" }} spacing={2}>
+            <FormControl
+              sx={{ flexGrow: 1 }}
+              error={Boolean(errors.employmentStatus)}
+            >
+              <FormLabel>Employment Status</FormLabel>
+              <Controller
+                name="employmentStatus"
+                control={control}
+                defaultValue=""
+                rules={{ required: "Employment Status is required client" }}
+                render={({ field }) => (
+                  <RadioGroup {...field} row>
+                    {employmentStatuses.map((status) => (
+                      <FormControlLabel
+                        key={status}
+                        value={status}
+                        control={<Radio />}
+                        label={status}
+                      />
+                    ))}
+                  </RadioGroup>
+                )}
+              />
+              {errors.employmentStatus && (
+                <FormHelperText error>
+                  {errors.employmentStatus?.message}
+                </FormHelperText>
+              )}
+            </FormControl>
+
+            {showEmploymentType && (
+              <FormControl
+                sx={{ flexGrow: 1 }}
+                error={Boolean(errors.employmentType)}
+              >
+                <InputLabel id="employment-type-label">
+                  Employment Type
+                </InputLabel>
+                <Controller
+                  name="employmentType"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      labelId="employment-type-label"
+                      id="employment-type-select"
+                      label="Employment Type"
+                    >
+                      {employmentTypes.map((type, index) => (
+                        <MenuItem key={index} value={type}>
+                          {type}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  )}
+                />
+                {errors.employmentType && (
+                  <FormHelperText>
+                    {errors.employmentType?.message}
+                  </FormHelperText>
+                )}
+              </FormControl>
+            )}
+          </Stack>
+
+          <Divider sx={{ margin: 3 }} />
+          {/* Birthdate */}
+
+          <Typography variant="h6">Birthdate</Typography>
+          <Stack
+            direction={"row"}
+            spacing={2}
+            sx={{ justifyContent: "space-evenly" }}
+          >
             <Controller
-              name="employmentType"
+              name="personalInformation.birthdate"
               control={control}
-              // defaultValue=""
-              // rules={{
-              //   validate: (value) =>
-              //     showEmploymentType && !value
-              //       ? "Employment Type is required when Employment Status is Wage-Employed or Underemployed"
-              //       : true,
-              // }}
+              render={({ field }) => (
+                <DatePicker
+                  sx={{ flexGrow: 1 }}
+                  {...field}
+                  label="Birthdate"
+                  value={field.value ? dayjs(field.value) : null} // Make sure the value is either a Date object or null
+                  onChange={(date) => {
+                    // Convert the date to a valid Date object or null
+                    field.onChange(date ? dayjs(date).toDate() : null);
+                  }}
+                  slotProps={{
+                    textField: {
+                      helperText:
+                        errors.personalInformation?.birthdate?.message,
+                      error: Boolean(errors.personalInformation?.birthdate),
+                    },
+                  }}
+                />
+              )}
+            />
+            {/* Age */}
+            <TextField
+              {...register("personalInformation.age", {
+                valueAsNumber: true,
+                min: { value: 0, message: "Age must be a positive number" },
+              })}
+              label="Age"
+              type="number"
+              variant="outlined"
+              helperText={errors.personalInformation?.age?.message}
+              error={Boolean(errors.personalInformation?.age)}
+            />
+          </Stack>
+
+          <Divider sx={{ margin: 3 }} />
+          {/* Birthplace */}
+
+          <Typography variant="h6">Birthplace</Typography>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <TextField
+              {...register("personalInformation.birthplace.city")}
+              label="Birthplace City"
+              helperText={errors.personalInformation?.birthplace?.city?.message}
+              error={Boolean(errors.personalInformation?.birthplace?.city)}
+              fullWidth
+            />
+
+            <TextField
+              {...register("personalInformation.birthplace.province")}
+              label="Birthplace Province"
+              helperText={
+                errors.personalInformation?.birthplace?.province?.message
+              }
+              error={Boolean(errors.personalInformation?.birthplace?.province)}
+              fullWidth
+            />
+
+            <TextField
+              {...register("personalInformation.birthplace.region")}
+              label="Birthplace Region"
+              helperText={
+                errors.personalInformation?.birthplace?.region?.message
+              }
+              error={Boolean(errors.personalInformation?.birthplace?.region)}
+              fullWidth
+            />
+          </Stack>
+
+          <Divider sx={{ margin: 3 }} />
+          {/* Education Attainment Before the Training (Trainee) */}
+
+          <Typography variant="h6">
+            Education Attainment Before the Training (Trainee)
+          </Typography>
+          <FormControl
+            sx={{ flexGrow: 1, marginRight: 1 }}
+            error={Boolean(errors.education)}
+            fullWidth
+          >
+            <InputLabel id="education-label">Civil Status</InputLabel>
+            <Controller
+              control={control}
+              name="education"
               render={({ field }) => (
                 <Select
                   {...field}
-                  labelId="employment-type-label"
-                  id="employment-type-select"
-                  label="Employment Type"
+                  labelId="education-label"
+                  id="education-select"
+                  label="Educational Attainment"
                 >
-                  {employmentTypes.map((type, index) => (
-                    <MenuItem key={index} value={type}>
-                      {type}
+                  {educationalAttainments.map((status, index) => (
+                    <MenuItem key={index} value={status}>
+                      {status}
                     </MenuItem>
                   ))}
                 </Select>
               )}
             />
-            {errors.employmentType && (
-              <FormHelperText>{errors.employmentType?.message}</FormHelperText>
+            {errors.education && (
+              <FormHelperText>{errors.education?.message}</FormHelperText>
             )}
           </FormControl>
-        )}
-      </Paper>
 
-      {/* Birthdate */}
-      <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
-        <Typography variant="h6">Birthdate</Typography>
-        <Stack
-          direction={"row"}
-          spacing={2}
-          sx={{ justifyContent: "space-evenly" }}
-        >
-          <Controller
-            name="personalInformation.birthdate"
-            control={control}
-            render={({ field }) => (
-              <DatePicker
-                sx={{ flexGrow: 1 }}
-                {...field}
-                label="Birthdate"
-                value={field.value ? dayjs(field.value) : null} // Make sure the value is either a Date object or null
-                onChange={(date) => {
-                  // Convert the date to a valid Date object or null
-                  field.onChange(date ? dayjs(date).toDate() : null);
-                }}
-                slotProps={{
-                  textField: {
-                    helperText: errors.personalInformation?.birthdate?.message,
-                    error: Boolean(errors.personalInformation?.birthdate),
-                  },
-                }}
-              />
-            )}
-          />
-          {/* Age */}
-          <TextField
-            {...register("personalInformation.age", {
-              valueAsNumber: true,
-              min: { value: 0, message: "Age must be a positive number" },
-            })}
-            label="Age"
-            type="number"
-            variant="outlined"
-            helperText={errors.personalInformation?.age?.message}
-            error={Boolean(errors.personalInformation?.age)}
-          />
-        </Stack>
-      </Paper>
+          <Divider sx={{ margin: 3 }} />
+          {/* Parent/Guardian Information */}
 
-      {/* Birthplace */}
-      <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
-        <Typography variant="h6">Birthplace</Typography>
-        <Stack direction={"row"} spacing={2}>
-          <TextField
-            {...register("personalInformation.birthplace.city")}
-            label="Birthplace City"
-            helperText={errors.personalInformation?.birthplace?.city?.message}
-            error={Boolean(errors.personalInformation?.birthplace?.city)}
-            fullWidth
-          />
+          <Typography variant="h6">Parent/Guardian Information</Typography>
+          <Typography sx={{ margin: 2 }}>Name</Typography>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <TextField
+              {...register("parent.name.firstName")}
+              label="First Name"
+              helperText={errors.parent?.name?.firstName?.message}
+              error={Boolean(errors.parent?.name?.firstName)}
+              fullWidth
+            />
 
-          <TextField
-            {...register("personalInformation.birthplace.province")}
-            label="Birthplace Province"
-            helperText={
-              errors.personalInformation?.birthplace?.province?.message
-            }
-            error={Boolean(errors.personalInformation?.birthplace?.province)}
-            fullWidth
-          />
+            <TextField
+              {...register("parent.name.middleName")}
+              label="Middle Name"
+              helperText={errors.parent?.name?.middleName?.message}
+              error={Boolean(errors.parent?.name?.middleName)}
+              fullWidth
+            />
 
-          <TextField
-            {...register("personalInformation.birthplace.region")}
-            label="Birthplace Region"
-            helperText={errors.personalInformation?.birthplace?.region?.message}
-            error={Boolean(errors.personalInformation?.birthplace?.region)}
-            fullWidth
-          />
-        </Stack>
-      </Paper>
-
-      {/* Education Attainment Before the Training (Trainee) */}
-      <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
-        <Typography variant="h6">
-          Education Attainment Before the Training (Trainee)
-        </Typography>
-        <FormControl
-          sx={{ flexGrow: 1, marginRight: 1 }}
-          error={Boolean(errors.education)}
-          fullWidth
-        >
-          <InputLabel id="education-label">Civil Status</InputLabel>
-          <Controller
-            control={control}
-            name="education"
-            render={({ field }) => (
-              <Select
-                {...field}
-                labelId="education-label"
-                id="education-select"
-                label="Educational Attainment"
-              >
-                {educationalAttainments.map((status, index) => (
-                  <MenuItem key={index} value={status}>
-                    {status}
-                  </MenuItem>
-                ))}
-              </Select>
-            )}
-          />
-          {errors.education && (
-            <FormHelperText>{errors.education?.message}</FormHelperText>
-          )}
-        </FormControl>
-      </Paper>
-
-      {/* Parent/Guardian Information */}
-      <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
-        <Typography variant="h6">Parent/Guardian Information</Typography>
-        <Typography sx={{ margin: 2 }}>Name</Typography>
-        <Stack direction={"row"} spacing={2}>
-          <TextField
-            {...register("parent.name.firstName")}
-            label="First Name"
-            helperText={errors.parent?.name?.firstName?.message}
-            error={Boolean(errors.parent?.name?.firstName)}
-            fullWidth
-          />
-
-          <TextField
-            {...register("parent.name.middleName")}
-            label="Middle Name"
-            helperText={errors.parent?.name?.middleName?.message}
-            error={Boolean(errors.parent?.name?.middleName)}
-            fullWidth
-          />
-
-          <TextField
-            {...register("parent.name.lastName")}
-            label="Last Name"
-            helperText={errors.parent?.name?.lastName?.message}
-            error={Boolean(errors.parent?.name?.lastName)}
-            fullWidth
-          />
-        </Stack>
-        <Typography sx={{ margin: 2 }}>Complete Mailing Address</Typography>
-        <Stack direction={"row"} spacing={2}>
-          <Grid2 container spacing={2}>
-            <Grid2 size={{ xs: 6, md: 4 }}>
-              <TextField
-                {...register("parent.completeMailingAddress.street")}
-                label="Street"
-                helperText={
-                  errors.parent?.completeMailingAddress?.street?.message
-                }
-                error={Boolean(errors.parent?.completeMailingAddress?.street)}
-                fullWidth
-              />
+            <TextField
+              {...register("parent.name.lastName")}
+              label="Last Name"
+              helperText={errors.parent?.name?.lastName?.message}
+              error={Boolean(errors.parent?.name?.lastName)}
+              fullWidth
+            />
+          </Stack>
+          <Typography sx={{ margin: 2 }}>Complete Mailing Address</Typography>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <Grid2 container spacing={2}>
+              <Grid2 size={{ xs: 12, md: 4 }}>
+                <TextField
+                  {...register("parent.completeMailingAddress.street")}
+                  label="Street"
+                  helperText={
+                    errors.parent?.completeMailingAddress?.street?.message
+                  }
+                  error={Boolean(errors.parent?.completeMailingAddress?.street)}
+                  fullWidth
+                />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 4 }}>
+                <TextField
+                  {...register("parent.completeMailingAddress.barangay")}
+                  label="Barangay"
+                  helperText={
+                    errors.parent?.completeMailingAddress?.barangay?.message
+                  }
+                  error={Boolean(
+                    errors.parent?.completeMailingAddress?.barangay
+                  )}
+                  fullWidth
+                />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 4 }}>
+                <TextField
+                  {...register("parent.completeMailingAddress.district")}
+                  label="District"
+                  helperText={
+                    errors.parent?.completeMailingAddress?.district?.message
+                  }
+                  error={Boolean(
+                    errors.parent?.completeMailingAddress?.district
+                  )}
+                  fullWidth
+                />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 4 }}>
+                <TextField
+                  {...register("parent.completeMailingAddress.city")}
+                  label="City/Municipality"
+                  helperText={
+                    errors.parent?.completeMailingAddress?.city?.message
+                  }
+                  error={Boolean(errors.parent?.completeMailingAddress?.city)}
+                  fullWidth
+                />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 4 }}>
+                <TextField
+                  {...register("parent.completeMailingAddress.province")}
+                  label="Province"
+                  helperText={
+                    errors.parent?.completeMailingAddress?.province?.message
+                  }
+                  error={Boolean(
+                    errors.parent?.completeMailingAddress?.province
+                  )}
+                  fullWidth
+                />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 4 }}>
+                <TextField
+                  {...register("parent.completeMailingAddress.region")}
+                  label="Region"
+                  helperText={
+                    errors.parent?.completeMailingAddress?.region?.message
+                  }
+                  error={Boolean(errors.parent?.completeMailingAddress?.region)}
+                  fullWidth
+                />
+              </Grid2>
             </Grid2>
-            <Grid2 size={{ xs: 6, md: 4 }}>
-              <TextField
-                {...register("parent.completeMailingAddress.barangay")}
-                label="Barangay"
-                helperText={
-                  errors.parent?.completeMailingAddress?.barangay?.message
-                }
-                error={Boolean(errors.parent?.completeMailingAddress?.barangay)}
-                fullWidth
-              />
-            </Grid2>
-            <Grid2 size={{ xs: 6, md: 4 }}>
-              <TextField
-                {...register("parent.completeMailingAddress.district")}
-                label="District"
-                helperText={
-                  errors.parent?.completeMailingAddress?.district?.message
-                }
-                error={Boolean(errors.parent?.completeMailingAddress?.district)}
-                fullWidth
-              />
-            </Grid2>
-            <Grid2 size={{ xs: 6, md: 4 }}>
-              <TextField
-                {...register("parent.completeMailingAddress.city")}
-                label="City/Municipality"
-                helperText={
-                  errors.parent?.completeMailingAddress?.city?.message
-                }
-                error={Boolean(errors.parent?.completeMailingAddress?.city)}
-                fullWidth
-              />
-            </Grid2>
-            <Grid2 size={{ xs: 6, md: 4 }}>
-              <TextField
-                {...register("parent.completeMailingAddress.province")}
-                label="Province"
-                helperText={
-                  errors.parent?.completeMailingAddress?.province?.message
-                }
-                error={Boolean(errors.parent?.completeMailingAddress?.province)}
-                fullWidth
-              />
-            </Grid2>
-            <Grid2 size={{ xs: 6, md: 4 }}>
-              <TextField
-                {...register("parent.completeMailingAddress.region")}
-                label="Region"
-                helperText={
-                  errors.parent?.completeMailingAddress?.region?.message
-                }
-                error={Boolean(errors.parent?.completeMailingAddress?.region)}
-                fullWidth
-              />
-            </Grid2>
-          </Grid2>
-        </Stack>
-      </Paper>
+          </Stack>
+        </Paper>
+      </Box>
 
       {/* Learner/Trainee/Student (Clients) Classification */}
       <Box
@@ -742,48 +758,51 @@ function RegistrationForm() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          bgcolor: "#f5f5f5",
+          borderRadius: 2,
+          pt: 2,
         }}
-        bgcolor={"#f5f5f5"}
       >
-        <Typography variant="h6">
+        <Typography variant="h6" sx={{ fontWeight: "bold", marginBottom: 1 }}>
           Learner/Trainee/Student (Clients) Classification
         </Typography>
-      </Box>
-      <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
-        <Typography variant="h6">Classification:</Typography>
-        <FormControl
-          sx={{ flexGrow: 1, marginRight: 1 }}
-          error={Boolean(errors.clientClassification)}
-          fullWidth
-        >
-          <InputLabel id="client-classification-label">
-            Client Classification
-          </InputLabel>
-          <Controller
-            control={control}
-            name="clientClassification"
-            render={({ field }) => (
-              <Select
-                {...field}
-                labelId="client-classification-label"
-                id="client-classification-select"
-                label="Client Classification"
-              >
-                {clientClassifications.map((status, index) => (
-                  <MenuItem key={index} value={status}>
-                    {status}
-                  </MenuItem>
-                ))}
-              </Select>
+
+        <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
+          <Typography variant="h6">Classification:</Typography>
+          <FormControl
+            sx={{ flexGrow: 1, marginRight: 1 }}
+            error={Boolean(errors.clientClassification)}
+            fullWidth
+          >
+            <InputLabel id="client-classification-label">
+              Client Classification
+            </InputLabel>
+            <Controller
+              control={control}
+              name="clientClassification"
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  labelId="client-classification-label"
+                  id="client-classification-select"
+                  label="Client Classification"
+                >
+                  {clientClassifications.map((status, index) => (
+                    <MenuItem key={index} value={status}>
+                      {status}
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
+            />
+            {errors.clientClassification && (
+              <FormHelperText>
+                {errors.clientClassification?.message}
+              </FormHelperText>
             )}
-          />
-          {errors.clientClassification && (
-            <FormHelperText>
-              {errors.clientClassification?.message}
-            </FormHelperText>
-          )}
-        </FormControl>
-      </Paper>
+          </FormControl>
+        </Paper>
+      </Box>
 
       {/* Course/Qualification */}
       <Box
@@ -793,21 +812,26 @@ function RegistrationForm() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          bgcolor: "#f5f5f5",
+          borderRadius: 2,
+          pt: 2,
         }}
-        bgcolor={"#f5f5f5"}
       >
-        <Typography variant="h6">Name of Course/Qualification</Typography>
+        <Typography variant="h6" sx={{ fontWeight: "bold", marginBottom: 1 }}>
+          Name of Course/Qualification
+        </Typography>
+
+        <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
+          <Typography variant="h6">Course:</Typography>
+          <TextField
+            {...register("course")}
+            label="Course"
+            helperText={errors.course?.message}
+            error={Boolean(errors.course)}
+            fullWidth
+          />
+        </Paper>
       </Box>
-      <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
-        <Typography variant="h6">Course:</Typography>
-        <TextField
-          {...register("course")}
-          label="Course"
-          helperText={errors.course?.message}
-          error={Boolean(errors.course)}
-          fullWidth
-        />
-      </Paper>
 
       {/* Scholar */}
       <Box
@@ -817,47 +841,54 @@ function RegistrationForm() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          bgcolor: "#f5f5f5",
+          borderRadius: 2,
+          padding: 1,
         }}
-        bgcolor={"#f5f5f5"}
       >
         <FormControlLabel
           {...register("hasScholarType")}
-          label="Are you a scholar?"
+          label={
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              Are you a scholar?
+            </Typography>
+          }
           control={<Checkbox />}
         />
-      </Box>
-      {hasScholarType && (
-        <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
-          <FormControl
-            sx={{ flexGrow: 1, marginRight: 1 }}
-            error={Boolean(errors.scholarType)} // TODO: fix error message
-            fullWidth
-          >
-            <InputLabel id="scholar-type-label">Scholar Type</InputLabel>
-            <Controller
-              control={control}
-              name="scholarType"
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  labelId="scholar-type-label"
-                  id="scholar-type-select"
-                  label="Scholar Type"
-                >
-                  {scholarTypes.map((status, index) => (
-                    <MenuItem key={index} value={status}>
-                      {status}
-                    </MenuItem>
-                  ))}
-                </Select>
+
+        {hasScholarType && (
+          <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
+            <FormControl
+              sx={{ flexGrow: 1, marginRight: 1 }}
+              error={Boolean(errors.scholarType)} // TODO: fix error message
+              fullWidth
+            >
+              <InputLabel id="scholar-type-label">Scholar Type</InputLabel>
+              <Controller
+                control={control}
+                name="scholarType"
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    labelId="scholar-type-label"
+                    id="scholar-type-select"
+                    label="Scholar Type"
+                  >
+                    {scholarTypes.map((status, index) => (
+                      <MenuItem key={index} value={status}>
+                        {status}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                )}
+              />
+              {errors.scholarType && (
+                <FormHelperText>{errors.scholarType?.message}</FormHelperText> // TODO:fix error message
               )}
-            />
-            {errors.scholarType && (
-              <FormHelperText>{errors.scholarType?.message}</FormHelperText> // TODO:fix error message
-            )}
-          </FormControl>
-        </Paper>
-      )}
+            </FormControl>
+          </Paper>
+        )}
+      </Box>
 
       {/* Privacy Consent and Disclaimer */}
       <Box
@@ -900,9 +931,6 @@ function RegistrationForm() {
               alignItems: "center",
             }}
           >
-            <Typography variant="subtitle1" sx={{ marginTop: 2 }}>
-              Please select your choice:
-            </Typography>
             <RadioGroup
               row
               onChange={handleAgreementChange}
