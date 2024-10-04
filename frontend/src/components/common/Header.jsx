@@ -88,7 +88,7 @@ const Header = () => {
         <Toolbar disableGutters>
           <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
             <img
-              src="../tesda_icon.svg"
+              src={tesdaIcon}
               alt="Tesda Logo"
               style={{ width: 40, marginRight: theme.spacing(2) }}
             />
