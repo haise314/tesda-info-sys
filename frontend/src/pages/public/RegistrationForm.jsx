@@ -40,7 +40,6 @@ import {
 } from "../../components/utils/registrant.enums";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 
 const SubmitButton = ({ isSubmitting, onSubmit, isAgreed }) => {
@@ -163,14 +162,14 @@ function RegistrationForm() {
       });
       // reset the form
       reset(registrantDefaultValues);
-      alert(JSON.stringify(data, null, 2));
+      // alert(JSON.stringify(data, null, 2));
     } catch (error) {
       // Handle registration error (e.g., show error message)
       console.error(
         "Registration failed:",
         error.response ? error.response.data : error.message
       );
-      alert(JSON.stringify(data, null, 2));
+      // alert(JSON.stringify(data, null, 2));
       // Alert for failed registration
       setSnackbar({
         open: true,
@@ -190,12 +189,27 @@ function RegistrationForm() {
         flexDirection: "column",
         alignItems: "center",
         marginBottom: 4,
+        marginTop: 4,
       }}
     >
       {/* Title */}
-      <Paper elevation={1} sx={{ padding: 3, margin: 2 }}>
-        <Typography variant="h4">Registration Form</Typography>
-      </Paper>
+      <Box
+        sx={{
+          marginBottom: 3, // Adds spacing after the title
+          textAlign: "center", // Center-aligns the title for symmetry
+        }}
+      >
+        <Typography
+          variant="h3" // Larger but not overwhelming, ideal for a main page title
+          component="h1" // Sets the semantic structure as the primary heading
+          sx={{
+            fontWeight: 600, // Semi-bold for attention
+            color: "primary.main", // Use the primary theme color for brand consistency
+          }}
+        >
+          Registration Form
+        </Typography>
+      </Box>
 
       {/* Learner/Manpower Profile */}
       <Box
