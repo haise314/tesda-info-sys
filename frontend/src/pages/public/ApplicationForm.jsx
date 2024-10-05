@@ -913,7 +913,7 @@ const ApplicationForm = () => {
                 error={Boolean(errors.clientType)}
                 sx={{ width: "100%" }}
               >
-                <InputLabel id="client-type-label">Civil Status</InputLabel>
+                <InputLabel id="client-type-label">Client Type</InputLabel>
                 <Controller
                   control={control}
                   name="clientType"
