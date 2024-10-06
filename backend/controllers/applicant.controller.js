@@ -1,5 +1,9 @@
 import Applicant from "../models/applicant.model.js";
 import DeletedApplicant from "../models/Deleted/deletedApplicant.model.js";
+import bcrypt from "bcryptjs";
+import { generateToken } from "./user.controller.js";
+import { generatePlaceholderPassword } from "./registrant.controller.js";
+import User from "../models/user.model.js";
 
 // Function to generate ULI
 const generateULI = (firstName, lastName, middleName, birthYear) => {
@@ -37,11 +41,12 @@ export const createApplicant = async (req, res) => {
     }
 
     // Generate ULI
+    const birthYear = new Date(applicantData.birthdate).getFullYear();
     const uli = generateULI(
       applicantData.name?.firstName,
       applicantData.name?.lastName,
       applicantData.name?.middleName,
-      new Date(applicantData.birthdate).getFullYear() // Ensure birthdate is properly formatted
+      birthYear
     );
 
     // Add ULI to applicant data
@@ -51,15 +56,51 @@ export const createApplicant = async (req, res) => {
     const applicant = new Applicant(applicantData);
     const savedApplicant = await applicant.save();
 
+    // Generate a random placeholder password
+    const placeholderPassword = generatePlaceholderPassword();
+
+    // Create the user with the unhashed password
+    const user = new User({
+      uli,
+      password: placeholderPassword,
+    });
+
+    await user.save(); // The pre-save middleware will hash the password
+    console.log("New user created:", user);
+
+    // Generate a token to immediately log in the user
+    const token = generateToken(user._id);
+    console.log("Generated token:", token);
+
     res.status(201).json({
       success: true,
       message: "Applicant created successfully",
-      data: savedApplicant,
+      data: {
+        applicant: savedApplicant,
+        user: {
+          id: user._id,
+          uli: user.uli,
+          role: user.role,
+          token,
+          placeholderPassword,
+        },
+      },
     });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    console.error("Error in createApplicant:", error);
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
+
 // Get all applicants
 export const getApplicants = async (req, res) => {
   try {

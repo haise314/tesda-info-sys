@@ -1,6 +1,21 @@
 import Registrant from "../models/registrant.model.js";
 import mongoose from "mongoose";
 import DeletedRegistrant from "../models/Deleted/deletedRegistrant.model.js";
+import User from "../models/user.model.js";
+import { generateToken } from "./user.controller.js";
+import bcrypt from "bcryptjs";
+
+// Function to generate a placeholder password
+export const generatePlaceholderPassword = (length = 12) => {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let password = "";
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * chars.length);
+    password += chars[randomIndex];
+  }
+  return password;
+};
 
 // Function to generate ULI
 const generateULI = (firstName, lastName, middleName, birthYear) => {
@@ -59,7 +74,7 @@ export const getSingleRegistrant = async (req, res) => {
 
 // @desc    Create a new registrant
 export const createRegistrant = async (req, res) => {
-  console.log("Request Body:", req.body);
+  console.log("Creating new registrant:", req.body);
   try {
     const {
       name,
@@ -122,22 +137,48 @@ export const createRegistrant = async (req, res) => {
     // Save to database
     await newRegistrant.save();
 
+    // Generate a random placeholder password
+    const placeholderPassword = generatePlaceholderPassword();
+
+    // Create the user with the unhashed password
+    const user = new User({
+      uli,
+      password: placeholderPassword, // Store unhashed password
+    });
+
+    await user.save(); // The pre-save middleware will hash the password
+    console.log("New user created:", user);
+
+    // Generate a token to immediately log in the user
+    const token = generateToken(user._id);
+    console.log("Generated token:", token);
+
     // Send response
     res.status(201).json({
       success: true,
       message: "Registrant created successfully",
-      data: newRegistrant,
+      data: {
+        id: user._id,
+        uli: user.uli,
+        role: user.role,
+        token, // JWT token for immediate login
+        placeholderPassword, // Optional: you can display this to the user
+      },
+    });
+
+    console.log("Registration response sent:", {
+      uli: user.uli,
+      role: user.role,
+      token: token.substring(0, 10) + "...",
     });
   } catch (error) {
-    console.error(error);
-
+    console.error("Error in createRegistrant:", error);
     if (error instanceof mongoose.Error.ValidationError) {
       return res.status(400).json({
         success: false,
         message: error.message,
       });
     }
-
     res.status(500).json({
       success: false,
       message: "Server error",

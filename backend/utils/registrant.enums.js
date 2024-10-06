@@ -88,3 +88,10 @@ export const civilStatues = [
 ];
 
 export const scholarTypes = ["TWSP", "PESFA", "STEP", "Others", "None"];
+
+export const registrationStatuses = [
+  "Pending",
+  "For Screening",
+  "For Exam",
+  "Enrolled",
+];

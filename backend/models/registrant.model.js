@@ -9,6 +9,7 @@ import {
   disabilityCauses,
   scholarTypes,
   civilStatues,
+  registrationStatuses,
 } from "../utils/registrant.enums.js";
 
 const registrantSchema = new mongoose.Schema(
@@ -209,6 +210,12 @@ const registrantSchema = new mongoose.Schema(
       type: String,
       required: true,
       default: "client",
+    },
+    registrationStatus: {
+      type: String,
+      required: registrationStatuses,
+      default: "Pending",
+      required: false,
     },
   },
   {

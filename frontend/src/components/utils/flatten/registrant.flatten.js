@@ -55,6 +55,7 @@ const flattenRegistrantData = (registrant) => {
     course: registrant.course,
     hasScholarType: registrant.hasScholarType,
     scholarType: registrant.scholarType,
+    registrationStatus: registrant.registrationStatus,
 
     // You might also want to include these
     createdAt: registrant.createdAt.$date || registrant.createdAt,

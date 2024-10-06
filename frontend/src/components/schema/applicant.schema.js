@@ -5,7 +5,7 @@ import {
   highestEducationalAttainments,
   employmentStatuses,
   civilStatues,
-} from "../utils/applicant.enums.js";
+} from "../utils/enums/applicant.enums.js";
 
 const nameSchema = z.object({
   firstName: z.string().min(1, "First name is required"),

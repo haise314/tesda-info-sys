@@ -14,7 +14,7 @@ import {
   highestEducationalAttainments,
   employmentStatuses,
   civilStatues,
-} from "../../components/utils/applicant.enums";
+} from "../../components/utils/enums/applicant.enums";
 import {
   TextField,
   Select,
@@ -47,6 +47,7 @@ import { DatePicker } from "@mui/x-date-pickers";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useNavigate } from "react-router-dom";
 
 const SubmitButton = ({ isSubmitting, onSubmit, isAgreed }) => {
   return (
@@ -123,6 +124,7 @@ const ApplicationForm = () => {
     severity: "success",
   });
 
+  const navigate = useNavigate();
   const [isAgreed, setIsAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -133,6 +135,7 @@ const ApplicationForm = () => {
 
   const mutation = useMutation({
     mutationFn: (newApplicant) => {
+      console.log("Submitting application:", newApplicant);
       return axios.post("/api/applicants", newApplicant);
     },
     onSuccess: () => {
@@ -152,32 +155,64 @@ const ApplicationForm = () => {
     },
   });
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     console.log("Form data:", data);
     setIsSubmitting(true);
 
-    mutation.mutate(data, {
-      onSuccess: (response) => {
-        console.log("Server response:", response.data);
+    try {
+      const response = await axios.post("/api/applicants/", data);
+      console.log("Server response:", response.data);
+      console.log("response.data.data:", response.data.data);
+      console.log("response.data.data.user:", response.data.data.user);
+      console.log("response.data.data.user.uli:", response.data.data.user.uli);
+      console.log(
+        "response.data.data.user.placeholderPassword:",
+        response.data.data.user.placeholderPassword
+      );
+
+      if (
+        response.data.success &&
+        response.data.data &&
+        response.data.data.user
+      ) {
+        // Store the ULI and placeholder password in localStorage
+        localStorage.setItem("newUserUli", response.data.data.user.uli);
+        localStorage.setItem(
+          "newUserPassword",
+          response.data.data.user.placeholderPassword
+        );
+
         setSnackbar({
           open: true,
-          message: "Application submitted successfully!",
+          message:
+            "Application submitted successfully! Redirecting to login page...",
           severity: "success",
         });
+
         reset();
-      },
-      onError: (error) => {
-        console.error("Error submitting form:", error);
+
+        // Redirect to login page after a short delay
+        setTimeout(() => {
+          navigate("/login");
+        }, 1000);
+      } else {
+        console.error("Application submission failed:", response.data.message);
         setSnackbar({
           open: true,
-          message: `Error submitting application: ${error.message}`,
+          message: "Application submission failed. Please try again.",
           severity: "error",
         });
-      },
-      onSettled: () => {
-        setIsSubmitting(false);
-      },
-    });
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setSnackbar({
+        open: true,
+        message: `Error submitting application: ${error.message}`,
+        severity: "error",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCloseSnackbar = (event, reason) => {

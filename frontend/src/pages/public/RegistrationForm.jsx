@@ -37,10 +37,11 @@ import {
   civilStatues,
   clientClassifications,
   scholarTypes,
-} from "../../components/utils/registrant.enums";
+} from "../../components/utils/enums/registrant.enums";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const SubmitButton = ({ isSubmitting, onSubmit, isAgreed }) => {
   return (
@@ -95,7 +96,7 @@ function RegistrationForm() {
     resolver: zodResolver(registrantSchema),
     defaultValues: registrantDefaultValues,
   });
-
+  const navigate = useNavigate();
   const [isAgreed, setIsAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -141,36 +142,48 @@ function RegistrationForm() {
     data.hasScholarType = Boolean(data.hasScholarType);
     console.log("Form Data Before Submission:", data);
     try {
-      // Handle successful registration (e.g., show success message, redirect)
       const response = await axios.post("/api/register", data);
-
-      // Check if the response is JSON
       if (response.headers["content-type"].includes("application/json")) {
         console.log("Response Data:", response.data);
+
+        // Store the ULI and placeholder password in localStorage
+        if (response.data.success && response.data.data) {
+          localStorage.setItem("newUserUli", response.data.data.uli);
+          localStorage.setItem(
+            "newUserPassword",
+            response.data.data.placeholderPassword
+          );
+          console.log("New user ULI and password stored in localStorage");
+        } else {
+          console.error("Registration response failed:", response.data.message);
+          setSnackbar({
+            open: true,
+            message: "Registration failed. Please try again.",
+            severity: "error",
+          });
+        }
+
         // Process response data here
       } else {
         console.error("Received non-JSON response:", response);
       }
-
-      // Log the response data
       console.log("Registration successful:", response.data);
-      // Alert for successful registration
       setSnackbar({
         open: true,
-        message: "Registration successful!",
+        message: "Registration successful! Redirecting to login page...",
         severity: "success",
       });
-      // reset the form
       reset(registrantDefaultValues);
-      // alert(JSON.stringify(data, null, 2));
+
+      // Redirect to login page after a short delay
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
     } catch (error) {
-      // Handle registration error (e.g., show error message)
       console.error(
         "Registration failed:",
         error.response ? error.response.data : error.message
       );
-      // alert(JSON.stringify(data, null, 2));
-      // Alert for failed registration
       setSnackbar({
         open: true,
         message: "Registration failed. Please try again.",
@@ -392,7 +405,7 @@ function RegistrationForm() {
           >
             {/* Sex */}
             <FormControl
-              sx={{ flexGrow: 1, marginRight: 1, width: "100%" }}
+              // sx={{ flexGrow: 1, marginRight: 1, width: "100%" }}
               error={Boolean(errors.personalInformation?.sex)}
               fullWidth
             >
@@ -428,7 +441,7 @@ function RegistrationForm() {
             </FormControl>
             {/* Civil Status */}
             <FormControl
-              sx={{ flexGrow: 1, marginRight: 1 }}
+              // sx={{ flexGrow: 1, marginRight: 1 }}
               error={Boolean(errors.personalInformation?.civilStatus)}
               fullWidth
             >
@@ -459,7 +472,12 @@ function RegistrationForm() {
             </FormControl>
             {/* Nationality */}
             <TextField
-              sx={{ flexGrow: 1, marginRight: 1 }}
+              sx={{
+                width: {
+                  xs: "100%", // Width for extra-small screens
+                  md: "70%", // Width for medium screens
+                },
+              }}
               {...register("personalInformation.nationality")}
               label="Nationality"
               helperText={errors.personalInformation?.nationality?.message}
@@ -630,7 +648,9 @@ function RegistrationForm() {
             error={Boolean(errors.education)}
             fullWidth
           >
-            <InputLabel id="education-label">Civil Status</InputLabel>
+            <InputLabel id="education-label">
+              Highest Educational Attainment
+            </InputLabel>
             <Controller
               control={control}
               name="education"

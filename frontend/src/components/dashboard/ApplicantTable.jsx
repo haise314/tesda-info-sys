@@ -16,13 +16,16 @@ import {
   TextField,
   useMediaQuery,
   Stack,
+  Container,
+  CircularProgress,
+  Typography,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
-import { applicantColumns } from "../utils/applicant.column.js";
-import flattenApplicantData from "../utils/applicant.flatten.js";
+import { applicantColumns } from "../utils/column/applicant.column.js";
+import flattenApplicantData from "../utils/flatten/applicant.flatten.js";
 import { useTheme } from "@emotion/react";
 import { TableContainer } from "../../layouts/TableContainer";
 
@@ -156,7 +159,25 @@ const ApplicantTable = () => {
     console.log("Add new applicant");
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <Container
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <Box sx={{ textAlign: "center" }}>
+          <CircularProgress size={60} />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Loading Applicant Data...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
   if (error) return <div>Error loading data: {error.message}</div>;
 
   return (
@@ -202,7 +223,7 @@ const ApplicantTable = () => {
               employmentStatus: !isMobile,
               highestEducationalAttainment: !isMobile,
               createdAt: !isMobile,
-              updatedAt: !isMobile,
+              applicationStatus: !isMobile,
               actions: true,
             },
           },

@@ -94,6 +94,7 @@ const flattenApplicantData = (applicant) => {
     assessmentTitle: applicant.assessmentTitle,
     assessmentType: applicant.assessmentType,
     trainingCenterName: applicant.trainingCenterName,
+    applicationStatus: applicant.applicationStatus,
 
     // Created and updated timestamps
     createdAt: applicant.createdAt?.$date || applicant.createdAt,

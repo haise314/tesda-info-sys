@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 import {
+  applicationStatuses,
   assessmentTypes,
   civilStatues,
   clientTypes,
@@ -321,6 +322,12 @@ const applicantSchema = new mongoose.Schema(
       type: String,
       required: true,
       default: "client",
+    },
+    applicationStatus: {
+      type: String,
+      enum: applicationStatuses,
+      required: false,
+      default: "For Approval",
     },
   },
   {

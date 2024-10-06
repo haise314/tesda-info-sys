@@ -27,3 +27,5 @@ export const employmentStatuses = [
 ];
 
 export const civilStatues = ["Single", "Married", "Widow/er", "Separated"];
+
+export const applicationStatuses = ["For Approval", "Approved", "Completed"];

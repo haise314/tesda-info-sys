@@ -165,6 +165,11 @@ export const registrantColumns = [
   // Scholar Information
   { field: "hasScholarType", headerName: "Scholar", width: 70 },
   { field: "scholarType", headerName: "Scholar Type", width: 100 },
+  {
+    field: "registrationStatus",
+    headerName: "Registration Status",
+    width: 80,
+  },
 
   // Created and Updated At
   {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -13,10 +13,17 @@ import {
   Paper,
   Container,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton,
+  InputAdornment,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { z } from "zod";
 
-// Updated login schema
 const loginSchema = z.object({
   uli: z
     .string()
@@ -24,15 +31,30 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+const passwordChangeSchema = z
+  .object({
+    newPassword: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
 const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [openDialog, setOpenDialog] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     control,
     handleSubmit,
     setError,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
@@ -42,12 +64,41 @@ const Login = () => {
     },
   });
 
+  const {
+    control: passwordChangeControl,
+    handleSubmit: handlePasswordChangeSubmit,
+    formState: { errors: passwordChangeErrors },
+  } = useForm({
+    resolver: zodResolver(passwordChangeSchema),
+    defaultValues: {
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  useEffect(() => {
+    // Check for stored credentials
+    const storedUli = localStorage.getItem("newUserUli");
+    const storedPassword = localStorage.getItem("newUserPassword");
+
+    if (storedUli && storedPassword) {
+      setValue("uli", storedUli);
+      setValue("password", storedPassword);
+    }
+  }, [setValue]);
+
   const loginMutation = useMutation({
     mutationFn: (credentials) => axios.post("/api/auth/login", credentials),
     onSuccess: (response) => {
       console.log("Login response:", response.data);
       login(response.data);
-      navigate(location.state?.from || "/dashboard");
+
+      // Check if it's the first login (using placeholder password)
+      if (localStorage.getItem("newUserPassword")) {
+        setOpenDialog(true);
+      } else {
+        navigate(location.state?.from || "/dashboard");
+      }
     },
     onError: (error) => {
       console.error("Login error:", error.response?.data || error.message);
@@ -62,6 +113,37 @@ const Login = () => {
 
   const onSubmit = (data) => {
     loginMutation.mutate(data);
+  };
+
+  const handlePasswordChange = async (data) => {
+    try {
+      await axios.put("/api/auth/change-password", {
+        uli: localStorage.getItem("newUserUli"),
+        newPassword: data.newPassword,
+      });
+      localStorage.removeItem("newUserUli");
+      localStorage.removeItem("newUserPassword");
+      setOpenDialog(false);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Password change error:", error);
+      setError("root", {
+        type: "manual",
+        message: "Failed to change password. Please try again.",
+      });
+    }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleNewPasswordVisibility = () => {
+    setShowNewPassword(!showNewPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
   };
 
   return (
@@ -114,10 +196,19 @@ const Login = () => {
               <TextField
                 {...field}
                 label="Password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 variant="outlined"
                 error={!!errors.password}
                 helperText={errors.password?.message}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={togglePasswordVisibility} edge="end">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "8px",
@@ -166,6 +257,82 @@ const Login = () => {
           Don't have an account? <Link to="/registeruser">Register here</Link>
         </Typography>
       </Paper>
+
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>Change Your Password</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            For security reasons, please change your password.
+          </DialogContentText>
+          <Box
+            component="form"
+            onSubmit={handlePasswordChangeSubmit(handlePasswordChange)}
+            sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+          >
+            <Controller
+              name="newPassword"
+              control={passwordChangeControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="New Password"
+                  type={showNewPassword ? "text" : "password"}
+                  fullWidth
+                  variant="outlined"
+                  error={!!passwordChangeErrors.newPassword}
+                  helperText={passwordChangeErrors.newPassword?.message}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={toggleNewPasswordVisibility}
+                          edge="end"
+                        >
+                          {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              )}
+            />
+            <Controller
+              name="confirmPassword"
+              control={passwordChangeControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Confirm New Password"
+                  type={showConfirmPassword ? "text" : "password"}
+                  fullWidth
+                  variant="outlined"
+                  error={!!passwordChangeErrors.confirmPassword}
+                  helperText={passwordChangeErrors.confirmPassword?.message}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={toggleConfirmPasswordVisibility}
+                          edge="end"
+                        >
+                          {showConfirmPassword ? (
+                            <VisibilityOff />
+                          ) : (
+                            <Visibility />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              )}
+            />
+            <Button type="submit" variant="contained" color="primary">
+              Change Password
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 };

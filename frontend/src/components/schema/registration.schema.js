@@ -8,7 +8,7 @@ import {
   disabilityCauses,
   scholarTypes,
   civilStatues,
-} from "../utils/registrant.enums.js";
+} from "../utils/enums/registrant.enums.js";
 
 // TODO: conditional validation when employmentStatus is Wage-Employed or Underemployed
 const employmentTypeSchema = z.discriminatedUnion("employmentStatus", [

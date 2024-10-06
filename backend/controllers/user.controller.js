@@ -39,10 +39,11 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   try {
+    console.log("Login request body:", req.body);
     const { uli, password } = req.body;
 
     console.log("Login attempt for ULI:", uli);
-
+    console.log("Login attempt for password:", password);
     const user = await User.findOne({ uli });
 
     if (!user) {
@@ -117,7 +118,7 @@ export const loginRegistrant = async (req, res) => {
   }
 };
 
-const generateToken = (id) => {
+export const generateToken = (id) => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     throw new Error("JWT_SECRET is not defined in the environment variables");
@@ -176,5 +177,26 @@ export const updateUser = async (req, res) => {
     res.json(user);
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { uli, newPassword } = req.body;
+    const user = await User.findOne({ uli });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Set the new password
+    user.password = newPassword;
+
+    // Save the user, which will trigger the pre-save middleware to hash the password
+    await user.save();
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({ message: "Server error during password change" });
   }
 };

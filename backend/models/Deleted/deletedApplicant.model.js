@@ -5,6 +5,7 @@ import {
   clientTypes,
   employmentStatuses,
   highestEducationalAttainments,
+  applicationStatuses,
 } from "../../utils/applicant.enums.js";
 
 // Define schemas for work experience, training, licensure, and competency as used in Applicant
@@ -215,7 +216,17 @@ const deletedApplicantSchema = new mongoose.Schema(
     trainingSeminarAttended: [trainingSeminarAttendedSchema],
     licensureExaminationPassed: [licensureExaminationPassedSchema],
     competencyAssessment: [competencyAssessmentSchema],
-
+    role: {
+      type: String,
+      required: true,
+      default: "client",
+    },
+    applicationStatus: {
+      type: String,
+      enum: applicationStatuses,
+      required: false,
+      default: "For Approval",
+    },
     // Additional fields for deletion tracking
     deletedAt: {
       type: Date,

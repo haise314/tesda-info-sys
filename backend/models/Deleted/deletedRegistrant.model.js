@@ -9,6 +9,7 @@ import {
   disabilityCauses,
   scholarTypes,
   civilStatues,
+  registrationStatuses,
 } from "../../utils/registrant.enums.js";
 
 const DeletedRegistrantSchema = new mongoose.Schema(
@@ -204,6 +205,17 @@ const DeletedRegistrantSchema = new mongoose.Schema(
       enum: scholarTypes,
       required: false,
       // default: "",
+    },
+    role: {
+      type: String,
+      required: true,
+      default: "client",
+    },
+    registrationStatus: {
+      type: String,
+      enum: registrationStatuses,
+      default: "Pending",
+      required: false,
     },
     deletedAt: {
       type: Date,

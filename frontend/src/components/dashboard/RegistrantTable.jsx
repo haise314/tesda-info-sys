@@ -15,14 +15,18 @@ import {
   TextField,
   useMediaQuery,
   Stack,
+  Container,
+  Box,
+  CircularProgress,
+  Typography,
 } from "@mui/material";
 import { useTheme } from "@emotion/react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
-import { registrantColumns } from "../utils/registrant.column.js";
-import flattenRegistrantData from "../utils/registrant.flatten.js";
+import { registrantColumns } from "../utils/column/registrant.column.js";
+import flattenRegistrantData from "../utils/flatten/registrant.flatten.js";
 import { TableContainer } from "../../layouts/TableContainer";
 
 const fetchRegistrants = async () => {
@@ -156,7 +160,25 @@ const RegistrantTable = () => {
     console.log("Add new registrant");
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <Container
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <Box sx={{ textAlign: "center" }}>
+          <CircularProgress size={60} />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Loading Registrant Data...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
   if (error) return <div>Error loading data: {error.message}</div>;
 
   return (
@@ -203,8 +225,8 @@ const RegistrantTable = () => {
               course: !isMobile,
               hasScholarType: !isMobile,
               scholarType: !isMobile,
+              registrationStatus: !isMobile,
               createdAt: !isMobile,
-              updatedAt: !isMobile,
               actions: true,
             },
           },

@@ -119,6 +119,11 @@ export const applicantColumns = [
         )
         .join("; "),
   },
+  {
+    field: "applicationStatus",
+    headerName: "Applicant Status",
+    width: 90,
+  },
 
   // Created and Updated At
   {

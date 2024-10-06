@@ -33,10 +33,14 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 // Middleware to hash password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
-    next();
+    return next(); // Exit early if password is not modified.
   }
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  console.log("Hashed password in model:", this.password);
+
+  next(); // Always call next after hashing
 });
 
 const User = mongoose.model("User", userSchema);
