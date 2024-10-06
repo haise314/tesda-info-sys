@@ -25,7 +25,10 @@ import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
 import { applicantColumns } from "../utils/column/applicant.column.js";
-import flattenApplicantData from "../utils/flatten/applicant.flatten.js";
+import {
+  flattenApplicantData,
+  unflattenApplicantData,
+} from "../utils/flatten/applicant.flatten.js";
 import { useTheme } from "@emotion/react";
 import { TableContainer } from "../../layouts/TableContainer";
 
@@ -50,8 +53,7 @@ const ApplicantTable = () => {
   const queryClient = useQueryClient();
   const apiRef = useGridApiRef();
   const [rows, setRows] = useState([]);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null);
+
   const {
     data: applicants,
     isLoading,
@@ -68,49 +70,31 @@ const ApplicantTable = () => {
   }, [applicants]);
 
   const updateApplicantMutation = useMutation({
-    mutationFn: (updatedApplicant) => {
-      const { _id, ...applicantData } = updatedApplicant;
-      return axios.put(`/api/applicants/${_id}`, applicantData);
+    mutationFn: async (params) => {
+      const { id, field, value } = params;
+
+      const currentRow = apiRef.current?.getRow(id);
+      if (!currentRow) {
+        throw new Error("Row not found");
+      }
+
+      const updatedRow = { ...currentRow, [field]: value };
+
+      const unFlattenedData = unflattenApplicantData(updatedRow);
+      const response = await axios.put(
+        `/api/applicants/${id}`,
+        unFlattenedData
+      );
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["applicants"]);
     },
     onError: (error) => {
+      console.error("Update error:", error);
       alert("Failed to update applicant. Please try again.");
     },
   });
-
-  const handleEditClick = (id) => () => {
-    const rowToEdit = applicants.find((row) => row._id === id);
-    setSelectedRow(rowToEdit);
-    setOpenDialog(true);
-  };
-
-  const handleDialogClose = () => {
-    setOpenDialog(false);
-    setSelectedRow(null);
-  };
-
-  const handleDialogSave = () => {
-    if (selectedRow) {
-      updateApplicantMutation.mutate(selectedRow);
-      handleDialogClose();
-    }
-  };
-
-  const handleFieldChange = (field, value) => {
-    setSelectedRow((prev) => {
-      const newRow = { ...prev };
-      const fields = field.split(".");
-      let current = newRow;
-      for (let i = 0; i < fields.length - 1; i++) {
-        if (!current[fields[i]]) current[fields[i]] = {};
-        current = current[fields[i]];
-      }
-      current[fields[fields.length - 1]] = value;
-      return newRow;
-    });
-  };
 
   const deleteApplicantMutation = useMutation({
     mutationFn: (id) => axios.delete(`/api/applicants/${id}`),
@@ -125,35 +109,50 @@ const ApplicantTable = () => {
     }
   };
 
-  const columns = React.useMemo(
-    () => [
-      ...applicantColumns.map((col) => ({
-        ...col,
-        editable: false,
-      })),
-      {
-        field: "actions",
-        type: "actions",
-        headerName: "Actions",
-        width: 100,
-        getActions: ({ id }) => [
-          <GridActionsCellItem
-            icon={<EditIcon />}
-            label="Edit"
-            onClick={handleEditClick(id)}
-            color="inherit"
-          />,
-          <GridActionsCellItem
-            icon={<DeleteIcon />}
-            label="Delete"
-            onClick={handleDeleteClick(id)}
-            color="inherit"
-          />,
-        ],
-      },
-    ],
-    []
+  const processRowUpdate = React.useCallback(
+    async (newRow, oldRow) => {
+      const field = Object.keys(newRow).find(
+        (key) => newRow[key] !== oldRow[key]
+      );
+      if (!field) return oldRow; // No changes
+
+      try {
+        await updateApplicantMutation.mutateAsync({
+          id: newRow._id,
+          field,
+          value: newRow[field],
+        });
+        return newRow;
+      } catch (error) {
+        return oldRow;
+      }
+    },
+    [updateApplicantMutation]
   );
+
+  // Make all columns editable
+  const editableColumns = applicantColumns.map((column) => ({
+    ...column,
+    editable: true,
+  }));
+
+  const columns = [
+    ...editableColumns,
+    {
+      field: "actions",
+      type: "actions",
+      headerName: "Actions",
+      width: 100,
+      getActions: ({ id }) => [
+        <GridActionsCellItem
+          icon={<DeleteIcon />}
+          label="Delete"
+          onClick={handleDeleteClick(id)}
+          color="inherit"
+        />,
+      ],
+    },
+  ];
 
   const handleAddClick = () => {
     console.log("Add new applicant");
@@ -172,13 +171,21 @@ const ApplicantTable = () => {
         <Box sx={{ textAlign: "center" }}>
           <CircularProgress size={60} />
           <Typography variant="h6" sx={{ mt: 2 }}>
-            Loading Applicant Data...
+            Loading Registrant Data...
           </Typography>
         </Box>
       </Container>
     );
   }
-  if (error) return <div>Error loading data: {error.message}</div>;
+  if (error) {
+    return (
+      <Container>
+        <Typography color="error" variant="h6">
+          Error loading data: {error.message}
+        </Typography>
+      </Container>
+    );
+  }
 
   return (
     <TableContainer>
@@ -197,7 +204,6 @@ const ApplicantTable = () => {
           Add Applicant
         </Button>
       </Stack>
-
       <DataGrid
         apiRef={apiRef}
         rows={rows}
@@ -212,6 +218,10 @@ const ApplicantTable = () => {
           },
         }}
         getRowId={(row) => row._id}
+        processRowUpdate={processRowUpdate}
+        onProcessRowUpdateError={(error) => {
+          console.error("Error while saving:", error);
+        }}
         initialState={{
           columns: {
             columnVisibilityModel: {
@@ -234,81 +244,6 @@ const ApplicantTable = () => {
         pageSizeOptions={isMobile ? [5, 10] : [10, 25, 50]}
         density={isMobile ? "compact" : "standard"}
       />
-
-      <Dialog
-        open={openDialog}
-        onClose={handleDialogClose}
-        fullScreen={isMobile}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Edit Applicant</DialogTitle>
-
-        <DialogContent>
-          {selectedRow && (
-            <>
-              <TextField
-                margin="dense"
-                label="First Name"
-                fullWidth
-                value={selectedRow?.firstName || ""}
-                onChange={(e) => handleFieldChange("firstName", e.target.value)}
-              />
-              <TextField
-                margin="dense"
-                label="Last Name"
-                fullWidth
-                value={selectedRow?.lastName || ""}
-                onChange={(e) => handleFieldChange("lastName", e.target.value)}
-              />
-              <TextField
-                margin="dense"
-                label="Email"
-                fullWidth
-                value={selectedRow?.email || ""}
-                onChange={(e) =>
-                  handleFieldChange("contact.email", e.target.value)
-                }
-              />
-              <TextField
-                margin="dense"
-                label="Mobile Number"
-                fullWidth
-                value={selectedRow?.mobileNumber || ""}
-                onChange={(e) =>
-                  handleFieldChange("contact.mobileNumber", e.target.value)
-                }
-              />
-              <TextField
-                margin="dense"
-                label="Employment Status"
-                fullWidth
-                value={selectedRow?.employmentStatus || ""}
-                onChange={(e) =>
-                  handleFieldChange("employmentStatus", e.target.value)
-                }
-              />
-              <TextField
-                margin="dense"
-                label="Highest Educational Attainment"
-                fullWidth
-                value={selectedRow?.highestEducationalAttainment || ""}
-                onChange={(e) =>
-                  handleFieldChange(
-                    "highestEducationalAttainment",
-                    e.target.value
-                  )
-                }
-              />
-            </>
-          )}
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={handleDialogClose}>Cancel</Button>
-          <Button onClick={handleDialogSave}>Save</Button>
-        </DialogActions>
-      </Dialog>
     </TableContainer>
   );
 };
