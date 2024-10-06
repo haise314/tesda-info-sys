@@ -9,7 +9,10 @@ import {
   Box,
   Typography,
   CircularProgress,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const loginSchema = z.object({
   uli: z
@@ -21,6 +24,7 @@ const loginSchema = z.object({
 const LoginMATB = ({ onLoginSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     control,
@@ -37,28 +41,27 @@ const LoginMATB = ({ onLoginSuccess }) => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     setError("");
-
     try {
       console.log("Attempting login with data:", { uli: data.uli }); // Don't log password
-
       const response = await axios.post("/api/auth/login", data);
       console.log("Login response:", response.data);
-
       if (response.data) {
         onLoginSuccess(response.data);
       }
     } catch (error) {
       console.error("Login error:", error);
-
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
         "Login failed. Please check your credentials.";
-
       setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
   };
 
   return (
@@ -87,7 +90,6 @@ const LoginMATB = ({ onLoginSuccess }) => {
           />
         )}
       />
-
       <Controller
         name="password"
         control={control}
@@ -95,21 +97,32 @@ const LoginMATB = ({ onLoginSuccess }) => {
           <TextField
             {...field}
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             fullWidth
             error={!!errors.password}
             helperText={errors.password?.message}
             disabled={isLoading}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleTogglePasswordVisibility}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
         )}
       />
-
       {error && (
         <Typography color="error" variant="body2">
           {error}
         </Typography>
       )}
-
       <Button
         type="submit"
         variant="contained"
