@@ -1,4 +1,4 @@
-const flattenApplicantData = (applicant) => {
+export const flattenApplicantData = (applicant) => {
   return {
     // MongoDB _id, handling ObjectId cases
     _id: applicant._id?.$oid || applicant._id,
@@ -102,4 +102,97 @@ const flattenApplicantData = (applicant) => {
   };
 };
 
-export default flattenApplicantData;
+// Utility function to unflatten applicant data
+export const unflattenApplicantData = (flatData) => {
+  const { _id, ...rest } = flatData;
+
+  return {
+    _id,
+    uli: rest.uli,
+    name: {
+      firstName: rest.firstName,
+      middleName: rest.middleName,
+      lastName: rest.lastName,
+      extension: rest.extension,
+    },
+    completeMailingAddress: {
+      street: rest.mailingStreet,
+      barangay: rest.mailingBarangay,
+      district: rest.mailingDistrict,
+      city: rest.mailingCity,
+      province: rest.mailingProvince,
+      region: rest.mailingRegion,
+      zipCode: rest.mailingZipCode,
+    },
+    contact: {
+      telephoneNumber: rest.telephoneNumber,
+      mobileNumber: rest.mobileNumber,
+      email: rest.email,
+      fax: rest.fax,
+      others: rest.otherContacts,
+    },
+    sex: rest.sex,
+    civilStatus: rest.civilStatus,
+    birthdate: rest.birthdate,
+    birthplace: rest.birthplace,
+    age: rest.age,
+    motherName: {
+      firstName: rest.motherFirstName,
+      middleName: rest.motherMiddleName,
+      lastName: rest.motherLastName,
+    },
+    fatherName: {
+      firstName: rest.fatherFirstName,
+      middleName: rest.fatherMiddleName,
+      lastName: rest.fatherLastName,
+    },
+    workExperience: rest.workExperience?.map((exp) => ({
+      companyName: exp.companyName,
+      position: exp.position,
+      inclusiveDates: {
+        from: exp.from,
+        to: exp.to,
+      },
+      monthlySalary: exp.monthlySalary,
+      appointmentStatus: exp.appointmentStatus,
+      noOfYearsInWork: exp.noOfYearsInWork,
+    })),
+    trainingSeminarAttended: rest.trainingSeminarAttended?.map((training) => ({
+      title: training.title,
+      venue: training.venue,
+      inclusiveDates: {
+        from: training.from,
+        to: training.to,
+      },
+      numberOfHours: training.numberOfHours,
+      conductedBy: training.conductedBy,
+    })),
+    licensureExaminationPassed: rest.licensureExaminationPassed?.map(
+      (exam) => ({
+        title: exam.title,
+        dateOfExamination: exam.dateOfExamination,
+        examinationVenue: exam.examinationVenue,
+        rating: exam.rating,
+        remarks: exam.remarks,
+        expiryDate: exam.expiryDate,
+      })
+    ),
+    competencyAssessment: rest.competencyAssessment?.map((assessment) => ({
+      title: assessment.title,
+      qualificationLevel: assessment.qualificationLevel,
+      industrySector: assessment.industrySector,
+      certificateNumber: assessment.certificateNumber,
+      dateIssued: assessment.dateIssued,
+      expirationDate: assessment.expirationDate,
+    })),
+    highestEducationalAttainment: rest.highestEducationalAttainment,
+    employmentStatus: rest.employmentStatus,
+    clientType: rest.clientType,
+    assessmentTitle: rest.assessmentTitle,
+    assessmentType: rest.assessmentType,
+    trainingCenterName: rest.trainingCenterName,
+    applicationStatus: rest.applicationStatus,
+    createdAt: rest.createdAt,
+    updatedAt: rest.updatedAt,
+  };
+};

@@ -1,4 +1,4 @@
-const flattenRegistrantData = (registrant) => {
+export const flattenRegistrantData = (registrant) => {
   return {
     // Include the MongoDB _id
     _id: registrant._id.$oid || registrant._id, // Handle both string and ObjectId cases
@@ -63,4 +63,66 @@ const flattenRegistrantData = (registrant) => {
   };
 };
 
-export default flattenRegistrantData;
+// Utility function to unflatten registrant data
+export const unflattenRegistrantData = (flatData) => {
+  const { _id, ...rest } = flatData;
+
+  return {
+    _id,
+    name: {
+      firstName: rest.firstName,
+      middleName: rest.middleName,
+      lastName: rest.lastName,
+      extension: rest.extension,
+    },
+    completeMailingAddress: {
+      street: rest.mailingStreet,
+      barangay: rest.mailingBarangay,
+      district: rest.mailingDistrict,
+      city: rest.mailingCity,
+      province: rest.mailingProvince,
+      region: rest.mailingRegion,
+    },
+    contact: {
+      email: rest.email,
+      mobileNumber: rest.mobileNumber,
+    },
+    personalInformation: {
+      sex: rest.sex,
+      civilStatus: rest.civilStatus,
+      nationality: rest.nationality,
+      birthdate: rest.birthdate,
+      age: rest.age,
+      birthplace: {
+        city: rest.birthplaceCity,
+        province: rest.birthplaceProvince,
+        region: rest.birthplaceRegion,
+      },
+    },
+    employmentStatus: rest.employmentStatus,
+    employmentType: rest.employmentType,
+    education: rest.education,
+    parent: {
+      name: {
+        firstName: rest.parentFirstName,
+        middleName: rest.parentMiddleName,
+        lastName: rest.parentLastName,
+      },
+      completeMailingAddress: {
+        street: rest.parentMailingStreet,
+        barangay: rest.parentMailingBarangay,
+        district: rest.parentMailingDistrict,
+        city: rest.parentMailingCity,
+        province: rest.parentMailingProvince,
+        region: rest.parentMailingRegion,
+      },
+    },
+    clientClassification: rest.clientClassification,
+    disabilityType: rest.disabilityType,
+    disabilityCause: rest.disabilityCause,
+    course: rest.course,
+    hasScholarType: rest.hasScholarType,
+    scholarType: rest.scholarType,
+    registrationStatus: rest.registrationStatus,
+  };
+};
