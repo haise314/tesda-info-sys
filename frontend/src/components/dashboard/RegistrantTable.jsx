@@ -26,14 +26,37 @@ import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
 import { registrantColumns } from "../utils/column/registrant.column.js";
-import flattenRegistrantData from "../utils/flatten/registrant.flatten.js";
 import { TableContainer } from "../../layouts/TableContainer";
+import {
+  unflattenRegistrantData,
+  flattenRegistrantData,
+} from "../utils/flatten/registrant.flatten.js";
 
 const fetchRegistrants = async () => {
-  const response = await axios.get("/api/register");
-  return Array.isArray(response.data.data)
-    ? response.data.data.map(flattenRegistrantData)
-    : [flattenRegistrantData(response.data.data)];
+  try {
+    const response = await axios.get("/api/register");
+    console.log("Raw API response:", response);
+    console.log("Response data:", response.data);
+
+    let flattenedData;
+    if (Array.isArray(response.data.data)) {
+      console.log("Data is an array with length:", response.data.data.length);
+      flattenedData = response.data.data.map((registrant) => {
+        const flattened = flattenRegistrantData(registrant);
+        console.log("Flattened registrant:", flattened);
+        return flattened;
+      });
+    } else {
+      console.log("Data is a single object");
+      flattenedData = [flattenRegistrantData(response.data.data)];
+    }
+
+    console.log("Final flattened data:", flattenedData);
+    return flattenedData;
+  } catch (error) {
+    console.error("Error fetching registrants:", error);
+    throw error;
+  }
 };
 
 const getDefaultColumnVisibility = (columns) => {
@@ -50,8 +73,6 @@ const RegistrantTable = () => {
   const queryClient = useQueryClient();
   const apiRef = useGridApiRef();
   const [rows, setRows] = useState([]);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null);
 
   const {
     data: registrants,
@@ -69,49 +90,28 @@ const RegistrantTable = () => {
   }, [registrants]);
 
   const updateRegistrantMutation = useMutation({
-    mutationFn: (updatedRegistrant) => {
-      const { _id, ...registrantData } = updatedRegistrant;
-      return axios.put(`/api/register/${_id}`, registrantData);
+    mutationFn: async (params) => {
+      const { id, field, value } = params;
+
+      const currentRow = apiRef.current?.getRow(id);
+      if (!currentRow) {
+        throw new Error("Could not find row data");
+      }
+
+      const updatedRow = { ...currentRow, [field]: value };
+
+      const unflattedData = unflattenRegistrantData(updatedRow);
+      const response = await axios.put(`/api/register/${id}`, unflattedData);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["registrants"]);
     },
     onError: (error) => {
+      console.error("Update error:", error);
       alert("Failed to update registrant. Please try again.");
     },
   });
-
-  const handleEditClick = (id) => () => {
-    const rowToEdit = registrants.find((row) => row._id === id);
-    setSelectedRow(rowToEdit);
-    setOpenDialog(true);
-  };
-
-  const handleDialogClose = () => {
-    setOpenDialog(false);
-    setSelectedRow(null);
-  };
-
-  const handleDialogSave = () => {
-    if (selectedRow) {
-      updateRegistrantMutation.mutate(selectedRow);
-      handleDialogClose();
-    }
-  };
-
-  const handleFieldChange = (field, value) => {
-    setSelectedRow((prev) => {
-      const newRow = { ...prev };
-      const fields = field.split(".");
-      let current = newRow;
-      for (let i = 0; i < fields.length - 1; i++) {
-        if (!current[fields[i]]) current[fields[i]] = {};
-        current = current[fields[i]];
-      }
-      current[fields[fields.length - 1]] = value;
-      return newRow;
-    });
-  };
 
   const deleteRegistrantMutation = useMutation({
     mutationFn: (id) => axios.delete(`/api/register/${id}`),
@@ -126,35 +126,50 @@ const RegistrantTable = () => {
     }
   };
 
-  const columns = React.useMemo(
-    () => [
-      ...registrantColumns.map((col) => ({
-        ...col,
-        editable: false,
-      })),
-      {
-        field: "actions",
-        type: "actions",
-        headerName: "Actions",
-        width: 100,
-        getActions: ({ id }) => [
-          <GridActionsCellItem
-            icon={<EditIcon />}
-            label="Edit"
-            onClick={handleEditClick(id)}
-            color="inherit"
-          />,
-          <GridActionsCellItem
-            icon={<DeleteIcon />}
-            label="Delete"
-            onClick={handleDeleteClick(id)}
-            color="inherit"
-          />,
-        ],
-      },
-    ],
-    []
+  const processRowUpdate = React.useCallback(
+    async (newRow, oldRow) => {
+      const field = Object.keys(newRow).find(
+        (key) => newRow[key] !== oldRow[key]
+      );
+      if (!field) return oldRow; // No changes
+
+      try {
+        await updateRegistrantMutation.mutateAsync({
+          id: newRow._id,
+          field,
+          value: newRow[field],
+        });
+        return newRow;
+      } catch (error) {
+        return oldRow;
+      }
+    },
+    [updateRegistrantMutation]
   );
+
+  // Make all columns editable
+  const editableColumns = registrantColumns.map((column) => ({
+    ...column,
+    editable: true,
+  }));
+
+  const columns = [
+    ...editableColumns,
+    {
+      field: "actions",
+      type: "actions",
+      headerName: "Actions",
+      width: 100,
+      getActions: ({ id }) => [
+        <GridActionsCellItem
+          icon={<DeleteIcon />}
+          label="Delete"
+          onClick={handleDeleteClick(id)}
+          color="inherit"
+        />,
+      ],
+    },
+  ];
 
   const handleAddClick = () => {
     console.log("Add new registrant");
@@ -179,7 +194,15 @@ const RegistrantTable = () => {
       </Container>
     );
   }
-  if (error) return <div>Error loading data: {error.message}</div>;
+  if (error) {
+    return (
+      <Container>
+        <Typography color="error" variant="h6">
+          Error loading data: {error.message}
+        </Typography>
+      </Container>
+    );
+  }
 
   return (
     <TableContainer>
@@ -213,6 +236,10 @@ const RegistrantTable = () => {
           },
         }}
         getRowId={(row) => row._id}
+        processRowUpdate={processRowUpdate}
+        onProcessRowUpdateError={(error) => {
+          console.error("Error while saving:", error);
+        }}
         initialState={{
           columns: {
             columnVisibilityModel: {
@@ -237,106 +264,6 @@ const RegistrantTable = () => {
         pageSizeOptions={isMobile ? [5, 10] : [10, 25, 50]}
         density={isMobile ? "compact" : "standard"}
       />
-
-      <Dialog
-        open={openDialog}
-        onClose={handleDialogClose}
-        fullScreen={isMobile}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Edit Registrant</DialogTitle>
-        <DialogContent>
-          {selectedRow && (
-            <>
-              <TextField
-                margin="dense"
-                label="First Name"
-                fullWidth
-                value={selectedRow?.firstName || ""}
-                onChange={(e) => handleFieldChange("firstName", e.target.value)}
-              />
-              <TextField
-                margin="dense"
-                label="Middle Name"
-                fullWidth
-                value={selectedRow?.middleName || ""}
-                onChange={(e) =>
-                  handleFieldChange("middleName", e.target.value)
-                }
-              />
-              <TextField
-                margin="dense"
-                label="Last Name"
-                fullWidth
-                value={selectedRow?.lastName || ""}
-                onChange={(e) => handleFieldChange("lastName", e.target.value)}
-              />
-              <TextField
-                margin="dense"
-                label="Extension"
-                fullWidth
-                value={selectedRow?.extension || ""}
-                onChange={(e) => handleFieldChange("extension", e.target.value)}
-              />
-              <TextField
-                margin="dense"
-                label="Email"
-                fullWidth
-                value={selectedRow?.email || ""}
-                onChange={(e) => handleFieldChange("email", e.target.value)}
-              />
-              <TextField
-                margin="dense"
-                label="Mobile Number"
-                fullWidth
-                value={selectedRow?.mobileNumber || ""}
-                onChange={(e) =>
-                  handleFieldChange("mobileNumber", e.target.value)
-                }
-              />
-              <TextField
-                margin="dense"
-                label="Client Classification"
-                fullWidth
-                value={selectedRow?.clientClassification || ""}
-                onChange={(e) =>
-                  handleFieldChange("clientClassification", e.target.value)
-                }
-              />
-              <TextField
-                margin="dense"
-                label="Course"
-                fullWidth
-                value={selectedRow?.course || ""}
-                onChange={(e) => handleFieldChange("course", e.target.value)}
-              />
-              <TextField
-                margin="dense"
-                label="Has Scholar?"
-                fullWidth
-                value={selectedRow?.hasScholarType || ""}
-                onChange={(e) =>
-                  handleFieldChange("hasScholarType", e.target.value)
-                }
-              />
-              <TextField
-                margin="dense"
-                label="Scholar Type"
-                fullWidth
-                value={selectedRow?.scholarType || ""}
-                onChange={(e) =>
-                  handleFieldChange("scholarType", e.target.value)
-                }
-              />
-            </>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose}>Cancel</Button>
-          <Button onClick={handleDialogSave}>Save</Button>
-        </DialogActions>
-      </Dialog>
     </TableContainer>
   );
 };
