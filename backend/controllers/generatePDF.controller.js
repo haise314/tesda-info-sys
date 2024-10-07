@@ -12,7 +12,7 @@ const createPdf = promisify(htmlPdf.create);
 
 // Registrant
 export const generatePDF = async (data) => {
-  console.log("Starting PDF generation...");
+  console.log("Starting Registrant PDF generation...");
   try {
     // Load and compile template
     const templatePath = path.resolve(
@@ -25,16 +25,16 @@ export const generatePDF = async (data) => {
     // Format date if needed
     const formattedData = {
       ...data,
-      personalInformation: {
-        ...data.personalInformation,
-        birthdate: new Date(
-          data.personalInformation.birthdate
-        ).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }),
-      },
+      // personalInformation: {
+      //   ...data.personalInformation,
+      //   birthdate: new Date(
+      //     data.personalInformation.birthdate
+      //   ).toLocaleDateString("en-US", {
+      //     year: "numeric",
+      //     month: "long",
+      //     day: "numeric",
+      //   }),
+      // },
     };
     console.log("Data formatted:", formattedData);
 
@@ -73,7 +73,7 @@ export const generatePDF = async (data) => {
 
 // Applicant
 export const generatePDFApplicant = async (data) => {
-  console.log("Starting PDF generation...");
+  console.log("Starting Applicant PDF generation...");
   try {
     // Load and compile template
     const templatePath = path.resolve(
@@ -86,11 +86,11 @@ export const generatePDFApplicant = async (data) => {
     // Format date if needed
     const formattedData = {
       ...data,
-      birthdate: new Date(data.birthdate).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
+      // birthdate: new Date(data.birthdate).toLocaleDateString("en-US", {
+      //   year: "numeric",
+      //   month: "long",
+      //   day: "numeric",
+      // }),
     };
     console.log("Data formatted:", formattedData);
 
