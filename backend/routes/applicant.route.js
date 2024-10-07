@@ -20,7 +20,7 @@ router.get("/", getApplicants);
 router.get("/:id", getApplicantById);
 router.put("/:id", updateApplicant);
 router.delete("/:id", deleteApplicant);
-router.get("/:uli", getApplicantByUli);
+router.get("/uli/:uli", getApplicantByUli);
 
 // Dynamic field addition routes
 router.post("/:id/work-experience", addWorkExperience);

@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import { generateToken } from "./user.controller.js";
 import { generatePlaceholderPassword } from "./registrant.controller.js";
 import User from "../models/user.model.js";
+import ImageUpload from "../models/image.model.js";
+import { upload } from "../config/multer.config.js";
 
 // Function to generate ULI
 const generateULI = (firstName, lastName, middleName, birthYear) => {

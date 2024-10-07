@@ -48,6 +48,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
+import ImageUploadForm from "./components/ImageUploadForm";
 
 const SubmitButton = ({ isSubmitting, onSubmit, isAgreed }) => {
   return (
@@ -127,6 +128,7 @@ const ApplicationForm = () => {
   const navigate = useNavigate();
   const [isAgreed, setIsAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Handle agreement change
   const handleAgreementChange = (event) => {
@@ -158,40 +160,51 @@ const ApplicationForm = () => {
   const onSubmit = async (data) => {
     console.log("Form data:", data);
     setIsSubmitting(true);
-
     try {
+      // First, submit the JSON data
       const response = await axios.post("/api/applicants/", data);
-      console.log("Server response:", response.data);
-      console.log("response.data.data:", response.data.data);
-      console.log("response.data.data.user:", response.data.data.user);
-      console.log("response.data.data.user.uli:", response.data.data.user.uli);
-      console.log(
-        "response.data.data.user.placeholderPassword:",
-        response.data.data.user.placeholderPassword
-      );
-
+      console.log("Response:", response.data);
       if (
         response.data.success &&
         response.data.data &&
         response.data.data.user
       ) {
-        // Store the ULI and placeholder password in localStorage
+        // If there's an image file, upload it separately
+        if (selectedImage) {
+          const formData = new FormData();
+          formData.append("image", selectedImage);
+          formData.append("uli", response.data.data.user.uli);
+
+          const imageUploadResponse = await axios.post(
+            "/api/upload",
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+
+          if (!imageUploadResponse.data.success) {
+            console.error(
+              "Image upload failed:",
+              imageUploadResponse.data.message
+            );
+          }
+        }
+
         localStorage.setItem("newUserUli", response.data.data.user.uli);
         localStorage.setItem(
           "newUserPassword",
           response.data.data.user.placeholderPassword
         );
-
         setSnackbar({
           open: true,
           message:
             "Application submitted successfully! Redirecting to login page...",
           severity: "success",
         });
-
         reset();
-
-        // Redirect to login page after a short delay
         setTimeout(() => {
           navigate("/login");
         }, 1000);
@@ -863,6 +876,10 @@ const ApplicationForm = () => {
     </Accordion>
   );
 
+  const handleImageSelect = (file) => {
+    setSelectedImage(file);
+  };
+
   return (
     <Container
       maxWidth="md"
@@ -921,102 +938,115 @@ const ApplicationForm = () => {
             width: "100%",
           }}
         >
-          <Grid2 container spacing={2}>
-            <Grid2 size={{ xs: 12, md: 4 }} sx={{ width: "100%" }}>
-              <TextField
-                sx={{ flex: 1 }}
-                {...register("trainingCenterName")}
-                label="Name of School/Training Center/Company"
-                helperText={errors.trainingCenterName?.message}
-                error={Boolean(errors.trainingCenterName)}
-                fullWidth
-              />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 4 }} sx={{ width: "100%" }}>
-              <TextField
-                sx={{ flex: 1 }}
-                {...register("addressLocation")}
-                label="Address"
-                helperText={errors.addressLocation?.message}
-                error={Boolean(errors.addressLocation)}
-                fullWidth
-              />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 4 }} sx={{ width: "100%" }}>
-              <FormControl
-                error={Boolean(errors.clientType)}
-                sx={{ width: "100%" }}
-              >
-                <InputLabel id="client-type-label">Client Type</InputLabel>
-                <Controller
-                  control={control}
-                  name="clientType"
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      labelId="client-type-label"
-                      id="client-type-select"
-                      label="Client Type"
-                      value={field.value || ""}
-                    >
-                      {clientTypes.map((status, index) => (
-                        <MenuItem key={index} value={status}>
-                          {status}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={2}
+            sx={{
+              display: { xs: "flex", sm: "null" },
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "center", sm: "null" },
+            }}
+          >
+            <Grid2 container spacing={2}>
+              <Grid2 size={{ xs: 12, md: 4 }} sx={{ width: "100%" }}>
+                <TextField
+                  sx={{ flex: 1 }}
+                  {...register("trainingCenterName")}
+                  label="Name of School/Training Center/Company"
+                  helperText={errors.trainingCenterName?.message}
+                  error={Boolean(errors.trainingCenterName)}
+                  fullWidth
                 />
-                {errors.clientType && (
-                  <FormHelperText>{errors.clientType?.message}</FormHelperText>
-                )}
-              </FormControl>
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField
-                sx={{ flex: 1 }}
-                {...register("assessmentTitle")}
-                label="Title of Assessment Applied For:"
-                helperText={errors.assessmentTitle?.message}
-                error={Boolean(errors.assessmentTitle)}
-                fullWidth
-              />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <FormControl
-                error={Boolean(errors.assessmentType)}
-                sx={{ width: "100%" }}
-              >
-                <InputLabel id="assessment-type-label">
-                  Assessment Type
-                </InputLabel>
-                <Controller
-                  control={control}
-                  name="assessmentType"
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      labelId="assessment-type-label"
-                      id="assessment-type-select"
-                      label="Assessment Type"
-                      value={field.value || ""}
-                    >
-                      {assessmentTypes.map((status, index) => (
-                        <MenuItem key={index} value={status}>
-                          {status}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 4 }} sx={{ width: "100%" }}>
+                <TextField
+                  sx={{ flex: 1 }}
+                  {...register("addressLocation")}
+                  label="Address"
+                  helperText={errors.addressLocation?.message}
+                  error={Boolean(errors.addressLocation)}
+                  fullWidth
                 />
-                {errors.assessmentType && (
-                  <FormHelperText>
-                    {errors.assessmentType?.message}
-                  </FormHelperText>
-                )}
-              </FormControl>
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 4 }} sx={{ width: "100%" }}>
+                <FormControl
+                  error={Boolean(errors.clientType)}
+                  sx={{ width: "100%" }}
+                >
+                  <InputLabel id="client-type-label">Client Type</InputLabel>
+                  <Controller
+                    control={control}
+                    name="clientType"
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        labelId="client-type-label"
+                        id="client-type-select"
+                        label="Client Type"
+                        value={field.value || ""}
+                      >
+                        {clientTypes.map((status, index) => (
+                          <MenuItem key={index} value={status}>
+                            {status}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    )}
+                  />
+                  {errors.clientType && (
+                    <FormHelperText>
+                      {errors.clientType?.message}
+                    </FormHelperText>
+                  )}
+                </FormControl>
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField
+                  sx={{ flex: 1 }}
+                  {...register("assessmentTitle")}
+                  label="Title of Assessment Applied For:"
+                  helperText={errors.assessmentTitle?.message}
+                  error={Boolean(errors.assessmentTitle)}
+                  fullWidth
+                />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <FormControl
+                  error={Boolean(errors.assessmentType)}
+                  sx={{ width: "100%" }}
+                >
+                  <InputLabel id="assessment-type-label">
+                    Assessment Type
+                  </InputLabel>
+                  <Controller
+                    control={control}
+                    name="assessmentType"
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        labelId="assessment-type-label"
+                        id="assessment-type-select"
+                        label="Assessment Type"
+                        value={field.value || ""}
+                      >
+                        {assessmentTypes.map((status, index) => (
+                          <MenuItem key={index} value={status}>
+                            {status}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    )}
+                  />
+                  {errors.assessmentType && (
+                    <FormHelperText>
+                      {errors.assessmentType?.message}
+                    </FormHelperText>
+                  )}
+                </FormControl>
+              </Grid2>
             </Grid2>
-          </Grid2>
+            <ImageUploadForm onImageSelect={handleImageSelect} />
+          </Stack>
         </Paper>
       </Box>
 

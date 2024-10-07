@@ -42,6 +42,7 @@ import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import ImageUploadForm from "./components/ImageUploadForm";
 
 const SubmitButton = ({ isSubmitting, onSubmit, isAgreed }) => {
   return (
@@ -99,6 +100,7 @@ function RegistrationForm() {
   const navigate = useNavigate();
   const [isAgreed, setIsAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -140,45 +142,67 @@ function RegistrationForm() {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     data.hasScholarType = Boolean(data.hasScholarType);
-    console.log("Form Data Before Submission:", data);
+    console.log("Form data:", data);
     try {
       const response = await axios.post("/api/register", data);
-      if (response.headers["content-type"].includes("application/json")) {
-        console.log("Response Data:", response.data);
+      console.log("Response:", response.data.data);
+      console.log("Response uli:", response.data.data.uli);
+      console.log(
+        "Response placeholderpassword:",
+        response.data.data.placeholderPassword
+      );
+      if (
+        response.data.data &&
+        response.data.data.uli &&
+        response.data.data.placeholderPassword
+      ) {
+        if (selectedImage) {
+          const formData = new FormData();
+          formData.append("image", selectedImage);
+          formData.append("uli", response.data.data.uli);
 
-        // Store the ULI and placeholder password in localStorage
-        if (response.data.success && response.data.data) {
-          localStorage.setItem("newUserUli", response.data.data.uli);
-          localStorage.setItem(
-            "newUserPassword",
-            response.data.data.placeholderPassword
+          const imageUploadResponse = await axios.post(
+            "/api/upload",
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
           );
-          console.log("New user ULI and password stored in localStorage");
-        } else {
-          console.error("Registration response failed:", response.data.message);
-          setSnackbar({
-            open: true,
-            message: "Registration failed. Please try again.",
-            severity: "error",
-          });
-        }
 
+          if (!imageUploadResponse.data.success) {
+            console.error(
+              "Image upload failed:",
+              imageUploadResponse.data.message
+            );
+          }
+        }
+        localStorage.setItem("newUserUli", response.data.data.uli);
+        localStorage.setItem(
+          "newUserPassword",
+          response.data.data.placeholderPassword
+        );
+        setSnackbar({
+          open: true,
+          message:
+            "Registration submitted successfully! Redirecting to login page...",
+          severity: "success",
+        });
+        // }
+        reset();
+        setTimeout(() => {
+          navigate("/login");
+        }, 1000);
         // Process response data here
       } else {
-        console.error("Received non-JSON response:", response);
+        console.error("Registration submission failed:", response.data.message);
+        setSnackbar({
+          open: true,
+          message: "Registration submission failed. Please try again.",
+          severity: "error",
+        });
       }
-      console.log("Registration successful:", response.data);
-      setSnackbar({
-        open: true,
-        message: "Registration successful! Redirecting to login page...",
-        severity: "success",
-      });
-      reset(registrantDefaultValues);
-
-      // Redirect to login page after a short delay
-      setTimeout(() => {
-        navigate("/login");
-      }, 1000);
     } catch (error) {
       console.error(
         "Registration failed:",
@@ -186,12 +210,16 @@ function RegistrationForm() {
       );
       setSnackbar({
         open: true,
-        message: "Registration failed. Please try again.",
+        message: `Error submitting registration: ${error.message}`,
         severity: "error",
       });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleImageSelect = (file) => {
+    setSelectedImage(file);
   };
 
   return (
@@ -254,38 +282,51 @@ function RegistrationForm() {
           <Stack
             direction={{ xs: "column", md: "row" }} // Stack direction changes based on screen size
             spacing={2}
+            sx={{
+              display: { xs: "flex", sm: "null" },
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "center", sm: "null" },
+            }}
           >
-            <TextField
-              {...register("name.firstName")}
-              label="First Name"
-              helperText={errors.name?.firstName?.message}
-              error={Boolean(errors.name?.firstName)}
-              fullWidth
-            />
-
-            <TextField
-              {...register("name.middleName")}
-              label="Middle Name"
-              helperText={errors.name?.middleName?.message}
-              error={Boolean(errors.name?.middleName)}
-              fullWidth
-            />
-
-            <TextField
-              {...register("name.lastName")}
-              label="Last Name"
-              helperText={errors.name?.lastName?.message}
-              error={Boolean(errors.name?.lastName)}
-              fullWidth
-            />
-
-            <TextField
-              {...register("name.extension")}
-              label="Extension"
-              helperText={errors.name?.extension?.message}
-              error={Boolean(errors.name?.extension)}
-              fullWidth
-            />
+            <Grid2 container spacing={2}>
+              <Grid2 size={{ xs: 12, md: 8 }}>
+                <TextField
+                  {...register("name.firstName")}
+                  label="First Name"
+                  helperText={errors.name?.firstName?.message}
+                  error={Boolean(errors.name?.firstName)}
+                  fullWidth
+                />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 4 }}>
+                <TextField
+                  {...register("name.middleName")}
+                  label="Middle Name"
+                  helperText={errors.name?.middleName?.message}
+                  error={Boolean(errors.name?.middleName)}
+                  fullWidth
+                />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 8 }}>
+                <TextField
+                  {...register("name.lastName")}
+                  label="Last Name"
+                  helperText={errors.name?.lastName?.message}
+                  error={Boolean(errors.name?.lastName)}
+                  fullWidth
+                />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 4 }}>
+                <TextField
+                  {...register("name.extension")}
+                  label="Extension"
+                  helperText={errors.name?.extension?.message}
+                  error={Boolean(errors.name?.extension)}
+                  fullWidth
+                />
+              </Grid2>
+            </Grid2>
+            <ImageUploadForm onImageSelect={handleImageSelect} />
           </Stack>
 
           {/* Complete Mailing Address */}
