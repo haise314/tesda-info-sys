@@ -4,8 +4,6 @@ import { Box, Typography, Button, CircularProgress } from "@mui/material";
 const ApplicantDetails = ({ data, handlePrintPDF, isPrinting }) => {
   if (!data) {
     return <Typography>No applicant details available.</Typography>;
-  } else {
-    console.log("Applicant data in Component A:", data);
   }
 
   return (
@@ -13,7 +11,6 @@ const ApplicantDetails = ({ data, handlePrintPDF, isPrinting }) => {
       <Typography variant="h6" gutterBottom>
         Applicant Details
       </Typography>
-      {console.log("Applicant data in Component B:", data.data)}
       <Typography>
         Full Name:
         {`${data.data?.name?.firstName} ${data.data?.name?.middleName || ""} ${

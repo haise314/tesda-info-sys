@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Registrant Details</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .section {
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 10px;
+      }
+      .section-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #333;
+      }
+      .detail-item {
+        margin-bottom: 8px;
+      }
+      .detail-item strong {
+        min-width: 120px;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      {{#if name.firstName}}
+      <h1>
+        {{name.firstName}} {{#if name.middleName}}{{name.middleName}}
+        {{/if}}{{name.lastName}}
+      </h1>
+      {{/if}} {{#if uli}}
+      <p><strong>ULI:</strong> {{uli}}</p>
+      {{/if}}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Contact Information</div>
+      {{#if contact.email}}
+      <div class="detail-item"><strong>Email:</strong> {{contact.email}}</div>
+      {{/if}} {{#if contact.mobileNumber}}
+      <div class="detail-item">
+        <strong>Mobile Number:</strong> {{contact.mobileNumber}}
+      </div>
+      {{/if}}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Address</div>
+      {{#if completeMailingAddress.street}}
+      <div class="detail-item">
+        {{completeMailingAddress.street}}, {{completeMailingAddress.barangay}},
+        {{#if
+        completeMailingAddress.district}}{{completeMailingAddress.district}},{{/if}}
+        {{completeMailingAddress.city}}, {{completeMailingAddress.province}},
+        {{completeMailingAddress.region}}
+      </div>
+      {{/if}}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Personal Information</div>
+      {{#if personalInformation.sex}}
+      <div class="detail-item">
+        <strong>Sex:</strong> {{personalInformation.sex}}
+      </div>
+      {{/if}} {{#if personalInformation.civilStatus}}
+      <div class="detail-item">
+        <strong>Civil Status:</strong> {{personalInformation.civilStatus}}
+      </div>
+      {{/if}} {{#if personalInformation.nationality}}
+      <div class="detail-item">
+        <strong>Nationality:</strong> {{personalInformation.nationality}}
+      </div>
+      {{/if}} {{#if personalInformation.birthdate}}
+      <div class="detail-item">
+        <strong>Birthdate:</strong> {{personalInformation.birthdate}}
+      </div>
+      {{/if}} {{#if personalInformation.age}}
+      <div class="detail-item">
+        <strong>Age:</strong> {{personalInformation.age}}
+      </div>
+      {{/if}} {{#if personalInformation.birthplace.city}}
+      <div class="detail-item">
+        <strong>Birthplace:</strong> {{personalInformation.birthplace.city}},
+        {{#if
+        personalInformation.birthplace.province}}{{personalInformation.birthplace.province}},{{/if}}
+        {{personalInformation.birthplace.region}}
+      </div>
+      {{/if}}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Employment Information</div>
+      {{#if employmentStatus}}
+      <div class="detail-item">
+        <strong>Status:</strong> {{employmentStatus}}
+      </div>
+      {{/if}} {{#if education}}
+      <div class="detail-item"><strong>Education:</strong> {{education}}</div>
+      {{/if}}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Parent Information</div>
+      {{#if parent.name.firstName}}
+      <div class="detail-item">
+        <strong>Name:</strong> {{parent.name.firstName}} {{#if
+        parent.name.middleName}}{{parent.name.middleName}}
+        {{/if}}{{parent.name.lastName}}
+      </div>
+      {{/if}} {{#if parent.completeMailingAddress.street}}
+      <div class="detail-item">
+        <strong>Address:</strong> {{parent.completeMailingAddress.street}},
+        {{parent.completeMailingAddress.barangay}}, {{#if
+        parent.completeMailingAddress.district}}{{parent.completeMailingAddress.district}},{{/if}}
+        {{parent.completeMailingAddress.city}},
+        {{parent.completeMailingAddress.province}},
+        {{parent.completeMailingAddress.region}}
+      </div>
+      {{/if}}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Additional Information</div>
+      {{#if clientClassification}}
+      <div class="detail-item">
+        <strong>Client Classification:</strong> {{clientClassification}}
+      </div>
+      {{/if}} {{#if registrationStatus}}
+      <div class="detail-item">
+        <strong>Registration Status:</strong> {{registrationStatus}}
+      </div>
+      {{/if}}
+    </div>
+  </body>
+</html>

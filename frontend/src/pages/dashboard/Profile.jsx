@@ -10,7 +10,7 @@ import {
   Box,
 } from "@mui/material";
 import { useAuth } from "../../context/AuthContext";
-import { useMutation, useQueries } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import axios from "axios";
 import ProfileImage from "../../components/dashboard/ProfileImage";
 import ApplicantDetails from "../../components/dashboard/ApplicantDetails";
@@ -22,20 +22,59 @@ const fetchData = async (url) => {
   return data;
 };
 
-const generatePDF = async ({ type, uli, data }) => {
-  const response = await axios.post(
-    "/api/generate-pdf",
-    { type, uli, data },
-    { responseType: "blob" }
-  );
-  return response.data;
+const handlePrintPDF = async (data) => {
+  try {
+    const response = await axios.post(
+      "/api/generate-pdf",
+      { data },
+      {
+        responseType: "blob",
+      }
+    );
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "registrant-details.pdf");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+  }
+};
+
+const handlePrintPDFApplicant = async (data) => {
+  try {
+    const response = await axios.post(
+      "/api/generate-pdf-applicant",
+      { data },
+      {
+        responseType: "blob",
+      }
+    );
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "registrant-details.pdf");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+  }
 };
 
 const Profile = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
+  const [isPrinting, setIsPrinting] = useState(false);
 
-  // Memoize the ULI to ensure it does not trigger unnecessary re-renders
   const uli = useMemo(() => user?.uli, [user?.uli]);
 
   const queries = useQueries({
@@ -43,18 +82,18 @@ const Profile = () => {
       {
         queryKey: ["applicant", uli],
         queryFn: () => fetchData(`/api/applicants/uli/${uli}`),
-        enabled: !!uli, // Fetch only if ULI exists
-        staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
+        enabled: !!uli,
+        staleTime: 1000 * 60 * 5,
         retry: 1,
-        refetchOnWindowFocus: false, // Do not refetch on window focus
+        refetchOnWindowFocus: false,
       },
       {
         queryKey: ["registrant", uli],
         queryFn: () => fetchData(`/api/register/uli/${uli}`),
-        enabled: !!uli, // Fetch only if ULI exists
-        staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
+        enabled: !!uli,
+        staleTime: 1000 * 60 * 5,
         retry: 1,
-        refetchOnWindowFocus: false, // Do not refetch on window focus
+        refetchOnWindowFocus: false,
       },
     ],
   });
@@ -62,29 +101,22 @@ const Profile = () => {
   const applicantQuery = queries[0];
   const registrantQuery = queries[1];
 
-  const pdfMutation = useMutation({
-    mutationFn: generatePDF,
-    onSuccess: (data) => {
-      const blob = new Blob([data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-      window.open(url);
-    },
-    onError: (error) => {
-      console.error("Error generating PDF:", error);
-    },
-  });
-
-  const handlePrintPDF = (type, data) => {
-    if (!data) {
-      console.error("No data found for PDF generation");
-      return;
+  const handlePrintClick = async (data) => {
+    setIsPrinting(true);
+    try {
+      await handlePrintPDF(data);
+    } finally {
+      setIsPrinting(false);
     }
+  };
 
-    pdfMutation.mutate({
-      type,
-      uli: user.uli,
-      data,
-    });
+  const handlePrintClickApplicant = async (data) => {
+    setIsPrinting(true);
+    try {
+      await handlePrintPDFApplicant(data);
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   const isLoading = queries.some((query) => query.isLoading);
@@ -145,29 +177,32 @@ const Profile = () => {
                 <Typography>Role: {user?.role}</Typography>
               </Box>
             </TabPanel>
-
+            {console.log(
+              "ApplicantQuery.data.data",
+              applicantQuery?.data?.data
+            )}
             <TabPanel value={activeTab} index={1}>
               {applicantQuery.data ? (
                 <ApplicantDetails
                   data={applicantQuery.data}
                   handlePrintPDF={() =>
-                    handlePrintPDF("applicant", applicantQuery.data)
+                    handlePrintClickApplicant(applicantQuery.data?.data)
                   }
-                  isPrinting={pdfMutation.isLoading}
+                  isPrinting={isPrinting}
                 />
               ) : (
                 <Typography>No applicant data available.</Typography>
               )}
             </TabPanel>
-
+            {console.log("RegistrantQuery.data", registrantQuery?.data?.data)}
             <TabPanel value={activeTab} index={2}>
               {registrantQuery.data ? (
                 <RegistrantDetails
                   data={registrantQuery.data.data}
                   handlePrintPDF={() =>
-                    handlePrintPDF("registrant", registrantQuery.data.data)
+                    handlePrintClick(registrantQuery.data.data)
                   }
-                  isPrinting={pdfMutation.isLoading}
+                  isPrinting={isPrinting}
                 />
               ) : (
                 <Typography>No registrant data available.</Typography>

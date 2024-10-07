@@ -1,161 +1,128 @@
-import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
+import handlebars from "handlebars";
+import { fileURLToPath } from "url";
+import htmlPdf from "html-pdf";
+import { promisify } from "util";
 
-const createRegistrantPDF = async (data, imagePath) => {
-  const doc = new PDFDocument({ size: "A4" });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  // Add header
-  doc.fontSize(20).text("Registrant Form", { align: "center" });
-  doc.moveDown();
+const createPdf = promisify(htmlPdf.create);
 
-  // Add profile image if exists
-  if (imagePath) {
-    try {
-      doc.image(imagePath, {
-        fit: [150, 150],
-        align: "center",
-      });
-      doc.moveDown();
-    } catch (error) {
-      console.error("Error adding image to PDF:", error);
-    }
-  }
-
-  // Add registrant information
-  doc.fontSize(12);
-
-  // Personal Information
-  doc.font("Helvetica-Bold").text("Personal Information");
-  doc
-    .font("Helvetica")
-    .text(`ULI: ${data.uli}`)
-    .text(
-      `Name: ${data.name.firstName} ${data.name.middleName} ${data.name.lastName}`
-    )
-    .text(`Civil Status: ${data.personalInformation.civilStatus}`)
-    .text(`Nationality: ${data.personalInformation.nationality}`)
-    .text(
-      `Birthdate: ${new Date(
-        data.personalInformation.birthdate
-      ).toLocaleDateString()}`
-    )
-    .text(`Age: ${data.personalInformation.age}`);
-  doc.moveDown();
-
-  // Contact Information
-  doc.font("Helvetica-Bold").text("Contact Information");
-  doc
-    .font("Helvetica")
-    .text(`Email: ${data.contact.email}`)
-    .text(`Mobile: ${data.contact.mobileNumber}`);
-  doc.moveDown();
-
-  // Address
-  doc.font("Helvetica-Bold").text("Complete Mailing Address");
-  doc
-    .font("Helvetica")
-    .text(`Street: ${data.completeMailingAddress.street}`)
-    .text(`Barangay: ${data.completeMailingAddress.barangay}`)
-    .text(`City: ${data.completeMailingAddress.city}`)
-    .text(`Province: ${data.completeMailingAddress.province}`)
-    .text(`Region: ${data.completeMailingAddress.region}`);
-  doc.moveDown();
-
-  // Education and Employment
-  doc.font("Helvetica-Bold").text("Education and Employment");
-  doc
-    .font("Helvetica")
-    .text(`Education: ${data.education}`)
-    .text(`Employment Status: ${data.employmentStatus}`)
-    .text(`Course: ${data.course}`);
-
-  return doc;
-};
-
-const createApplicantPDF = async (data, imagePath) => {
-  const doc = new PDFDocument({ size: "A4" });
-
-  // Add header
-  doc.fontSize(20).text("Applicant Form", { align: "center" });
-  doc.moveDown();
-
-  // Add profile image if exists
-  if (imagePath) {
-    try {
-      doc.image(imagePath, {
-        fit: [150, 150],
-        align: "center",
-      });
-      doc.moveDown();
-    } catch (error) {
-      console.error("Error adding image to PDF:", error);
-    }
-  }
-
-  // Add applicant information
-  doc.fontSize(12);
-
-  // Personal Information
-  doc.font("Helvetica-Bold").text("Personal Information");
-  doc
-    .font("Helvetica")
-    .text(`ULI: ${data.uli}`)
-    .text(
-      `Name: ${data.name.firstName} ${data.name.middleName} ${data.name.lastName}`
-    )
-    .text(`Sex: ${data.sex}`)
-    .text(`Civil Status: ${data.civilStatus}`)
-    .text(`Birthdate: ${new Date(data.birthdate).toLocaleDateString()}`)
-    .text(`Age: ${data.age}`);
-  doc.moveDown();
-
-  // Training Information
-  doc.font("Helvetica-Bold").text("Training Information");
-  doc
-    .font("Helvetica")
-    .text(`Training Center: ${data.trainingCenterName}`)
-    .text(`Assessment Title: ${data.assessmentTitle}`)
-    .text(`Assessment Type: ${data.assessmentType}`);
-  doc.moveDown();
-
-  // Address
-  doc.font("Helvetica-Bold").text("Complete Mailing Address");
-  doc
-    .font("Helvetica")
-    .text(`Street: ${data.completeMailingAddress.street}`)
-    .text(`Barangay: ${data.completeMailingAddress.barangay}`)
-    .text(`City: ${data.completeMailingAddress.city}`)
-    .text(`Province: ${data.completeMailingAddress.province}`)
-    .text(`Region: ${data.completeMailingAddress.region}`);
-
-  // Add work experience if exists
-  if (data.workExperience && data.workExperience.length > 0) {
-    doc.moveDown();
-    doc.font("Helvetica-Bold").text("Work Experience");
-    data.workExperience.forEach((work) => {
-      doc
-        .font("Helvetica")
-        .text(`Company: ${work.companyName}`)
-        .text(`Position: ${work.position}`)
-        .text(`Monthly Salary: ${work.monthlySalary}`)
-        .text(`Years in Work: ${work.noOfYearsInWork}`);
-      doc.moveDown(0.5);
-    });
-  }
-
-  return doc;
-};
-
-export const generatePDF = async (type, data, imagePath) => {
+// Registrant
+export const generatePDF = async (data) => {
+  console.log("Starting PDF generation...");
   try {
-    const doc =
-      type === "registrant"
-        ? await createRegistrantPDF(data, imagePath)
-        : await createApplicantPDF(data, imagePath);
+    // Load and compile template
+    const templatePath = path.resolve(
+      __dirname,
+      "../template/registrant-template.html"
+    );
+    const templateHtml = fs.readFileSync(templatePath, "utf8");
+    const template = handlebars.compile(templateHtml);
 
-    return doc;
+    // Format date if needed
+    const formattedData = {
+      ...data,
+      personalInformation: {
+        ...data.personalInformation,
+        birthdate: new Date(
+          data.personalInformation.birthdate
+        ).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+      },
+    };
+    console.log("Data formatted:", formattedData);
+
+    const compiledHtml = template(formattedData);
+
+    // Save compiled HTML for debugging
+    fs.writeFileSync("debug-output.html", compiledHtml);
+
+    // Generate PDF
+    const options = {
+      format: "A4",
+      border: {
+        top: "20mm",
+        right: "20mm",
+        bottom: "20mm",
+        left: "20mm",
+      },
+    };
+
+    return new Promise((resolve, reject) => {
+      htmlPdf.create(compiledHtml, options).toBuffer((err, buffer) => {
+        if (err) {
+          console.error("Error generating PDF:", err);
+          reject(err);
+        } else {
+          console.log("PDF generated successfully!");
+          resolve(buffer);
+        }
+      });
+    });
   } catch (error) {
-    throw new Error(`Error generating PDF: ${error.message}`);
+    console.error("Error in PDF generation:", error);
+    throw error;
+  }
+};
+
+// Applicant
+export const generatePDFApplicant = async (data) => {
+  console.log("Starting PDF generation...");
+  try {
+    // Load and compile template
+    const templatePath = path.resolve(
+      __dirname,
+      "../template/applicant-template.html"
+    );
+    const templateHtml = fs.readFileSync(templatePath, "utf8");
+    const template = handlebars.compile(templateHtml);
+
+    // Format date if needed
+    const formattedData = {
+      ...data,
+      birthdate: new Date(data.birthdate).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    };
+    console.log("Data formatted:", formattedData);
+
+    const compiledHtml = template(formattedData);
+
+    // Save compiled HTML for debugging
+    fs.writeFileSync("debug-output.html", compiledHtml);
+
+    // Generate PDF
+    const options = {
+      format: "A4",
+      border: {
+        top: "20mm",
+        right: "20mm",
+        bottom: "20mm",
+        left: "20mm",
+      },
+    };
+
+    return new Promise((resolve, reject) => {
+      htmlPdf.create(compiledHtml, options).toBuffer((err, buffer) => {
+        if (err) {
+          console.error("Error generating PDF:", err);
+          reject(err);
+        } else {
+          console.log("PDF generated successfully!");
+          resolve(buffer);
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Error in PDF generation:", error);
+    throw error;
   }
 };
