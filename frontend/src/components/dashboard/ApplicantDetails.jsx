@@ -25,6 +25,9 @@ const ApplicantDetails = ({ data, handlePrintPDF, isPrinting }) => {
       </Typography>
       <Typography>Training Center: {data.data?.trainingCenterName}</Typography>
       <Typography>Assessment Title: {data.data?.assessmentTitle}</Typography>
+      <Typography>
+        Application Status: {data.data?.applicationStatus}
+      </Typography>
       <Button
         variant="contained"
         color="primary"

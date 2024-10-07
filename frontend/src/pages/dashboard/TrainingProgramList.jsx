@@ -1,7 +1,7 @@
 import { Box, Typography, CircularProgress, Alert } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import TrainingProgramCard from "../../components/dashboard/TrainingProgramCard";
+import TrainingProgramListItem from "../../components/dashboard/TrainingProgramListItem";
 
 // Axios instance to interact with the backend
 const api = axios.create({
@@ -38,7 +38,7 @@ const TrainingProgramList = () => {
       {/* Render list of Training Programs */}
       {data.length > 0 ? (
         data.map((program) => (
-          <TrainingProgramCard key={program._id} program={program} />
+          <TrainingProgramListItem key={program._id} program={program} />
         ))
       ) : (
         <Typography variant="body1" color="textSecondary">

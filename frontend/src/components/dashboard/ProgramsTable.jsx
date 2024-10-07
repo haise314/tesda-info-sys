@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import {
   DataGrid,
   GridActionsCellItem,
@@ -9,34 +10,22 @@ import {
 import {
   Box,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  useMediaQuery,
-  Stack,
-  Container,
   CircularProgress,
+  Container,
+  duration,
+  Stack,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
-import axios from "axios";
-import { applicantColumns } from "../utils/column/applicant.column.js";
-import {
-  flattenApplicantData,
-  unflattenApplicantData,
-} from "../utils/flatten/applicant.flatten.js";
-import { useTheme } from "@emotion/react";
+import { programsColumns } from "../utils/column/programs.column";
 import { TableContainer } from "../../layouts/TableContainer";
+import { useTheme } from "@emotion/react";
 
-const fetchApplicants = async () => {
-  const response = await axios.get("/api/applicants");
-  return Array.isArray(response.data.data)
-    ? response.data.data.map(flattenApplicantData)
-    : [flattenApplicantData(response.data.data)];
+const fetchPrograms = async () => {
+  const response = await axios.get("/api/programs");
+  return response.data;
 };
 
 const getDefaultColumnVisibility = (columns) => {
@@ -47,7 +36,7 @@ const getDefaultColumnVisibility = (columns) => {
   return visibility;
 };
 
-const ApplicantTable = () => {
+const ProgramsTable = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const queryClient = useQueryClient();
@@ -55,94 +44,70 @@ const ApplicantTable = () => {
   const [rows, setRows] = useState([]);
 
   const {
-    data: applicants,
+    data: programs,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["applicants"],
-    queryFn: fetchApplicants,
+    queryKey: ["programs"],
+    queryFn: fetchPrograms,
   });
 
   useEffect(() => {
-    if (applicants) {
-      setRows(applicants);
+    if (programs) {
+      setRows(programs);
     }
-  }, [applicants]);
+  }, [programs]);
 
-  // Update applicant mutation
-  // This mutation is used to update an applicant's data
-  // It sends a request to the server to update the applicant
-  const updateApplicantMutation = useMutation({
+  const updateProgramMutation = useMutation({
     mutationFn: async (params) => {
-      const { id, field, value } = params;
-
-      const currentRow = apiRef.current?.getRow(id);
-      if (!currentRow) {
-        throw new Error("Row not found");
-      }
-
-      const updatedRow = { ...currentRow, [field]: value };
-
-      const unFlattenedData = unflattenApplicantData(updatedRow);
-      const response = await axios.put(
-        `/api/applicants/${id}`,
-        unFlattenedData
-      );
+      const { id, ...updateData } = params;
+      const response = await axios.put(`/api/programs/${id}`, updateData);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["applicants"]);
+      queryClient.invalidateQueries(["programs"]);
     },
     onError: (error) => {
       console.error("Update error:", error);
-      alert("Failed to update applicant. Please try again.");
+      alert("Failed to update program. Please try again.");
     },
   });
 
-  const deleteApplicantMutation = useMutation({
-    mutationFn: (id) => axios.delete(`/api/applicants/${id}`),
+  const deleteProgramMutation = useMutation({
+    mutationFn: (id) => axios.delete(`/api/programs/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries(["applicants"]);
+      queryClient.invalidateQueries(["programs"]);
     },
   });
 
   const handleDeleteClick = (id) => () => {
-    if (window.confirm("Are you sure you want to delete this applicant?")) {
-      deleteApplicantMutation.mutate(id);
+    if (window.confirm("Are you sure you want to delete this program?")) {
+      deleteProgramMutation.mutate(id);
     }
   };
 
-  // this function is called when a row is updated
-  // it sends a request to the server to update the row
   const processRowUpdate = React.useCallback(
     async (newRow, oldRow) => {
-      const field = Object.keys(newRow).find(
+      const changedField = Object.keys(newRow).find(
         (key) => newRow[key] !== oldRow[key]
       );
-      if (!field) return oldRow; // No changes
+      if (!changedField) return oldRow; // No changes
 
       try {
-        await updateApplicantMutation.mutateAsync({
+        await updateProgramMutation.mutateAsync({
           id: newRow._id,
-          field,
-          value: newRow[field],
+          [changedField]: newRow[changedField],
         });
         return newRow;
       } catch (error) {
         return oldRow;
       }
     },
-    [updateApplicantMutation]
+    [updateProgramMutation]
   );
 
-  // Make all columns editable
-  const editableColumns = applicantColumns.map((column) => ({
-    ...column,
-    editable: true,
-  }));
-
   const columns = [
-    ...editableColumns,
+    ...programsColumns,
     {
       field: "actions",
       type: "actions",
@@ -160,7 +125,8 @@ const ApplicantTable = () => {
   ];
 
   const handleAddClick = () => {
-    console.log("Add new applicant");
+    console.log("Add new program");
+    // Implement the logic to add a new program
   };
 
   if (isLoading) {
@@ -176,12 +142,13 @@ const ApplicantTable = () => {
         <Box sx={{ textAlign: "center" }}>
           <CircularProgress size={60} />
           <Typography variant="h6" sx={{ mt: 2 }}>
-            Loading Registrant Data...
+            Loading Program Data...
           </Typography>
         </Box>
       </Container>
     );
   }
+
   if (error) {
     return (
       <Container>
@@ -206,7 +173,7 @@ const ApplicantTable = () => {
           startIcon={<AddIcon />}
           onClick={handleAddClick}
         >
-          Add Applicant
+          Add Program
         </Button>
       </Stack>
       <DataGrid
@@ -230,15 +197,16 @@ const ApplicantTable = () => {
         initialState={{
           columns: {
             columnVisibilityModel: {
-              ...getDefaultColumnVisibility(applicantColumns),
-              uli: true,
-              fullName: true,
-              email: !isMobile,
-              mobileNumber: !isMobile,
-              employmentStatus: !isMobile,
-              highestEducationalAttainment: !isMobile,
-              createdAt: !isMobile,
-              applicationStatus: !isMobile,
+              ...getDefaultColumnVisibility(columns),
+              name: true,
+              duration: !isMobile,
+              qualificationLevel: !isMobile,
+              startDate: !isMobile,
+              endDate: !isMobile,
+              location: !isMobile,
+              trainer: !isMobile,
+              scholStartDatearshipAvailable: true,
+              slotsAvailable: true,
               actions: true,
             },
           },
@@ -253,4 +221,4 @@ const ApplicantTable = () => {
   );
 };
 
-export default ApplicantTable;
+export default ProgramsTable;

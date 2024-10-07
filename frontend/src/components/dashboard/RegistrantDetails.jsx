@@ -26,6 +26,9 @@ const RegistrantDetails = ({ data, handlePrintPDF, isPrinting }) => {
         }, ${data.completeMailingAddress?.city || ""}`}
       </Typography>
       <Typography>Contact Email: {data.contact?.email || ""}</Typography>
+      <Typography>
+        Registration Status: {data.registrationStatus || ""}
+      </Typography>
       <Button
         onClick={handlePrintPDF}
         disabled={isPrinting}

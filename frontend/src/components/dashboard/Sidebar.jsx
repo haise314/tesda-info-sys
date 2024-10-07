@@ -68,6 +68,12 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       roles: ["client", "admin", "superadmin"],
     },
     {
+      title: "Training Program Table",
+      path: "training-program-table",
+      icon: <FeedIcon />,
+      roles: ["admin", "superadmin"],
+    },
+    {
       title: "MATB",
       path: "MATB",
       icon: <Quiz />,

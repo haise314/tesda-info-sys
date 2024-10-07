@@ -34,6 +34,7 @@ import Unauthorized from "./pages/public/UnauthorizedPage.jsx";
 import TrainingProgramList from "./pages/dashboard/TrainingProgramList.jsx";
 import UsersTable from "./components/dashboard/UsersTable.jsx";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import ProgramsTable from "./components/dashboard/ProgramsTable.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -185,6 +186,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["client", "admin", "superadmin"]}>
             <TrainingProgramList />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "training-program-table",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <ProgramsTable />
           </ProtectedRoute>
         ),
       },
