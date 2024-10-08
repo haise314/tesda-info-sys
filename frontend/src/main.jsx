@@ -42,6 +42,8 @@ import TestSessionTable from "./components/dashboard/TestSessionTable.jsx";
 import ResultsTable from "./components/dashboard/ResultsTable.jsx";
 import UserTestResults from "./components/dashboard/UserTestResults.jsx";
 import UserResultsList from "./components/dashboard/UserTestResults.jsx";
+import NewsTable from "./components/dashboard/NewsTable.jsx";
+import NewsList from "./components/dashboard/NewsList.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -249,6 +251,22 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
             <TestSessionTable />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "news-create",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <NewsTable />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "news-list",
+        element: (
+          <ProtectedRoute allowedRoles={["client"]}>
+            <NewsList />
           </ProtectedRoute>
         ),
       },

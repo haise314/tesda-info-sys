@@ -10,7 +10,6 @@ import {
   useTheme,
   useMediaQuery,
   Toolbar,
-  IconButton,
 } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -25,13 +24,12 @@ import {
   Assessment as AssessmentIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
-  Close as CloseIcon,
 } from "@mui/icons-material";
 
 const drawerWidth = 240;
 
 const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const theme = useTheme();
   const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
   const role = user?.role || "client";
@@ -140,6 +138,18 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       roles: ["admin", "superadmin"],
     },
     {
+      title: "News and Updates",
+      path: "news-list",
+      icon: <FeedIcon />,
+      roles: ["client"],
+    },
+    {
+      title: "News Create",
+      path: "news-create",
+      icon: <FeedIcon />,
+      roles: ["admin", "superadmin"],
+    },
+    {
       title: "Settings",
       path: "settings",
       icon: <SettingsIcon />,
@@ -147,24 +157,31 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
     },
     {
       title: "Logout",
-      path: "../",
       icon: <LogoutIcon />,
       roles: ["client", "admin", "superadmin"],
+      onClick: logout,
     },
   ];
 
   const drawer = (
     <Box>
-      <Toolbar /> {/* This creates space for the AppBar */}
+      <Toolbar />
       <List>
         {menuItems
           .filter((item) => item.roles.includes(role))
-          .map(({ title, path, icon }) => (
+          .map(({ title, path, icon, onClick }) => (
             <ListItem key={title} disablePadding>
               <ListItemButton
-                component={NavLink}
-                to={`/dashboard/${path}`}
-                onClick={!isSmUp ? onDrawerToggle : undefined}
+                component={onClick ? "button" : NavLink}
+                to={onClick ? undefined : `/dashboard/${path}`}
+                onClick={(event) => {
+                  if (onClick) {
+                    onClick();
+                  }
+                  if (!isSmUp) {
+                    onDrawerToggle();
+                  }
+                }}
                 sx={{
                   minHeight: 48,
                   "&.active": {

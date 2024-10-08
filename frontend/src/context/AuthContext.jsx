@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
   const login = (userData) => {
     const userWithRole = {
       ...userData,
-      role: userData.role || "client", // Ensure role is always set
+      role: userData.role || "client",
     };
     setUser(userWithRole);
     localStorage.setItem("user", JSON.stringify(userWithRole));
@@ -24,6 +24,8 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    // Use window.location for a full page reload and redirection
+    window.location.href = "/login";
   };
 
   return (

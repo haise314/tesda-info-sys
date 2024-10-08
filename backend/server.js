@@ -15,6 +15,7 @@ import imageRouter from "./routes/image.route.js";
 import pdfRouter from "./routes/generatePDF.route.js";
 import eventRoutes from "./routes/event.route.js";
 import resultsRoutes from "./routes/results.route.js";
+import newsRoutes from "./routes/news.route.js";
 
 dotenv.config();
 const app = express();
@@ -46,6 +47,7 @@ app.use("/api", imageRouter);
 app.use("/api", pdfRouter);
 app.use("/api/events", eventRoutes);
 app.use("/api/results", resultsRoutes);
+app.use("/api/news", newsRoutes);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "/frontend/dist")));
