@@ -200,3 +200,39 @@ export const changePassword = async (req, res) => {
     res.status(500).json({ message: "Server error during password change" });
   }
 };
+
+export const updateUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const user = await User.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const deleteUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findByIdAndDelete(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error while deleting user" });
+  }
+};

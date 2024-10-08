@@ -39,7 +39,7 @@ const UsersTable = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["users-for-table"],
+    queryKey: ["users"],
     queryFn: fetchUsersForTable,
   });
 
@@ -52,11 +52,14 @@ const UsersTable = () => {
   const updateUserMutation = useMutation({
     mutationFn: async (params) => {
       const { id, ...updateData } = params;
-      const response = await axios.put(`/api/auth/users/${id}`, updateData);
+      const response = await axios.put(
+        `/api/auth/users/update/${id}`,
+        updateData
+      );
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["users-for-table"]);
+      queryClient.invalidateQueries(["users"]);
     },
     onError: (error) => {
       console.error("Update error:", error);
@@ -65,9 +68,9 @@ const UsersTable = () => {
   });
 
   const deleteUserMutation = useMutation({
-    mutationFn: (id) => axios.delete(`/api/auth/users/${id}`),
+    mutationFn: (id) => axios.delete(`/api/auth/users/delete/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries(["users-for-table"]);
+      queryClient.invalidateQueries(["users"]);
     },
   });
 
@@ -79,26 +82,28 @@ const UsersTable = () => {
 
   const processRowUpdate = React.useCallback(
     async (newRow, oldRow) => {
+      console.log("Processing row update:", newRow, oldRow);
       const changedField = Object.keys(newRow).find(
         (key) => newRow[key] !== oldRow[key]
       );
       if (!changedField) return oldRow; // No changes
 
       try {
-        await updateUserMutation.mutateAsync({
+        const updatedUser = await updateUserMutation.mutateAsync({
           id: newRow.id,
           [changedField]: newRow[changedField],
         });
-        return newRow;
+        console.log("Update successful:", updatedUser);
+        return updatedUser;
       } catch (error) {
+        console.error("Update failed:", error);
         return oldRow;
       }
     },
     [updateUserMutation]
   );
-
   const columns = [
-    ...userColumns,
+    ...userColumns.map((col) => ({ ...col, editable: true })),
     {
       field: "actions",
       type: "actions",
