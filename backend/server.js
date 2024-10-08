@@ -13,6 +13,7 @@ import trainingProgramRoutes from "./routes/programs.route.js";
 import path from "path";
 import imageRouter from "./routes/image.route.js";
 import pdfRouter from "./routes/generatePDF.route.js";
+import eventRoutes from "./routes/event.route.js";
 
 dotenv.config();
 const app = express();
@@ -42,6 +43,7 @@ app.use("/api/test-sessions", testSessionRoutes);
 app.use("/api/programs", trainingProgramRoutes);
 app.use("/api", imageRouter);
 app.use("/api", pdfRouter);
+app.use("/api/events", eventRoutes);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "/frontend/dist")));

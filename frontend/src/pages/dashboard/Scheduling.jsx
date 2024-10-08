@@ -1,126 +1,189 @@
 import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import {
   Container,
   Typography,
-  Paper,
-  Box,
-  Grid,
   TextField,
   Button,
+  Box,
+  Grid,
+  Paper,
   List,
   ListItem,
   ListItemText,
-  Divider,
+  ListItemSecondaryAction,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import DeleteIcon from "@mui/icons-material/Delete";
+import dayjs from "dayjs"; // Day.js for date manipulation
 
-const Scheduling = () => {
-  // State to store form data and scheduled events
+const TaskScheduler = () => {
+  const [selectedDate, setSelectedDate] = useState(dayjs()); // Ensure the use of dayjs object
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    title: "",
-    date: "",
-    time: "",
+    uli: "",
+    studentName: "",
+    eventName: "",
+    personnelAssigned: "",
+    remarks: "",
   });
-  const [schedule, setSchedule] = useState([]);
 
-  // Handle input changes
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const queryClient = useQueryClient();
+
+  const { data: events = [] } = useQuery({
+    queryKey: ["events"],
+    queryFn: () => axios.get("/api/events").then((res) => res.data),
+  });
+
+  const addEventMutation = useMutation({
+    mutationFn: (newEvent) => axios.post("/api/events", newEvent),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      setIsModalOpen(false);
+      setFormData({
+        uli: "",
+        studentName: "",
+        eventName: "",
+        personnelAssigned: "",
+        remarks: "",
+      });
+    },
+  });
+
+  const deleteEventMutation = useMutation({
+    mutationFn: (id) => axios.delete(`/api/events/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
+  });
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSchedule([...schedule, formData]);
-    setFormData({ title: "", date: "", time: "" }); // Clear form after submission
+  const handleAddEvent = () => {
+    addEventMutation.mutate({ ...formData, date: selectedDate.toISOString() }); // Use the correct format for date storage
   };
 
   return (
-    <Container sx={{ flexGrow: 1, mt: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Dashboard Scheduling
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
+        <Typography variant="h4" gutterBottom>
+          Task Scheduler
         </Typography>
-
-        {/* Scheduling Form */}
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                id="title"
-                name="title"
-                label="Event Title"
-                variant="outlined"
-                value={formData.title}
-                onChange={handleChange}
-                required
-              />
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <TextField
-                fullWidth
-                id="date"
-                name="date"
-                label="Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                value={formData.date}
-                onChange={handleChange}
-                required
-              />
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <TextField
-                fullWidth
-                id="time"
-                name="time"
-                label="Time"
-                type="time"
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                value={formData.time}
-                onChange={handleChange}
-                required
-              />
-            </Grid>
-          </Grid>
-
-          <Box sx={{ mt: 3 }}>
-            <Button type="submit" variant="contained" color="primary" fullWidth>
-              Add to Schedule
-            </Button>
-          </Box>
+        <Box sx={{ mb: 2 }}>
+          {" "}
+          {/* Wrap DatePicker in LocalizationProvider */}
+          <DatePicker
+            label="Select Date"
+            value={selectedDate}
+            onChange={(newDate) => setSelectedDate(dayjs(newDate))} // Ensure the new date is handled as a dayjs object
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setIsModalOpen(true)}
+            sx={{ ml: 2 }}
+          >
+            Add Event
+          </Button>
         </Box>
-
-        <Divider sx={{ my: 4 }} />
-
-        {/* Scheduled Events */}
-        <Typography variant="h6" gutterBottom>
-          Scheduled Events
-        </Typography>
-        {schedule.length > 0 ? (
-          <List>
-            {schedule.map((event, index) => (
-              <ListItem key={index}>
-                <ListItemText
-                  primary={event.title}
-                  secondary={`${event.date} at ${event.time}`}
-                />
-              </ListItem>
-            ))}
-          </List>
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            No events scheduled yet.
-          </Typography>
-        )}
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Typography variant="h6" gutterBottom>
+              Scheduled Events
+            </Typography>
+            <List>
+              {events.map((event) => (
+                <ListItem key={event._id}>
+                  <ListItemText
+                    primary={event.eventName}
+                    secondary={`${dayjs(event.date).format("MM/DD/YYYY")} - ${
+                      event.studentName
+                    }`}
+                  />
+                  <ListItemSecondaryAction>
+                    <IconButton
+                      edge="end"
+                      aria-label="delete"
+                      onClick={() => deleteEventMutation.mutate(event._id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))}
+            </List>
+          </Grid>
+        </Grid>
       </Paper>
+      <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <DialogTitle>Add New Event</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            name="uli"
+            label="ULI"
+            type="text"
+            fullWidth
+            value={formData.uli}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            name="studentName"
+            label="Student Name"
+            type="text"
+            fullWidth
+            value={formData.studentName}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            name="eventName"
+            label="Event Name"
+            type="text"
+            fullWidth
+            value={formData.eventName}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            name="personnelAssigned"
+            label="Personnel Assigned"
+            type="text"
+            fullWidth
+            value={formData.personnelAssigned}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            name="remarks"
+            label="Remarks"
+            type="text"
+            fullWidth
+            multiline
+            rows={4}
+            value={formData.remarks}
+            onChange={handleInputChange}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>
+          <Button onClick={handleAddEvent} color="primary">
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
 
-export default Scheduling;
+export default TaskScheduler;
