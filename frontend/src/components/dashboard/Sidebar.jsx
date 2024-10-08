@@ -42,7 +42,13 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       roles: ["client", "admin", "superadmin"],
     },
     {
-      title: "Clients",
+      title: "Users",
+      path: "users",
+      icon: <PeopleIcon />,
+      roles: ["admin", "superadmin"],
+    },
+    {
+      title: "Registrants",
       path: "clients",
       icon: <PeopleIcon />,
       roles: ["admin", "superadmin"],

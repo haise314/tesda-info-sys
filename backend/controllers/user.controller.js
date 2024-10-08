@@ -147,7 +147,7 @@ export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");
     const formattedUsers = users.map((user) => ({
-      id: user._id.toString(), // Only need this once
+      id: user._id.toString(), // Use _id as the id field
       uli: user.uli,
       role: user.role,
       createdAt: user.createdAt,
@@ -155,8 +155,8 @@ export const getAllUsers = async (req, res) => {
     }));
     res.json(formattedUsers);
   } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ message: error.message });
+    console.error("Error fetching users for table:", error);
+    res.status(500).json({ message: "Server error while fetching users" });
   }
 };
 
