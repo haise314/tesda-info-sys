@@ -28,3 +28,17 @@ export const deleteEvent = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getEventsUli = async (req, res) => {
+  try {
+    const { uli } = req.params; // Changed from req.query to req.params
+    const query = { uli }; // Always filter by ULI
+    if (req.query.upcoming) {
+      query.date = { $gte: new Date() };
+    }
+    const events = await Event.find(query).sort({ date: 1 });
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

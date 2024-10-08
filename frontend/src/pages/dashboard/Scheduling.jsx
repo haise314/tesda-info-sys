@@ -18,17 +18,26 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  AccordionDetails,
+  Accordion,
+  AccordionSummary,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import DeleteIcon from "@mui/icons-material/Delete";
 import dayjs from "dayjs"; // Day.js for date manipulation
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 const TaskScheduler = () => {
   const [selectedDate, setSelectedDate] = useState(dayjs()); // Ensure the use of dayjs object
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     uli: "",
-    studentName: "",
+    clientName: "",
+    clientType: "",
     eventName: "",
     personnelAssigned: "",
     remarks: "",
@@ -48,7 +57,8 @@ const TaskScheduler = () => {
       setIsModalOpen(false);
       setFormData({
         uli: "",
-        studentName: "",
+        clientName: "",
+        clientType: "",
         eventName: "",
         personnelAssigned: "",
         remarks: "",
@@ -101,23 +111,53 @@ const TaskScheduler = () => {
             </Typography>
             <List>
               {events.map((event) => (
-                <ListItem key={event._id}>
-                  <ListItemText
-                    primary={event.eventName}
-                    secondary={`${dayjs(event.date).format("MM/DD/YYYY")} - ${
-                      event.studentName
-                    }`}
-                  />
-                  <ListItemSecondaryAction>
-                    <IconButton
-                      edge="end"
-                      aria-label="delete"
-                      onClick={() => deleteEventMutation.mutate(event._id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </ListItem>
+                <Accordion key={event._id}>
+                  <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    aria-controls={`panel-${event._id}-content`}
+                    id={`panel-${event._id}-header`}
+                  >
+                    <Typography>{`${event.eventName} - ${
+                      event.clientType
+                    } - ${new Date(
+                      event.date
+                    ).toLocaleDateString()}`}</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {/* Event details */}
+                    <AccordionDetails>
+                      <Typography>
+                        <strong>Date:</strong>{" "}
+                        {new Date(event.date).toLocaleDateString()}
+                      </Typography>
+                      <Typography>
+                        <strong>Student Name:</strong> {event.clientName}
+                      </Typography>
+                      <Typography>
+                        <strong>ULI:</strong> {event.uli}
+                      </Typography>
+                      <Typography>
+                        <strong>Client Type:</strong> {event.clientType}
+                      </Typography>
+                      <Typography>
+                        <strong>Personnel Assigned:</strong>{" "}
+                        {event.personnelAssigned}
+                      </Typography>
+                      <Typography>
+                        <strong>Remarks:</strong> {event.remarks}
+                      </Typography>
+                      <Box sx={{ mt: 2 }}>
+                        <IconButton
+                          edge="end"
+                          aria-label="delete"
+                          onClick={() => deleteEventMutation.mutate(event._id)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    </AccordionDetails>
+                  </AccordionDetails>
+                </Accordion>
               ))}
             </List>
           </Grid>
@@ -138,13 +178,28 @@ const TaskScheduler = () => {
           />
           <TextField
             margin="dense"
-            name="studentName"
-            label="Student Name"
+            name="clientName"
+            label="Client Name"
             type="text"
             fullWidth
-            value={formData.studentName}
+            value={formData.clientName}
             onChange={handleInputChange}
           />
+          <FormControl fullWidth margin="dense">
+            <InputLabel id="client-type-label">Client Type</InputLabel>
+            <Select
+              labelId="client-type-label"
+              name="clientType"
+              value={formData.clientType}
+              onChange={handleInputChange}
+              label="Client Type"
+            >
+              <MenuItem value="Student">Student</MenuItem>
+              <MenuItem value="Faculty">Faculty</MenuItem>
+              <MenuItem value="Staff">Staff</MenuItem>
+              <MenuItem value="Guest">Guest</MenuItem>
+            </Select>
+          </FormControl>
           <TextField
             margin="dense"
             name="eventName"

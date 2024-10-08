@@ -35,6 +35,8 @@ import TrainingProgramList from "./pages/dashboard/TrainingProgramList.jsx";
 import UsersTable from "./components/dashboard/UsersTable.jsx";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import ProgramsTable from "./components/dashboard/ProgramsTable.jsx";
+import EventCalendar from "./components/dashboard/EventCalendar.jsx";
+import EventCalendarClient from "./components/dashboard/EventCalendarClient.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -194,6 +196,22 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
             <ProgramsTable />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "event-calendar",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <EventCalendar />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "event-calendar-client",
+        element: (
+          <ProtectedRoute allowedRoles={["client"]}>
+            <EventCalendarClient />
           </ProtectedRoute>
         ),
       },

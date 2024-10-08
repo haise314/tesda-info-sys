@@ -98,6 +98,18 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       roles: ["admin", "superadmin"],
     },
     {
+      title: "Event Calendar",
+      path: "event-calendar",
+      icon: <CalendarMonthIcon />,
+      roles: ["admin", "superadmin"],
+    },
+    {
+      title: "Schedules",
+      path: "event-calendar-client",
+      icon: <CalendarMonthIcon />,
+      roles: ["client"],
+    },
+    {
       title: "Reports",
       path: "reports",
       icon: <AssessmentIcon />,
