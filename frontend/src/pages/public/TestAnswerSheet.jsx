@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -13,10 +13,10 @@ import {
   FormControl,
   FormLabel,
   Typography,
-  Grid,
-  Stack,
-  Paper,
   Box,
+  CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 
 const answerSheetSchema = z.object({
@@ -32,11 +32,14 @@ const answerSheetSchema = z.object({
 const TestAnswerSheet = ({ uli }) => {
   const [testCode, setTestCode] = useState("");
   const [sessionId, setSessionId] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const {
     control,
     handleSubmit,
     formState: { errors },
+    setValue,
+    reset,
   } = useForm({
     resolver: zodResolver(answerSheetSchema),
     defaultValues: {
@@ -45,43 +48,22 @@ const TestAnswerSheet = ({ uli }) => {
     },
   });
 
-  // Fetch registrant data using ULI
-  const { data: registrantData, isLoading: isLoadingRegistrant } = useQuery({
-    queryKey: ["registrant", uli],
-    queryFn: async () => {
-      try {
-        console.log("Fetching registrant data for ULI:", uli);
-        const response = await axios.get(`/api/register/uli/${uli}`);
-        if (response.data.success) {
-          return response.data.data;
-        } else {
-          throw new Error(
-            response.data.message || "Failed to fetch registrant data"
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching registrant:", error);
-        throw error;
-      }
-    },
-  });
+  const resetForm = useCallback(() => {
+    reset();
+    setSessionId(null);
+    setTestCode("");
+  }, [reset]);
 
+  // Start test session mutation
   const startSessionMutation = useMutation({
     mutationFn: async (newSession) => {
-      if (!registrantData?._id) {
-        throw new Error("Registrant data not available");
-      }
-
       const payload = {
-        registrantId: registrantData._id,
+        uli,
         testCode: newSession.testCode,
       };
-
-      console.log("Starting session with payload:", payload);
       return axios.post("/api/test-sessions/start", payload);
     },
     onSuccess: (response) => {
-      console.log("Session started successfully:", response.data);
       setSessionId(response.data.data.sessionId);
     },
     onError: (error) => {
@@ -89,6 +71,7 @@ const TestAnswerSheet = ({ uli }) => {
     },
   });
 
+  // Fetch test session data
   const {
     data: testSession,
     isLoading: isLoadingSession,
@@ -103,20 +86,33 @@ const TestAnswerSheet = ({ uli }) => {
     enabled: !!sessionId,
   });
 
+  // Submit answers mutation
   const submitAnswersMutation = useMutation({
-    mutationFn: (answerSheet) => {
-      return axios.post("/api/answer-sheets", {
+    mutationFn: async (answerSheet) => {
+      const answerSheetResponse = await axios.post("/api/answer-sheets", {
         ...answerSheet,
-        registrantId: registrantData._id,
+        uli,
+        testId: testSession.test._id,
       });
+
+      return answerSheetResponse.data;
+    },
+    onSuccess: (data) => {
+      console.log("Answer sheet submitted successfully:", data);
+      setSnackbarOpen(true);
+
+      // Delay the reset to allow the Snackbar to be visible
+      setTimeout(() => {
+        resetForm();
+      }, 2000); // 2 seconds delay
+    },
+    onError: (error) => {
+      console.error("Error submitting answer sheet:", error);
     },
   });
 
+  // Handle start session
   const handleStartSession = async () => {
-    if (!registrantData) {
-      console.error("Registrant data not loaded");
-      return;
-    }
     await startSessionMutation.mutateAsync({ testCode });
   };
 
@@ -124,25 +120,37 @@ const TestAnswerSheet = ({ uli }) => {
     submitAnswersMutation.mutate(data);
   };
 
-  if (isLoadingRegistrant) {
-    return <Typography>Loading registrant data...</Typography>;
-  }
+  // Set initial answers when test session data is loaded
+  React.useEffect(() => {
+    if (testSession && testSession.test) {
+      setValue(
+        "answers",
+        testSession.test.questions.map((question) => ({
+          questionId: question._id,
+          selectedOption: "",
+        }))
+      );
+      setValue("sessionId", sessionId);
+    }
+  }, [testSession, setValue, sessionId]);
 
-  if (!registrantData) {
-    return <Typography>Error: Registrant not found</Typography>;
-  }
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
 
   if (!sessionId) {
     return (
       <Box sx={{ padding: 3 }}>
         <Typography variant="h6" gutterBottom>
-          Welcome, {registrantData.name.firstName}{" "}
-          {registrantData.name.lastName}
+          Welcome, User (ULI: {uli})
         </Typography>
         <Typography variant="body1" gutterBottom>
           Enter the provided Test Code to start the test session
         </Typography>
-        <Stack spacing={2} sx={{ mt: 2 }}>
+        <Box sx={{ mt: 2 }}>
           <TextField
             label="Test Code"
             value={testCode}
@@ -152,113 +160,101 @@ const TestAnswerSheet = ({ uli }) => {
           <Button
             variant="contained"
             onClick={handleStartSession}
-            disabled={startSessionMutation.isPending}
+            disabled={startSessionMutation.isLoading}
             fullWidth
+            sx={{ mt: 2 }}
           >
-            {startSessionMutation.isPending ? "Starting..." : "Start Test"}
+            {startSessionMutation.isLoading ? "Starting..." : "Start Test"}
           </Button>
-        </Stack>
+        </Box>
       </Box>
     );
   }
 
-  if (isLoadingSession) return <Typography>Loading test session...</Typography>;
+  if (isLoadingSession) return <CircularProgress />;
   if (sessionError)
-    return <Typography>Error: {sessionError.message}</Typography>;
+    return <Typography color="error">Error: {sessionError.message}</Typography>;
 
   const { test } = testSession;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <Typography variant="h4" gutterBottom>
-        Test Answer Sheet
-      </Typography>
+    <>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Typography variant="h4" gutterBottom>
+          Test Answer Sheet
+        </Typography>
 
-      <Typography variant="h6">Registrant Information</Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="First Name"
-            value={registrantData.name.firstName}
-            fullWidth
-            InputProps={{ readOnly: true }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Last Name"
-            value={registrantData.name.lastName}
-            fullWidth
-            InputProps={{ readOnly: true }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Middle Name"
-            value={registrantData.name.middleName || ""}
-            fullWidth
-            InputProps={{ readOnly: true }}
-          />
-        </Grid>
-      </Grid>
-
-      <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
-        Test Questions
-      </Typography>
-
-      <input
-        type="hidden"
-        {...control.register("sessionId")}
-        value={sessionId}
-      />
-
-      {test.questions.map((question, index) => (
-        <FormControl
-          key={question._id}
-          component="fieldset"
-          margin="normal"
+        <Typography variant="h6">User Information</Typography>
+        <TextField
+          label="ULI"
+          value={uli}
           fullWidth
-        >
-          <FormLabel component="legend">{`${index + 1}. ${
-            question.questionText
-          }`}</FormLabel>
-          <Controller
-            name={`answers.${index}.selectedOption`}
-            control={control}
-            defaultValue=""
-            render={({ field }) => (
-              <RadioGroup {...field}>
-                {question.options.map((option, optionIndex) => (
-                  <FormControlLabel
-                    key={optionIndex}
-                    value={option._id}
-                    control={<Radio />}
-                    label={option.text}
-                  />
-                ))}
-              </RadioGroup>
-            )}
-          />
-          <input
-            type="hidden"
-            {...control.register(`answers.${index}.questionId`)}
-            value={question._id}
-          />
-        </FormControl>
-      ))}
+          InputProps={{ readOnly: true }}
+          sx={{ mb: 2 }}
+        />
 
-      <Button
-        type="submit"
-        variant="contained"
-        color="primary"
-        disabled={submitAnswersMutation.isPending}
-        sx={{ mt: 2 }}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
+          Test Questions
+        </Typography>
+
+        {test.questions.map((question, index) => (
+          <FormControl
+            key={question._id}
+            component="fieldset"
+            margin="normal"
+            fullWidth
+          >
+            <FormLabel component="legend">{`${index + 1}. ${
+              question.questionText
+            }`}</FormLabel>
+            <Controller
+              name={`answers.${index}.selectedOption`}
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <RadioGroup {...field}>
+                  {question.options.map((option) => (
+                    <FormControlLabel
+                      key={option._id}
+                      value={option._id}
+                      control={<Radio />}
+                      label={option.text}
+                    />
+                  ))}
+                </RadioGroup>
+              )}
+            />
+          </FormControl>
+        ))}
+
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          disabled={submitAnswersMutation.isLoading}
+          sx={{ mt: 2 }}
+        >
+          {submitAnswersMutation.isLoading
+            ? "Submitting..."
+            : "Submit Answer Sheet"}
+        </Button>
+      </form>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={2000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        {submitAnswersMutation.isPending
-          ? "Submitting..."
-          : "Submit Answer Sheet"}
-      </Button>
-    </form>
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Test submitted successfully!
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

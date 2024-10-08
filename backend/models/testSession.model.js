@@ -2,9 +2,8 @@ import mongoose from "mongoose";
 
 const testSessionSchema = new mongoose.Schema(
   {
-    registrant: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Registrant",
+    uli: {
+      type: String,
       required: true,
     },
     test: {
@@ -19,9 +18,6 @@ const testSessionSchema = new mongoose.Schema(
     startTime: {
       type: Date,
       default: Date.now,
-    },
-    endTime: {
-      type: Date,
     },
     status: {
       type: String,

@@ -10,7 +10,6 @@ const MATBform = () => {
 
   const handleLoginSuccess = (userData) => {
     console.log("Login success, userData:", userData);
-
     if (userData && userData.uli) {
       login(userData);
       setUserUli(userData.uli);
@@ -21,24 +20,24 @@ const MATBform = () => {
 
   return (
     <Container
+      maxWidth="md"
       sx={{
-        height: "100vh",
-        flexGrow: 1,
+        minHeight: "100vh",
         display: "flex",
-        flexDirection: "center",
-        alignItems: "center",
+        flexDirection: "column",
         justifyContent: "center",
+        py: 4, // Add some padding to top and bottom
       }}
     >
-      <Paper elevation={2}>
+      <Paper elevation={3} sx={{ overflow: "hidden" }}>
         <Box
           sx={{
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
             alignItems: "center",
-            height: "100%",
-            padding: 3,
+            p: 3,
+            maxHeight: "80vh", // Limit the height
+            overflowY: "auto", // Allow vertical scrolling
           }}
         >
           {userUli ? (

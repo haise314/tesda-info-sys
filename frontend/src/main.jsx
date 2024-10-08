@@ -37,6 +37,8 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import ProgramsTable from "./components/dashboard/ProgramsTable.jsx";
 import EventCalendar from "./components/dashboard/EventCalendar.jsx";
 import EventCalendarClient from "./components/dashboard/EventCalendarClient.jsx";
+import TestList from "./pages/dashboard/TestList.jsx";
+import TestReviewManagement from "./pages/dashboard/TestReviewManagement.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -212,6 +214,22 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["client"]}>
             <EventCalendarClient />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "MATB-list",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <TestList />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "MATB-results",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <TestReviewManagement />
           </ProtectedRoute>
         ),
       },

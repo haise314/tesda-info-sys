@@ -80,6 +80,18 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       roles: ["admin", "superadmin"],
     },
     {
+      title: "MATB Tests",
+      path: "MATB-list",
+      icon: <Quiz />,
+      roles: ["admin", "superadmin"],
+    },
+    {
+      title: "MATB Results",
+      path: "MATB-results",
+      icon: <Quiz />,
+      roles: ["client", "admin", "superadmin"],
+    },
+    {
       title: "Feedback",
       path: "feedback",
       icon: <FeedbackIcon />,

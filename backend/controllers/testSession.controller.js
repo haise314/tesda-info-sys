@@ -1,18 +1,9 @@
 import TestSession from "../models/testSession.model.js";
 import Test from "../models/test.model.js";
-import Registrant from "../models/registrant.model.js"; // Assuming you have this model
 
 export const startTestSession = async (req, res) => {
   try {
-    const { registrantId, testCode } = req.body;
-
-    // Find the registrant
-    const registrant = await Registrant.findById(registrantId);
-    if (!registrant) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Registrant not found" });
-    }
+    const { uli, testCode } = req.body;
 
     // Find the test by test code
     const test = await Test.findOne({ testCode });
@@ -24,7 +15,7 @@ export const startTestSession = async (req, res) => {
 
     // Create a new test session
     const testSession = new TestSession({
-      registrant: registrantId,
+      uli,
       test: test._id,
       testCode,
     });
@@ -47,9 +38,7 @@ export const startTestSession = async (req, res) => {
 export const getTestSession = async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const testSession = await TestSession.findById(sessionId)
-      .populate("registrant")
-      .populate("test");
+    const testSession = await TestSession.findById(sessionId).populate("test");
 
     if (!testSession) {
       return res
@@ -66,4 +55,29 @@ export const getTestSession = async (req, res) => {
   }
 };
 
-// Add other CRUD operations as needed
+export const endTestSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { endTime } = req.body;
+
+    const updatedSession = await TestSession.findByIdAndUpdate(
+      sessionId,
+      { endTime, status: "completed" },
+      { new: true }
+    );
+
+    if (!updatedSession) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Test session not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Test session ended successfully",
+      data: updatedSession,
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
