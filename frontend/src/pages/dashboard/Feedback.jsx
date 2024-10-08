@@ -1,36 +1,20 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { Pie } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PieController,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from "chart.js";
+import { Doughnut } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import {
   Container,
   Typography,
   Grid,
   CircularProgress,
   Box,
-  Divider,
   Paper,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PieController,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const fetchFeedbackData = async () => {
   try {
@@ -88,30 +72,11 @@ const processFeedbackData = (feedbacks) => {
   });
 };
 
-const options = {
-  responsive: true,
-  plugins: {
-    legend: {
-      position: "top",
-    },
-    tooltip: {
-      callbacks: {
-        label: function (tooltipItem) {
-          const dataset = tooltipItem.dataset;
-          const total = dataset.data.reduce((a, b) => a + b, 0);
-          const currentValue = dataset.data[tooltipItem.dataIndex];
-          const percentage = Math.floor((currentValue / total) * 100 + 0.5);
-
-          return `${
-            dataset.labels[tooltipItem.dataIndex]
-          }: ${percentage}% (${currentValue})`;
-        },
-      },
-    },
-  },
-};
-
 const FeedbackCharts = () => {
+  const theme = useTheme();
+  const isXSmallScreen = useMediaQuery(theme.breakpoints.down("xs"));
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
   const {
     data: feedbackData,
     isLoading,
@@ -120,19 +85,50 @@ const FeedbackCharts = () => {
   } = useQuery({
     queryKey: ["feedbackData"],
     queryFn: fetchFeedbackData,
-    refetchOnMount: true, // Add this to refetch when component mounts
-    refetchOnWindowFocus: true, // Add this to refetch when window gains focus
-    cacheTime: 0, // Disable caching
-    staleTime: 0, // Data is immediately considered stale
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    cacheTime: 0,
+    staleTime: 0,
   });
 
   const chartData = React.useMemo(() => {
     return processFeedbackData(feedbackData);
   }, [feedbackData]);
 
+  const chartOptions = React.useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: isXSmallScreen ? "bottom" : "right",
+          labels: {
+            boxWidth: 10,
+            padding: isXSmallScreen ? 5 : 10,
+            font: {
+              size: isXSmallScreen ? 10 : 12,
+            },
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: function (tooltipItem) {
+              const dataset = tooltipItem.dataset;
+              const total = dataset.data.reduce((a, b) => a + b, 0);
+              const currentValue = dataset.data[tooltipItem.dataIndex];
+              const percentage = Math.floor((currentValue / total) * 100 + 0.5);
+              return `${tooltipItem.label}: ${percentage}% (${currentValue})`;
+            },
+          },
+        },
+      },
+    }),
+    [isXSmallScreen]
+  );
+
   if (isLoading) {
     return (
-      <Container
+      <Box
         sx={{
           display: "flex",
           justifyContent: "center",
@@ -140,68 +136,51 @@ const FeedbackCharts = () => {
           height: "100vh",
         }}
       >
-        <Box sx={{ textAlign: "center" }}>
-          <CircularProgress size={60} />
-          <Typography variant="h6" sx={{ mt: 2 }}>
-            Loading Feedback Data...
-          </Typography>
-        </Box>
-      </Container>
+        <CircularProgress />
+      </Box>
     );
   }
 
   if (isError) {
     return (
       <Container>
-        <Typography color="error">Error: {error.message}</Typography>
-        <Typography color="error">Stack: {error.stack}</Typography>
+        <Typography color="error" variant="h6">
+          Error: {error.message}
+        </Typography>
       </Container>
     );
   }
 
   return (
-    <Container>
-      <Typography variant="h4" gutterBottom align="center">
+    <Container maxWidth="lg" sx={{ py: 2 }}>
+      <Typography variant="h5" gutterBottom align="center" sx={{ mb: 2 }}>
         Feedback Ratings
       </Typography>
-      {chartData.length > 0 ? (
-        <Grid container spacing={3}>
-          {chartData.map((chart, index) => (
-            <Grid item xs={6} md={3} key={index}>
-              <Paper
+      <Grid container spacing={2}>
+        {chartData.map((chart, index) => (
+          <Grid item xs={12} sm={6} md={3} key={index}>
+            <Paper
+              elevation={3}
+              sx={{
+                p: 1,
+                height: isXSmallScreen ? 300 : isSmallScreen ? 350 : 400,
+              }}
+            >
+              <Typography variant="subtitle2" align="center" sx={{ mb: 1 }}>
+                {chart.question}
+              </Typography>
+              <Box
                 sx={{
-                  p: 2,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  aspectRatio: "1/1",
+                  height: isXSmallScreen ? "85%" : "90%",
+                  position: "relative",
                 }}
-                elevation={2}
               >
-                <Typography
-                  variant="label"
-                  gutterBottom
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    textAlign: "center",
-                  }}
-                >
-                  {chart.question}
-                </Typography>
-                <Divider />
-                <Pie options={options} data={chart.data} />
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
-      ) : (
-        <Typography align="center">
-          No feedback data available. Raw data: {JSON.stringify(feedbackData)}
-        </Typography>
-      )}
+                <Doughnut data={chart.data} options={chartOptions} />
+              </Box>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
     </Container>
   );
 };
