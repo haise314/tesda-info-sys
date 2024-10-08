@@ -124,10 +124,10 @@ const ProgramsTable = () => {
     },
   ];
 
-  const handleAddClick = () => {
-    console.log("Add new program");
-    // Implement the logic to add a new program
-  };
+  //   const handleAddClick = () => {
+  //     console.log("Add new program");
+  //     // Implement the logic to add a new program
+  //   };
 
   if (isLoading) {
     return (
@@ -167,14 +167,14 @@ const ProgramsTable = () => {
         sx={{ mb: 2 }}
         alignItems={{ xs: "stretch", sm: "center" }}
       >
-        <Button
+        {/* <Button
           fullWidth={isMobile}
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleAddClick}
         >
           Add Program
-        </Button>
+        </Button> */}
       </Stack>
       <DataGrid
         apiRef={apiRef}

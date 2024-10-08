@@ -6,11 +6,11 @@ import {
   IconButton,
   Menu,
   MenuItem,
-  Avatar,
   Box,
   Badge,
   useTheme,
   Stack,
+  Avatar,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -20,6 +20,7 @@ import {
 } from "@mui/icons-material";
 import { useAuth } from "../../context/AuthContext";
 import tesdaIcon from "../../assets/tesda_icon.png";
+import ProfileImage from "./ProfileImage";
 
 const TopBar = ({ onDrawerToggle }) => {
   const { user, logout } = useAuth();
@@ -37,6 +38,12 @@ const TopBar = ({ onDrawerToggle }) => {
   const handleLogout = () => {
     handleClose();
     logout();
+  };
+
+  const getDashboardTitle = () => {
+    if (user?.role?.includes("superadmin")) return "Super Admin Dashboard";
+    if (user?.role?.includes("admin")) return "Admin Dashboard";
+    return "Client Dashboard";
   };
 
   return (
@@ -74,9 +81,7 @@ const TopBar = ({ onDrawerToggle }) => {
         />
 
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          {user?.role?.includes("admin")
-            ? "Admin Dashboard"
-            : "Client Dashboard"}
+          {getDashboardTitle()}
         </Typography>
 
         <Stack direction="row" spacing={1} alignItems="center">

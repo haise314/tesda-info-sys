@@ -45,7 +45,7 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       title: "Users",
       path: "users",
       icon: <PeopleIcon />,
-      roles: ["admin", "superadmin"],
+      roles: ["superadmin"],
     },
     {
       title: "Registrants",
@@ -60,10 +60,22 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       roles: ["admin", "superadmin"],
     },
     {
+      title: "Deleted Applicants",
+      path: "deleted-applicants",
+      icon: <PeopleIcon />,
+      roles: ["superadmin"],
+    },
+    {
+      title: "Deleted Registrants",
+      path: "deleted-registrants",
+      icon: <PeopleIcon />,
+      roles: ["superadmin"],
+    },
+    {
       title: "Create Training Programs",
       path: "programs",
       icon: <FeedIcon />,
-      roles: ["admin", "superadmin"],
+      roles: ["superadmin"],
     },
     {
       title: "Training Programs",
@@ -75,7 +87,7 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       title: "Training Program Table",
       path: "training-program-table",
       icon: <FeedIcon />,
-      roles: ["admin", "superadmin"],
+      roles: ["superadmin"],
     },
     {
       title: "MATB Create Test",
@@ -113,12 +125,12 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       icon: <FeedbackIcon />,
       roles: ["admin", "superadmin"],
     },
-    {
-      title: "Notifications",
-      path: "notifications",
-      icon: <NotificationsIcon />,
-      roles: ["client", "admin", "superadmin"],
-    },
+    // {
+    //   title: "Notifications",
+    //   path: "notifications",
+    //   icon: <NotificationsIcon />,
+    //   roles: ["client", "admin", "superadmin"],
+    // },
     {
       title: "Scheduling",
       path: "scheduling",
@@ -137,12 +149,12 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       icon: <CalendarMonthIcon />,
       roles: ["client"],
     },
-    {
-      title: "Reports",
-      path: "reports",
-      icon: <AssessmentIcon />,
-      roles: ["admin", "superadmin"],
-    },
+    // {
+    //   title: "Reports",
+    //   path: "reports",
+    //   icon: <AssessmentIcon />,
+    //   roles: ["admin", "superadmin"],
+    // },
     {
       title: "News and Updates",
       path: "news-list",
@@ -155,12 +167,12 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       icon: <FeedIcon />,
       roles: ["admin", "superadmin"],
     },
-    {
-      title: "Settings",
-      path: "settings",
-      icon: <SettingsIcon />,
-      roles: ["admin", "superadmin"],
-    },
+    // {
+    //   title: "Settings",
+    //   path: "settings",
+    //   icon: <SettingsIcon />,
+    //   roles: ["admin", "superadmin"],
+    // },
     {
       title: "Logout",
       icon: <LogoutIcon />,

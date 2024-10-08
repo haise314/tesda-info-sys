@@ -16,6 +16,8 @@ import pdfRouter from "./routes/generatePDF.route.js";
 import eventRoutes from "./routes/event.route.js";
 import resultsRoutes from "./routes/results.route.js";
 import newsRoutes from "./routes/news.route.js";
+import deletedApplicantRoutes from "./routes/deletedApplicant.route.js";
+import deletedRegistrantRoutes from "./routes/deletedRegistrant.route.js";
 
 dotenv.config();
 const app = express();
@@ -48,6 +50,8 @@ app.use("/api", pdfRouter);
 app.use("/api/events", eventRoutes);
 app.use("/api/results", resultsRoutes);
 app.use("/api/news", newsRoutes);
+app.use("/api/deleted-applicants", deletedApplicantRoutes);
+app.use("/api/deleted-registrants", deletedRegistrantRoutes);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "/frontend/dist")));

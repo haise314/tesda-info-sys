@@ -123,10 +123,10 @@ const TestSessionTable = () => {
     },
   ];
 
-  const handleAddClick = () => {
-    console.log("Add new test session");
-    // Implement the logic to add a new test session
-  };
+  // const handleAddClick = () => {
+  //   console.log("Add new test session");
+  //   // Implement the logic to add a new test session
+  // };
 
   if (isLoading) {
     return (
@@ -166,14 +166,14 @@ const TestSessionTable = () => {
         sx={{ mb: 2 }}
         alignItems={{ xs: "stretch", sm: "center" }}
       >
-        <Button
+        {/* <Button
           fullWidth={isMobile}
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleAddClick}
         >
           Add Test Session
-        </Button>
+        </Button> */}
       </Stack>
       <DataGrid
         apiRef={apiRef}
