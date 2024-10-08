@@ -74,7 +74,7 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       roles: ["admin", "superadmin"],
     },
     {
-      title: "MATB",
+      title: "MATB Create Test",
       path: "MATB",
       icon: <Quiz />,
       roles: ["admin", "superadmin"],
@@ -86,10 +86,22 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       roles: ["admin", "superadmin"],
     },
     {
+      title: "MATB Management",
+      path: "MATB-management",
+      icon: <Quiz />,
+      roles: ["admin", "superadmin"],
+    },
+    {
       title: "MATB Results",
       path: "MATB-results",
       icon: <Quiz />,
-      roles: ["client", "admin", "superadmin"],
+      roles: ["admin", "superadmin"],
+    },
+    {
+      title: "MATB Results ",
+      path: "MATB-results-client",
+      icon: <Quiz />,
+      roles: ["client"],
     },
     {
       title: "Feedback",

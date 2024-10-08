@@ -38,7 +38,10 @@ import ProgramsTable from "./components/dashboard/ProgramsTable.jsx";
 import EventCalendar from "./components/dashboard/EventCalendar.jsx";
 import EventCalendarClient from "./components/dashboard/EventCalendarClient.jsx";
 import TestList from "./pages/dashboard/TestList.jsx";
-import TestReviewManagement from "./pages/dashboard/TestReviewManagement.jsx";
+import TestSessionTable from "./components/dashboard/TestSessionTable.jsx";
+import ResultsTable from "./components/dashboard/ResultsTable.jsx";
+import UserTestResults from "./components/dashboard/UserTestResults.jsx";
+import UserResultsList from "./components/dashboard/UserTestResults.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -97,7 +100,7 @@ const router = createBrowserRouter([
         path: "", // Default route for dashboard
         element: (
           <ProtectedRoute allowedRoles={["client", "admin", "superadmin"]}>
-            <Dashboard />
+            <Profile />
           </ProtectedRoute>
         ),
       },
@@ -229,7 +232,23 @@ const router = createBrowserRouter([
         path: "MATB-results",
         element: (
           <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
-            <TestReviewManagement />
+            <ResultsTable />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "MATB-results-client",
+        element: (
+          <ProtectedRoute allowedRoles={["client"]}>
+            <UserResultsList />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "MATB-management",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <TestSessionTable />
           </ProtectedRoute>
         ),
       },

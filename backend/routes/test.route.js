@@ -5,6 +5,7 @@ import {
   getTestById,
   updateTest,
   deleteTest,
+  getTestByCode,
 } from "../controllers/test.controller.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.get("/", getAllTests);
 router.get("/:id", getTestById);
 router.put("/:id", updateTest);
 router.delete("/:id", deleteTest);
+router.get("/code", getTestByCode);
 
 export default router;

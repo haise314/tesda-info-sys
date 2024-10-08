@@ -1,7 +1,7 @@
 import { Box, Typography, CircularProgress, Alert } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import TrainingProgramListItem from "../../components/dashboard/TrainingProgramListItem";
+import TrainingProgramListItem from "../../components/dashboard/TrainingProgramCard";
 
 // Axios instance to interact with the backend
 const api = axios.create({
