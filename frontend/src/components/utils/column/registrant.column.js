@@ -292,7 +292,12 @@ export const registrantColumns = [
   },
 
   // Course Information
-  { field: "course", headerName: "Course", width: 100, editable: true },
+  {
+    field: "course",
+    headerName: "Course/Qualifications",
+    width: 100,
+    editable: true,
+  },
 
   // Scholar Information
   {

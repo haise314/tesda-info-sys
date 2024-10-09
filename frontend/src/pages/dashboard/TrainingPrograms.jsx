@@ -61,7 +61,7 @@ const TrainingProgramForm = () => {
       }}
     >
       <Typography variant="h5" gutterBottom>
-        Create Training Program
+        Create Course/Qualification
       </Typography>
       <TextField
         fullWidth

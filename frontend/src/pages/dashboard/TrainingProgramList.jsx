@@ -32,7 +32,7 @@ const TrainingProgramList = () => {
   return (
     <Box sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Available Training Programs
+        Available Course/Qualifications
       </Typography>
 
       {/* Render list of Training Programs */}
