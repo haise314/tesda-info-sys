@@ -38,24 +38,35 @@ export const createApplicant = async (req, res) => {
       applicantData.assessmentTitle &&
       applicantData.assessmentType
     ) {
-      // If no assessments array is provided, create one using the individual fields
       assessments.push({
         assessmentTitle: applicantData.assessmentTitle,
         assessmentType: applicantData.assessmentType,
-        applicationStatus: "For Approval", // Default status for new assessments
+        applicationStatus: "For Approval",
       });
     }
 
-    // Check for other required fields
+    // Check for required fields
     if (
       !applicantData.name ||
       !applicantData.birthdate ||
       !applicantData.trainingCenterName ||
-      !assessments.length // Ensure there's at least one assessment
+      !assessments.length ||
+      !applicantData.highestEducationalAttainment
     ) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields or assessments",
+      });
+    }
+
+    // Handle "Others" option for highestEducationalAttainment
+    if (
+      applicantData.highestEducationalAttainment === "Others" &&
+      !applicantData.otherHighestEducationalAttainment
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please specify the other highest educational attainment",
       });
     }
 
@@ -72,7 +83,7 @@ export const createApplicant = async (req, res) => {
     const newApplicant = new Applicant({
       ...applicantData,
       uli,
-      assessments, // Store array of assessments
+      assessments,
     });
 
     // Save to database
@@ -136,6 +147,17 @@ export const updateApplicant = async (req, res) => {
           message: "Assessments must be an array with at least one assessment",
         });
       }
+    }
+
+    // Handle "Others" option for highestEducationalAttainment
+    if (
+      updateData.highestEducationalAttainment === "Others" &&
+      !updateData.otherHighestEducationalAttainment
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please specify the other highest educational attainment",
+      });
     }
 
     const updatedApplicant = await Applicant.findByIdAndUpdate(id, updateData, {

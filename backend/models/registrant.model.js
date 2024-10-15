@@ -34,6 +34,12 @@ const courseSchema = new mongoose.Schema({
       return this.hasScholarType; // Only required if hasScholarType is true
     },
   },
+  otherScholarType: {
+    type: String,
+    required: function () {
+      return this.scholarType === "Others";
+    },
+  },
 });
 
 const registrantSchema = new mongoose.Schema(
@@ -203,6 +209,12 @@ const registrantSchema = new mongoose.Schema(
       type: String,
       enum: clientClassifications,
       required: true,
+    },
+    otherClientClassification: {
+      type: String,
+      required: function () {
+        return this.clientClassification === "Others";
+      },
     },
     disabilityType: {
       type: String,

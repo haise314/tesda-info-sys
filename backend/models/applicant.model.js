@@ -304,6 +304,12 @@ const applicantSchema = new mongoose.Schema(
       enum: highestEducationalAttainments,
       required: true,
     },
+    otherHighestEducationalAttainment: {
+      type: String,
+      required: function () {
+        return this.highestEducationalAttainment === "Others";
+      },
+    },
     employmentStatus: {
       type: String,
       enum: employmentStatuses,

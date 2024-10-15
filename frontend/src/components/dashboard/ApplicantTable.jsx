@@ -125,14 +125,20 @@ const ApplicantTable = () => {
   // Update the updateApplicantMutation
   const updateApplicantMutation = useMutation({
     mutationFn: async (params) => {
-      const { id, ...updateData } = params;
-      console.log("Updating applicant with id:", id);
-      console.log("Update data:", updateData);
-      const response = await axios.put(`/api/applicants/${id}`, updateData);
+      const { id, field, value } = params;
+      const currentRow = apiRef.current?.getRow(id);
+      if (!currentRow) {
+        throw new Error("Could not find row data");
+      }
+      const updatedRow = { ...currentRow, [field]: value };
+      const unflattenedData = unflattenApplicantData(updatedRow);
+      const response = await axios.put(
+        `/api/applicants/${id}`,
+        unflattenedData
+      );
       return response.data;
     },
-    onSuccess: (data) => {
-      console.log("Update successful:", data);
+    onSuccess: () => {
       queryClient.invalidateQueries(["applicants"]);
     },
     onError: (error) => {
@@ -154,20 +160,18 @@ const ApplicantTable = () => {
     }
   };
 
-  // this function is called when a row is updated
-  // it sends a request to the server to update the row
   const processRowUpdate = React.useCallback(
     async (newRow, oldRow) => {
-      const field = Object.keys(newRow).find(
-        (key) => newRow[key] !== oldRow[key]
+      const changedField = Object.keys(newRow).find(
+        (key) => JSON.stringify(newRow[key]) !== JSON.stringify(oldRow[key])
       );
-      if (!field) return oldRow; // No changes
+      if (!changedField) return oldRow;
 
       try {
         await updateApplicantMutation.mutateAsync({
           id: newRow._id,
-          field,
-          value: newRow[field],
+          field: changedField,
+          value: newRow[changedField],
         });
         return newRow;
       } catch (error) {

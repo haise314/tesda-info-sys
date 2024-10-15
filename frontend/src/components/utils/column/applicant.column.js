@@ -140,8 +140,13 @@ export const applicantColumns = [
     editable: true,
     type: "singleSelect",
     valueOptions: highestEducationalAttainments,
+    renderCell: (params) => {
+      if (params.value === "Others") {
+        return params.row?.otherHighestEducationalAttainment;
+      }
+      return params.value;
+    },
   },
-
   // Work Experience
   {
     field: "workExperience",

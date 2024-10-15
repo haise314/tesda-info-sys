@@ -86,11 +86,13 @@ export const createRegistrant = async (req, res) => {
       education,
       parent,
       clientClassification,
+      otherClientClassification,
       disabilityType,
       disabilityCause,
       course,
       hasScholarType,
-      scholarType, // Now handling an array of courses
+      scholarType,
+      otherScholarType,
     } = req.body;
 
     // Employment Type validation
@@ -109,15 +111,19 @@ export const createRegistrant = async (req, res) => {
     // Handle course data
     let courses = [];
     if (Array.isArray(course)) {
-      // If course is already an array, use it as is
-      courses = course;
+      courses = course.map((c) => ({
+        ...c,
+        scholarType: c.hasScholarType ? c.scholarType : null,
+        otherScholarType:
+          c.scholarType === "Others" ? c.otherScholarType : null,
+      }));
     } else if (typeof course === "string") {
-      // If course is a string, convert it to the expected array format
       courses.push({
         courseName: course,
-        registrationStatus: "Pending", // Default status for new course
+        registrationStatus: "Pending",
         hasScholarType: hasScholarType || false,
         scholarType: hasScholarType ? scholarType : null,
+        otherScholarType: scholarType === "Others" ? otherScholarType : null,
       });
     } else {
       return res.status(400).json({
@@ -137,7 +143,7 @@ export const createRegistrant = async (req, res) => {
 
     // Create the new registrant with ULI
     const newRegistrant = new Registrant({
-      uli, // Add the ULI to the registrant data
+      uli,
       name,
       completeMailingAddress,
       contact,
@@ -147,9 +153,11 @@ export const createRegistrant = async (req, res) => {
       education,
       parent,
       clientClassification,
+      otherClientClassification:
+        clientClassification === "Others" ? otherClientClassification : null,
       disabilityType,
       disabilityCause,
-      course: courses, // Store array of courses
+      course: courses,
     });
 
     // Save to database

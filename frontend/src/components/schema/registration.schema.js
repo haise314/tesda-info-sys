@@ -32,17 +32,49 @@ const employmentTypeSchema = z.discriminatedUnion("employmentStatus", [
   }),
 ]);
 
-const scholarTypeschema = z.discriminatedUnion("hasScholarType", [
-  z.object({
-    hasScholarType: z.literal(true),
-    scholarType: z.enum(scholarTypes, {
-      message: "Please select a valid scholar type.",
+const clientClassificationSchema = z.discriminatedUnion(
+  "clientClassification",
+  [
+    z.object({
+      clientClassification: z.enum(
+        clientClassifications.filter((c) => c !== "Others")
+      ),
     }),
-  }),
-  z.object({
-    hasScholarType: z.literal(false),
-  }),
-]);
+    z.object({
+      clientClassification: z.literal("Others"),
+      otherClientClassification: z
+        .string()
+        .min(1, { message: "Please specify the other classification" }),
+    }),
+  ]
+);
+
+const scholarTypeSchema = z
+  .object({
+    hasScholarType: z.boolean(), // Checkbox to determine if a scholar type is needed
+    scholarType: z
+      .enum(
+        scholarTypes.filter((s) => s !== "Others"),
+        {
+          errorMap: () => ({ message: "Please select a valid scholar type." }),
+        }
+      )
+      .optional(),
+    otherScholarType: z
+      .string()
+      .min(1, { message: "Please specify the other scholar type" })
+      .optional(),
+  })
+  .refine(
+    (data) =>
+      data.hasScholarType === false || // Scholar type isn't required if the checkbox is false
+      (data.scholarType && data.scholarType !== "Others") || // Scholar type is required if checkbox is true and scholar type isn't "Others"
+      (data.scholarType === "Others" && data.otherScholarType), // Require otherScholarType if "Others" is selected
+    {
+      message: "Please select a scholar type or specify if it's 'Others'.",
+      path: ["scholarType"],
+    }
+  );
 
 const registrantSchema = z
   .object({
@@ -120,8 +152,9 @@ const registrantSchema = z
       .string()
       .min(1, { message: "Employment status is required zod" }),
   })
-  .and(scholarTypeschema)
-  .and(employmentTypeSchema);
+  .and(scholarTypeSchema)
+  .and(employmentTypeSchema)
+  .and(clientClassificationSchema);
 
 // Default values can be defined as follows:
 const registrantDefaultValues = {

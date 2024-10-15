@@ -107,7 +107,12 @@ function RegistrationForm() {
     severity: "success",
   });
 
+  const clientClassification = useWatch({
+    control,
+    name: "clientClassification",
+  });
   const hasScholarType = useWatch({ control, name: "hasScholarType" });
+  const scholarType = useWatch({ control, name: "scholarType" });
 
   // Handle agreement change
   const handleAgreementChange = (event) => {
@@ -841,9 +846,7 @@ function RegistrationForm() {
         <Typography variant="h6" sx={{ fontWeight: "bold", marginBottom: 1 }}>
           Learner/Trainee/Student (Clients) Classification
         </Typography>
-
         <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
-          <Typography variant="h6">Classification:</Typography>
           <FormControl
             sx={{ flexGrow: 1, marginRight: 1 }}
             error={Boolean(errors.clientClassification)}
@@ -876,6 +879,22 @@ function RegistrationForm() {
               </FormHelperText>
             )}
           </FormControl>
+          {clientClassification === "Others" && (
+            <Controller
+              name="otherClientClassification"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="Specify Other Classification"
+                  error={Boolean(errors.otherClientClassification)}
+                  helperText={errors.otherClientClassification?.message}
+                  sx={{ mt: 2 }}
+                />
+              )}
+            />
+          )}
         </Paper>
       </Box>
 
@@ -922,20 +941,30 @@ function RegistrationForm() {
         }}
       >
         <FormControlLabel
-          {...register("hasScholarType")}
+          control={
+            <Controller
+              name="hasScholarType"
+              control={control}
+              render={({ field: { onChange, value, ...field } }) => (
+                <Checkbox
+                  checked={value}
+                  onChange={(e) => onChange(e.target.checked)}
+                  {...field}
+                />
+              )}
+            />
+          }
           label={
             <Typography variant="h6" sx={{ fontWeight: "bold" }}>
               Are you a scholar?
             </Typography>
           }
-          control={<Checkbox />}
         />
-
         {hasScholarType && (
           <Paper elevation={3} sx={{ padding: 3, margin: 2, width: "100%" }}>
             <FormControl
               sx={{ flexGrow: 1, marginRight: 1 }}
-              error={Boolean(errors.scholarType)} // TODO: fix error message
+              error={Boolean(errors.scholarType)}
               fullWidth
             >
               <InputLabel id="scholar-type-label">Scholar Type</InputLabel>
@@ -958,9 +987,25 @@ function RegistrationForm() {
                 )}
               />
               {errors.scholarType && (
-                <FormHelperText>{errors.scholarType?.message}</FormHelperText> // TODO:fix error message
+                <FormHelperText>{errors.scholarType?.message}</FormHelperText>
               )}
             </FormControl>
+            {scholarType === "Others" && (
+              <Controller
+                name="otherScholarType"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="Specify Other Scholar Type"
+                    error={Boolean(errors.otherScholarType)}
+                    helperText={errors.otherScholarType?.message}
+                    sx={{ mt: 2 }}
+                  />
+                )}
+              />
+            )}
           </Paper>
         )}
       </Box>

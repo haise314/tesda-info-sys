@@ -97,29 +97,48 @@ const competencyAssessmentSchema = z.object({
   }),
 });
 
-export const applicantSchema = z.object({
-  trainingCenterName: z.string().min(1, "Training center name is required"),
-  addressLocation: z.string().min(1, "Address location is required"),
-  assessmentTitle: z.string().min(1, "Assessment title is required"),
-  assessmentType: z.enum(assessmentTypes),
-  clientType: z.enum(clientTypes),
-  name: nameSchema,
-  completeMailingAddress: addressSchema,
-  motherName: nameSchema,
-  fatherName: nameSchema,
-  sex: z.enum(["Male", "Female", "Others"]),
-  civilStatus: z.enum(civilStatues),
-  contact: contactSchema,
-  highestEducationalAttainment: z.enum(highestEducationalAttainments),
-  employmentStatus: z.enum(employmentStatuses),
-  birthdate: z.date(),
-  birthplace: z.string().min(1, "Birthplace is required"),
-  age: z.number().positive("Age must be positive"),
-  workExperience: z.array(workExperienceSchema),
-  trainingSeminarAttended: z.array(trainingSeminarSchema),
-  licensureExaminationPassed: z.array(licensureExaminationSchema),
-  competencyAssessment: z.array(competencyAssessmentSchema),
-});
+const highestEducationalAttainmentSchema = z.discriminatedUnion(
+  "highestEducationalAttainment",
+  [
+    z.object({
+      highestEducationalAttainment: z.enum(
+        highestEducationalAttainments.filter((c) => c !== "Others")
+      ),
+    }),
+    z.object({
+      highestEducationalAttainment: z.literal("Others"),
+      otherHighestEducationalAttainment: z
+        .string()
+        .min(1, { message: "Please specify the other educational attainment" }),
+    }),
+  ]
+);
+
+export const applicantSchema = z
+  .object({
+    trainingCenterName: z.string().min(1, "Training center name is required"),
+    addressLocation: z.string().min(1, "Address location is required"),
+    assessmentTitle: z.string().min(1, "Assessment title is required"),
+    assessmentType: z.enum(assessmentTypes),
+    clientType: z.enum(clientTypes),
+    name: nameSchema,
+    completeMailingAddress: addressSchema,
+    motherName: nameSchema,
+    fatherName: nameSchema,
+    sex: z.enum(["Male", "Female", "Others"]),
+    civilStatus: z.enum(civilStatues),
+    contact: contactSchema,
+    highestEducationalAttainment: z.enum(highestEducationalAttainments),
+    employmentStatus: z.enum(employmentStatuses),
+    birthdate: z.date(),
+    birthplace: z.string().min(1, "Birthplace is required"),
+    age: z.number().positive("Age must be positive"),
+    workExperience: z.array(workExperienceSchema),
+    trainingSeminarAttended: z.array(trainingSeminarSchema),
+    licensureExaminationPassed: z.array(licensureExaminationSchema),
+    competencyAssessment: z.array(competencyAssessmentSchema),
+  })
+  .and(highestEducationalAttainmentSchema);
 
 export const applicantDefaultValues = {
   trainingCenterName: "",

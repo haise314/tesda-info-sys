@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
@@ -125,6 +125,11 @@ const ApplicationForm = () => {
     severity: "success",
   });
 
+  const highestEducationalAttainment = useWatch({
+    control,
+    name: "highestEducationalAttainment",
+  });
+
   const navigate = useNavigate();
   const [isAgreed, setIsAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -134,28 +139,6 @@ const ApplicationForm = () => {
   const handleAgreementChange = (event) => {
     setIsAgreed(event.target.value === "Agree"); // Update state based on selection
   };
-
-  const mutation = useMutation({
-    mutationFn: (newApplicant) => {
-      console.log("Submitting application:", newApplicant);
-      return axios.post("/api/applicants", newApplicant);
-    },
-    onSuccess: () => {
-      setSnackbar({
-        open: true,
-        message: "Application submitted successfully!",
-        severity: "success",
-      });
-      reset();
-    },
-    onError: (error) => {
-      setSnackbar({
-        open: true,
-        message: `Error submitting application: ${error.message}`,
-        severity: "error",
-      });
-    },
-  });
 
   const onSubmit = async (data) => {
     console.log("Form data:", data);
@@ -1347,7 +1330,6 @@ const ApplicationForm = () => {
                       labelId="highest-educational-attainment-label"
                       id="highest-educational-attainment-select"
                       label="Highest Educational Attainment"
-                      value={field.value || ""}
                     >
                       {highestEducationalAttainments.map((status, index) => (
                         <MenuItem key={index} value={status}>
@@ -1363,6 +1345,24 @@ const ApplicationForm = () => {
                   </FormHelperText>
                 )}
               </FormControl>
+              {highestEducationalAttainment === "Others" && (
+                <Controller
+                  name="otherHighestEducationalAttainment"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Specify Other Educational Attainment"
+                      error={Boolean(errors.otherHighestEducationalAttainment)}
+                      helperText={
+                        errors.otherHighestEducationalAttainment?.message
+                      }
+                      sx={{ mt: 2 }}
+                    />
+                  )}
+                />
+              )}
             </Grid2>
 
             <Grid2 size={{ xs: 12, md: 6 }}>
