@@ -12,6 +12,30 @@ import {
   registrationStatuses,
 } from "../utils/registrant.enums.js";
 
+const courseSchema = new mongoose.Schema({
+  courseName: {
+    type: String,
+    required: true,
+  },
+  registrationStatus: {
+    type: String,
+    enum: registrationStatuses,
+    default: "Pending",
+    required: true, // Registration status is now required per course
+  },
+  hasScholarType: {
+    type: Boolean,
+    required: true, // Whether the course has a scholarship
+  },
+  scholarType: {
+    type: String,
+    enum: scholarTypes,
+    required: function () {
+      return this.hasScholarType; // Only required if hasScholarType is true
+    },
+  },
+});
+
 const registrantSchema = new mongoose.Schema(
   {
     uli: {
@@ -193,29 +217,19 @@ const registrantSchema = new mongoose.Schema(
       // default: "",
     },
     course: {
-      type: String,
+      type: [courseSchema],
       required: true,
-    },
-    hasScholarType: {
-      type: Boolean,
-      required: true,
-    },
-    scholarType: {
-      type: String,
-      enum: scholarTypes,
-      required: false,
-      // default: "",
+      validate: {
+        validator: function (v) {
+          return v.length > 0;
+        },
+      },
+      message: "At least one course is required",
     },
     role: {
       type: String,
       required: true,
       default: "client",
-    },
-    registrationStatus: {
-      type: String,
-      required: registrationStatuses,
-      default: "Pending",
-      required: false,
     },
   },
   {

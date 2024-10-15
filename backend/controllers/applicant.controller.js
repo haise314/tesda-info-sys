@@ -26,37 +26,57 @@ const generateULI = (firstName, lastName, middleName, birthYear) => {
   return `${firstInitial}${lastInitial}${middleInitial}-${yearDigits}-${randomNumbers}-03907-001`;
 };
 
-// Create a new applicant
 export const createApplicant = async (req, res) => {
   try {
     const applicantData = req.body;
 
-    // Ensure required fields are provided
+    // Check if assessmentTitle and assessmentType are submitted as individual fields
+    let assessments = applicantData.assessments || [];
+
+    if (
+      !assessments.length &&
+      applicantData.assessmentTitle &&
+      applicantData.assessmentType
+    ) {
+      // If no assessments array is provided, create one using the individual fields
+      assessments.push({
+        assessmentTitle: applicantData.assessmentTitle,
+        assessmentType: applicantData.assessmentType,
+        applicationStatus: "For Approval", // Default status for new assessments
+      });
+    }
+
+    // Check for other required fields
     if (
       !applicantData.name ||
       !applicantData.birthdate ||
-      !applicantData.trainingCenterName
+      !applicantData.trainingCenterName ||
+      !assessments.length // Ensure there's at least one assessment
     ) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Missing required fields" });
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields or assessments",
+      });
     }
 
     // Generate ULI
     const birthYear = new Date(applicantData.birthdate).getFullYear();
     const uli = generateULI(
-      applicantData.name?.firstName,
-      applicantData.name?.lastName,
-      applicantData.name?.middleName,
+      applicantData.name.firstName,
+      applicantData.name.lastName,
+      applicantData.name.middleName,
       birthYear
     );
 
-    // Add ULI to applicant data
-    applicantData.uli = uli;
+    // Create the new applicant with ULI and assessments
+    const newApplicant = new Applicant({
+      ...applicantData,
+      uli,
+      assessments, // Store array of assessments
+    });
 
-    // Create new applicant with ULI
-    const applicant = new Applicant(applicantData);
-    const savedApplicant = await applicant.save();
+    // Save to database
+    await newApplicant.save();
 
     // Generate a random placeholder password
     const placeholderPassword = generatePlaceholderPassword();
@@ -67,25 +87,21 @@ export const createApplicant = async (req, res) => {
       password: placeholderPassword,
     });
 
-    await user.save(); // The pre-save middleware will hash the password
-    console.log("New user created:", user);
+    await user.save();
 
     // Generate a token to immediately log in the user
     const token = generateToken(user._id);
-    console.log("Generated token:", token);
 
+    // Send response
     res.status(201).json({
       success: true,
       message: "Applicant created successfully",
       data: {
-        applicant: savedApplicant,
-        user: {
-          id: user._id,
-          uli: user.uli,
-          role: user.role,
-          token,
-          placeholderPassword,
-        },
+        id: user._id,
+        uli: user.uli,
+        role: user.role,
+        token,
+        placeholderPassword,
       },
     });
   } catch (error) {
@@ -100,6 +116,53 @@ export const createApplicant = async (req, res) => {
       success: false,
       message: "Server error",
     });
+  }
+};
+
+// Update an applicant
+export const updateApplicant = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // If assessments are being updated, ensure it's an array with at least one assessment
+    if (updateData.assessments) {
+      if (
+        !Array.isArray(updateData.assessments) ||
+        updateData.assessments.length === 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Assessments must be an array with at least one assessment",
+        });
+      }
+    }
+
+    const updatedApplicant = await Applicant.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedApplicant) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Applicant not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Applicant updated successfully",
+      data: updatedApplicant,
+    });
+  } catch (error) {
+    console.error("Error in updateApplicant:", error);
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
@@ -131,56 +194,32 @@ export const getApplicantById = async (req, res) => {
   }
 };
 
-// Update an applicant
-export const updateApplicant = async (req, res) => {
-  try {
-    const updatedApplicant = await Applicant.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-    if (!updatedApplicant)
-      return res
-        .status(404)
-        .json({ success: false, message: "Applicant not found" });
-    res.status(200).json({
-      success: true,
-      message: "Applicant updated successfully",
-      data: updatedApplicant,
-    });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-
-// Delete an applicant
 export const deleteApplicant = async (req, res) => {
   try {
     const { id } = req.params;
     const applicant = await Applicant.findById(id);
-
     if (!applicant) {
       return res
         .status(404)
         .json({ success: false, message: "Applicant not found" });
     }
-
     // Create deleted record
     const deletedApplicant = new DeletedApplicant({
       ...applicant.toObject(),
-      deletedBy: req.user?.name || "Unknown", // Assuming you have req.user from auth middleware
+      deletedAt: new Date(),
     });
-
     await deletedApplicant.save();
     await Applicant.findByIdAndDelete(id);
-
     res
       .status(200)
       .json({ success: true, message: "Applicant soft-deleted successfully" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Error soft-deleting applicant" });
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Error soft-deleting applicant",
+      error: error.message,
+    });
   }
 };
 
@@ -280,5 +319,52 @@ export const getApplicantByUli = async (req, res) => {
     res.status(200).json({ success: true, data: applicant });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete an assessment from an applicant
+export const deleteAssessment = async (req, res) => {
+  const { applicantId, assessmentId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(applicantId)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid Applicant ID" });
+  }
+
+  try {
+    const applicant = await Applicant.findById(applicantId);
+
+    if (!applicant) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Applicant not found" });
+    }
+
+    // Find the index of the assessment to remove
+    const assessmentIndex = applicant.assessments.findIndex(
+      (assessment) => assessment._id.toString() === assessmentId
+    );
+
+    if (assessmentIndex === -1) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Assessment not found" });
+    }
+
+    // Remove the assessment from the array
+    applicant.assessments.splice(assessmentIndex, 1);
+
+    // Save the updated applicant
+    await applicant.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Assessment deleted successfully",
+      data: applicant,
+    });
+  } catch (error) {
+    console.error("Error in deleteAssessment:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

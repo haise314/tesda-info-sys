@@ -167,13 +167,13 @@ const ApplicationForm = () => {
       if (
         response.data.success &&
         response.data.data &&
-        response.data.data.user
+        response.data.data.uli
       ) {
         // If there's an image file, upload it separately
         if (selectedImage) {
           const formData = new FormData();
           formData.append("image", selectedImage);
-          formData.append("uli", response.data.data.user.uli);
+          formData.append("uli", response.data.data.uli);
 
           const imageUploadResponse = await axios.post(
             "/api/upload",
@@ -193,10 +193,10 @@ const ApplicationForm = () => {
           }
         }
 
-        localStorage.setItem("newUserUli", response.data.data.user.uli);
+        localStorage.setItem("newUserUli", response.data.data.uli);
         localStorage.setItem(
           "newUserPassword",
-          response.data.data.user.placeholderPassword
+          response.data.data.placeholderPassword
         );
         setSnackbar({
           open: true,

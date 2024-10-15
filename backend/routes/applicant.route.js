@@ -10,6 +10,7 @@ import {
   addLicensureExamination,
   addCompetencyAssessment,
   getApplicantByUli,
+  deleteAssessment,
 } from "../controllers/applicant.controller.js";
 
 const router = express.Router();
@@ -21,6 +22,7 @@ router.get("/:id", getApplicantById);
 router.put("/:id", updateApplicant);
 router.delete("/:id", deleteApplicant);
 router.get("/uli/:uli", getApplicantByUli);
+router.delete("/:applicantId/assessments/:assessmentId", deleteAssessment);
 
 // Dynamic field addition routes
 router.post("/:id/work-experience", addWorkExperience);

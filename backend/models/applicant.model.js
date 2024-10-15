@@ -128,6 +128,25 @@ const competencyAssessmentSchema = new mongoose.Schema({
   },
 });
 
+// Define a schema for each assessment with related fields
+const assessmentSchema = new mongoose.Schema({
+  assessmentTitle: {
+    type: String,
+    required: true,
+  },
+  assessmentType: {
+    type: String,
+    enum: assessmentTypes,
+    required: true,
+  },
+  applicationStatus: {
+    type: String,
+    enum: applicationStatuses,
+    required: true,
+    default: "For Approval",
+  },
+});
+
 const applicantSchema = new mongoose.Schema(
   {
     uli: {
@@ -143,14 +162,15 @@ const applicantSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    assessmentTitle: {
-      type: String,
+    assessments: {
+      type: [assessmentSchema], // Store multiple assessments with titles, types, and statuses
       required: true,
-    },
-    assessmentType: {
-      type: String,
-      enum: assessmentTypes,
-      required: true,
+      validate: {
+        validator: function (v) {
+          return v.length > 0; // Ensure at least one assessment is registered
+        },
+        message: "At least one assessment must be provided.",
+      },
     },
     clientType: {
       type: String,
@@ -322,12 +342,6 @@ const applicantSchema = new mongoose.Schema(
       type: String,
       required: true,
       default: "client",
-    },
-    applicationStatus: {
-      type: String,
-      enum: applicationStatuses,
-      required: false,
-      default: "For Approval",
     },
   },
   {

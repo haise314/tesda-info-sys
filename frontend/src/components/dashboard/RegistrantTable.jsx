@@ -19,6 +19,8 @@ import {
   Box,
   CircularProgress,
   Typography,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { useTheme } from "@emotion/react";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -31,6 +33,8 @@ import {
   unflattenRegistrantData,
   flattenRegistrantData,
 } from "../utils/flatten/registrant.flatten.js";
+import { registrationStatuses } from "../utils/enums/registrant.enums.js";
+import CourseEditDialog from "./CourseEdit.jsx";
 
 const fetchRegistrants = async () => {
   try {
@@ -43,7 +47,6 @@ const fetchRegistrants = async () => {
       console.log("Data is an array with length:", response.data.data.length);
       flattenedData = response.data.data.map((registrant) => {
         const flattened = flattenRegistrantData(registrant);
-        console.log("Flattened registrant:", flattened);
         return flattened;
       });
     } else {
@@ -73,6 +76,8 @@ const RegistrantTable = () => {
   const queryClient = useQueryClient();
   const apiRef = useGridApiRef();
   const [rows, setRows] = useState([]);
+  const [selectedRegistrant, setSelectedRegistrant] = useState(null);
+  const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
 
   const {
     data: registrants,
@@ -88,6 +93,52 @@ const RegistrantTable = () => {
       setRows(registrants);
     }
   }, [registrants]);
+
+  const handleCourseEdit = (params) => {
+    const registrant = rows.find((row) => row._id === params.id);
+    console.log("Selected registrant:", registrant);
+    if (registrant) {
+      const registrantWithCourses = {
+        ...registrant,
+        courses: Array.isArray(registrant.courses) ? registrant.courses : [],
+      };
+      setSelectedRegistrant(registrantWithCourses);
+      setIsCourseDialogOpen(true);
+    }
+  };
+
+  const handleCourseDialogClose = () => {
+    setIsCourseDialogOpen(false);
+    setSelectedRegistrant(null);
+  };
+
+  const handleCourseSave = async (updatedCourses) => {
+    if (selectedRegistrant) {
+      try {
+        await updateRegistrantMutation.mutateAsync({
+          id: selectedRegistrant._id,
+          field: "course",
+          value: updatedCourses,
+        });
+        queryClient.invalidateQueries(["registrants"]);
+      } catch (error) {
+        console.error("Failed to update courses:", error);
+        // Handle error (e.g., show an error message to the user)
+      }
+    }
+    handleCourseDialogClose();
+  };
+
+  // Modify the existing courses column to add the onCellDoubleClick functionality
+  const modifiedColumns = registrantColumns.map((column) => {
+    if (column.field === "courses") {
+      return {
+        ...column,
+        editable: false, // Disable inline editing
+      };
+    }
+    return column;
+  });
 
   const updateRegistrantMutation = useMutation({
     mutationFn: async (params) => {
@@ -125,19 +176,18 @@ const RegistrantTable = () => {
       deleteRegistrantMutation.mutate(id);
     }
   };
-
   const processRowUpdate = React.useCallback(
     async (newRow, oldRow) => {
-      const field = Object.keys(newRow).find(
-        (key) => newRow[key] !== oldRow[key]
+      const changedField = Object.keys(newRow).find(
+        (key) => JSON.stringify(newRow[key]) !== JSON.stringify(oldRow[key])
       );
-      if (!field) return oldRow; // No changes
+      if (!changedField) return oldRow; // No changes
 
       try {
         await updateRegistrantMutation.mutateAsync({
           id: newRow._id,
-          field,
-          value: newRow[field],
+          field: changedField,
+          value: newRow[changedField],
         });
         return newRow;
       } catch (error) {
@@ -153,8 +203,9 @@ const RegistrantTable = () => {
     editable: true,
   }));
 
+  // Add the actions column
   const columns = [
-    ...editableColumns,
+    ...modifiedColumns,
     {
       field: "actions",
       type: "actions",
@@ -240,6 +291,12 @@ const RegistrantTable = () => {
         onProcessRowUpdateError={(error) => {
           console.error("Error while saving:", error);
         }}
+        onCellDoubleClick={(params) => {
+          console.log("Cell double click:", params);
+          if (params.field === "courses") {
+            handleCourseEdit(params);
+          }
+        }}
         initialState={{
           columns: {
             columnVisibilityModel: {
@@ -247,12 +304,8 @@ const RegistrantTable = () => {
               uli: true,
               fullName: true,
               email: !isMobile,
-              mobileNumber: !isMobile,
               clientClassification: !isMobile,
-              course: !isMobile,
-              hasScholarType: !isMobile,
-              scholarType: !isMobile,
-              registrationStatus: !isMobile,
+              courses: true,
               createdAt: !isMobile,
               actions: true,
             },
@@ -264,6 +317,14 @@ const RegistrantTable = () => {
         pageSizeOptions={isMobile ? [5, 10] : [10, 25, 50]}
         density={isMobile ? "compact" : "standard"}
       />
+      {selectedRegistrant && (
+        <CourseEditDialog
+          open={isCourseDialogOpen}
+          onClose={handleCourseDialogClose}
+          courses={selectedRegistrant.courses}
+          onSave={handleCourseSave}
+        />
+      )}
     </TableContainer>
   );
 };

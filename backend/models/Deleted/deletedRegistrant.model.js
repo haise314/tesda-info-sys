@@ -12,7 +12,31 @@ import {
   registrationStatuses,
 } from "../../utils/registrant.enums.js";
 
-const DeletedRegistrantSchema = new mongoose.Schema(
+const courseSchema = new mongoose.Schema({
+  courseName: {
+    type: String,
+    required: false,
+  },
+  registrationStatus: {
+    type: String,
+    enum: registrationStatuses,
+    default: "Pending",
+    required: false, // Registration status is now required per course
+  },
+  hasScholarType: {
+    type: Boolean,
+    required: false, // Whether the course has a scholarship
+  },
+  scholarType: {
+    type: String,
+    enum: scholarTypes,
+    required: function () {
+      return this.hasScholarType; // Only required if hasScholarType is true
+    },
+  },
+});
+
+const deletedRegistrantSchema = new mongoose.Schema(
   {
     uli: {
       type: String,
@@ -193,29 +217,13 @@ const DeletedRegistrantSchema = new mongoose.Schema(
       // default: "",
     },
     course: {
-      type: String,
-      required: true,
-    },
-    hasScholarType: {
-      type: Boolean,
-      required: true,
-    },
-    scholarType: {
-      type: String,
-      enum: scholarTypes,
+      type: [courseSchema],
       required: false,
-      // default: "",
     },
     role: {
       type: String,
       required: true,
       default: "client",
-    },
-    registrationStatus: {
-      type: String,
-      enum: registrationStatuses,
-      default: "Pending",
-      required: false,
     },
     deletedAt: {
       type: Date,
@@ -227,6 +235,6 @@ const DeletedRegistrantSchema = new mongoose.Schema(
   }
 );
 
-const Registrant = mongoose.model("DeletedRegistrant", DeletedRegistrantSchema);
+const Registrant = mongoose.model("DeletedRegistrant", deletedRegistrantSchema);
 
 export default Registrant;

@@ -190,6 +190,20 @@ export const applicantColumns = [
         .join("; "),
   },
   {
+    field: "assessments",
+    headerName: "Assessments",
+    width: 400,
+    editable: false,
+    renderCell: (params) => {
+      return params?.row?.assessments
+        .map(
+          (assessment) =>
+            `[${assessment.assessmentTitle} | Type: ${assessment.assessmentType} | Status: ${assessment.applicationStatus}]`
+        )
+        .join("\n");
+    },
+  },
+  {
     field: "applicationStatus",
     headerName: "Applicant Status",
     width: 90,

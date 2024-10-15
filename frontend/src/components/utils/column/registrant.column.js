@@ -262,7 +262,6 @@ export const registrantColumns = [
         params.row.parentMailingRegion || ""
       }`.trim(),
   },
-
   // Client Classification
   {
     field: "clientClassification",
@@ -291,43 +290,26 @@ export const registrantColumns = [
     valueOptions: disabilityCauses,
   },
 
-  // Course Information
+  // Courses Information (Display each course with status and scholar info)
   {
-    field: "course",
-    headerName: "Course/Qualifications",
-    width: 100,
-    editable: true,
-  },
-
-  // Scholar Information
-  {
-    field: "hasScholarType",
-    headerName: "Scholar",
-    width: 70,
-    editable: true,
-    type: "boolean",
-    // Optional: customize how the boolean is displayed
+    field: "courses",
+    headerName: "Courses/Qualifications",
+    width: 400,
+    editable: false,
     renderCell: (params) => {
-      return params.value ? "Yes" : "No";
+      // Concatenate each courseName with its scholarType and registrationStatus
+      return params?.row?.courses
+        .map(
+          (course) =>
+            `[${course.courseName} | Status: ${
+              course.registrationStatus
+            } | Scholar: ${
+              course.hasScholarType ? course.scholarType || "Yes" : "No"
+            }]`
+        )
+        .join("\n"); // You can use "<br/>" for HTML line breaks if necessary.
     },
   },
-  {
-    field: "scholarType",
-    headerName: "Scholar Type",
-    width: 100,
-    editable: true,
-    type: "singleSelect",
-    valueOptions: scholarTypes, // Add appropriate scholar types here
-  },
-  {
-    field: "registrationStatus",
-    headerName: "Registration Status",
-    width: 80,
-    editable: true,
-    type: "singleSelect",
-    valueOptions: registrationStatuses,
-  },
-
   // Created and Updated At
   {
     field: "createdAt",

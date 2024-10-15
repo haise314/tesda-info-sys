@@ -90,7 +90,7 @@ export const createRegistrant = async (req, res) => {
       disabilityCause,
       course,
       hasScholarType,
-      scholarType,
+      scholarType, // Now handling an array of courses
     } = req.body;
 
     // Employment Type validation
@@ -103,6 +103,26 @@ export const createRegistrant = async (req, res) => {
         success: false,
         message:
           "Employment Type is required for the selected Employment Status",
+      });
+    }
+
+    // Handle course data
+    let courses = [];
+    if (Array.isArray(course)) {
+      // If course is already an array, use it as is
+      courses = course;
+    } else if (typeof course === "string") {
+      // If course is a string, convert it to the expected array format
+      courses.push({
+        courseName: course,
+        registrationStatus: "Pending", // Default status for new course
+        hasScholarType: hasScholarType || false,
+        scholarType: hasScholarType ? scholarType : null,
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course format",
       });
     }
 
@@ -129,9 +149,7 @@ export const createRegistrant = async (req, res) => {
       clientClassification,
       disabilityType,
       disabilityCause,
-      course,
-      hasScholarType,
-      scholarType,
+      course: courses, // Store array of courses
     });
 
     // Save to database
@@ -200,6 +218,18 @@ export const updateRegistrant = async (req, res) => {
     console.log("Updating registrant with id:", id);
     console.log("Update data received:", req.body);
 
+    // Validate courses if they are provided
+    if (req.body.courses) {
+      for (const course of req.body.courses) {
+        if (course.hasScholarType && !course.scholarType) {
+          return res.status(400).json({
+            success: false,
+            message: `ScholarType is required for course ${course.courseName} if hasScholarType is true`,
+          });
+        }
+      }
+    }
+
     const updatedRegistrant = await Registrant.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
@@ -222,24 +252,19 @@ export const updateRegistrant = async (req, res) => {
   }
 };
 
-// @desc    Soft delete a registrant and move to DeletedRegistrant collection
 export const deleteRegistrant = async (req, res) => {
   const { id } = req.params;
-
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res
       .status(404)
       .json({ success: false, message: "Invalid Registrant ID" });
   }
-
   try {
     const session = await mongoose.startSession();
     session.startTransaction();
-
     try {
       // Find the registrant
       const registrant = await Registrant.findById(id).session(session);
-
       if (!registrant) {
         await session.abortTransaction();
         session.endSession();
@@ -247,17 +272,16 @@ export const deleteRegistrant = async (req, res) => {
           .status(404)
           .json({ success: false, message: "Registrant not found" });
       }
-
       // Create a new DeletedRegistrant document
-      const deletedRegistrant = new DeletedRegistrant(registrant.toObject());
+      const deletedRegistrant = new DeletedRegistrant({
+        ...registrant.toObject(),
+        deletedAt: new Date(),
+      });
       await deletedRegistrant.save({ session });
-
       // Remove the registrant from the main collection
       await Registrant.findByIdAndDelete(id).session(session);
-
       await session.commitTransaction();
       session.endSession();
-
       res.status(200).json({
         success: true,
         message: "Registrant soft deleted successfully",
@@ -270,7 +294,9 @@ export const deleteRegistrant = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
@@ -299,5 +325,52 @@ export const getRegistrantByUli = async (req, res) => {
       success: false,
       message: "Server error",
     });
+  }
+};
+
+// @desc    Delete a course from a registrant
+export const deleteCourse = async (req, res) => {
+  const { registrantId, courseId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(registrantId)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid Registrant ID" });
+  }
+
+  try {
+    const registrant = await Registrant.findById(registrantId);
+
+    if (!registrant) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Registrant not found" });
+    }
+
+    // Find the index of the course to remove
+    const courseIndex = registrant.course.findIndex(
+      (course) => course._id.toString() === courseId
+    );
+
+    if (courseIndex === -1) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found" });
+    }
+
+    // Remove the course from the array
+    registrant.course.splice(courseIndex, 1);
+
+    // Save the updated registrant
+    await registrant.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Course deleted successfully",
+      data: registrant,
+    });
+  } catch (error) {
+    console.error("Error in deleteCourse:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

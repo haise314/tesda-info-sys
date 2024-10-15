@@ -31,6 +31,7 @@ import {
 } from "../utils/flatten/applicant.flatten.js";
 import { useTheme } from "@emotion/react";
 import { TableContainer } from "../../layouts/TableContainer";
+import AssessmentEditDialog from "./AssessmentEdit.jsx";
 
 const fetchApplicants = async () => {
   const response = await axios.get("/api/applicants");
@@ -53,6 +54,8 @@ const ApplicantTable = () => {
   const queryClient = useQueryClient();
   const apiRef = useGridApiRef();
   const [rows, setRows] = useState([]);
+  const [selectedApplicant, setSelectedApplicant] = useState(null);
+  const [isAssessmentDialogOpen, setIsAssessmentDialogOpen] = useState(false);
 
   const {
     data: applicants,
@@ -69,28 +72,67 @@ const ApplicantTable = () => {
     }
   }, [applicants]);
 
-  // Update applicant mutation
-  // This mutation is used to update an applicant's data
-  // It sends a request to the server to update the applicant
+  const handleAssessmentEdit = (params) => {
+    const applicant = rows.find((row) => row._id === params.id);
+    if (applicant) {
+      const applicantWithAssessments = {
+        ...applicant,
+        assessments: Array.isArray(applicant.assessments)
+          ? applicant.assessments
+          : [],
+      };
+      setSelectedApplicant(applicantWithAssessments);
+      setIsAssessmentDialogOpen(true);
+    }
+  };
+
+  const handleAssessmentDialogClose = () => {
+    setIsAssessmentDialogOpen(false);
+    setSelectedApplicant(null);
+  };
+
+  const handleAssessmentSave = async (updatedAssessments) => {
+    if (selectedApplicant) {
+      try {
+        const updatedApplicant = {
+          ...selectedApplicant,
+          assessments: updatedAssessments,
+        };
+        await updateApplicantMutation.mutateAsync({
+          id: selectedApplicant._id,
+          ...updatedApplicant,
+        });
+        queryClient.invalidateQueries(["applicants"]);
+        handleAssessmentDialogClose();
+      } catch (error) {
+        console.error("Failed to update assessments:", error);
+        // Handle error (e.g., show an error message to the user)
+      }
+    }
+  };
+
+  // Modify the existing columns to add the onCellDoubleClick functionality for assessments
+  const modifiedColumns = applicantColumns.map((column) => {
+    if (column.field === "assessments") {
+      return {
+        ...column,
+        editable: false, // Disable inline editing
+      };
+    }
+    return column;
+  });
+
+  // Update the updateApplicantMutation
   const updateApplicantMutation = useMutation({
     mutationFn: async (params) => {
-      const { id, field, value } = params;
-
-      const currentRow = apiRef.current?.getRow(id);
-      if (!currentRow) {
-        throw new Error("Row not found");
-      }
-
-      const updatedRow = { ...currentRow, [field]: value };
-
-      const unFlattenedData = unflattenApplicantData(updatedRow);
-      const response = await axios.put(
-        `/api/applicants/${id}`,
-        unFlattenedData
-      );
+      const { id, ...updateData } = params;
+      console.log("Updating applicant with id:", id);
+      console.log("Update data:", updateData);
+      const response = await axios.put(`/api/applicants/${id}`, updateData);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Update successful:", data);
       queryClient.invalidateQueries(["applicants"]);
     },
     onError: (error) => {
@@ -135,14 +177,8 @@ const ApplicantTable = () => {
     [updateApplicantMutation]
   );
 
-  // Make all columns editable
-  const editableColumns = applicantColumns.map((column) => ({
-    ...column,
-    editable: true,
-  }));
-
   const columns = [
-    ...editableColumns,
+    ...modifiedColumns,
     {
       field: "actions",
       type: "actions",
@@ -227,18 +263,19 @@ const ApplicantTable = () => {
         onProcessRowUpdateError={(error) => {
           console.error("Error while saving:", error);
         }}
+        onCellDoubleClick={(params) => {
+          if (params.field === "assessments") {
+            handleAssessmentEdit(params);
+          }
+        }}
         initialState={{
           columns: {
             columnVisibilityModel: {
               ...getDefaultColumnVisibility(applicantColumns),
               uli: true,
               fullName: true,
-              email: !isMobile,
-              mobileNumber: !isMobile,
-              employmentStatus: !isMobile,
-              highestEducationalAttainment: !isMobile,
+              assessments: true,
               createdAt: !isMobile,
-              applicationStatus: !isMobile,
               actions: true,
             },
           },
@@ -249,6 +286,14 @@ const ApplicantTable = () => {
         pageSizeOptions={isMobile ? [5, 10] : [10, 25, 50]}
         density={isMobile ? "compact" : "standard"}
       />
+      {selectedApplicant && (
+        <AssessmentEditDialog
+          open={isAssessmentDialogOpen}
+          onClose={handleAssessmentDialogClose}
+          assessments={selectedApplicant.assessments}
+          onSave={handleAssessmentSave}
+        />
+      )}
     </TableContainer>
   );
 };

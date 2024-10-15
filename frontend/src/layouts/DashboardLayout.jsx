@@ -1,4 +1,3 @@
-// DashboardLayout.jsx
 import React from "react";
 import { Box, CssBaseline } from "@mui/material";
 import { Outlet } from "react-router-dom";
@@ -13,20 +12,29 @@ const DashboardLayout = () => {
   };
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <CssBaseline />
+      {/* TopBar stays fixed */}
       <TopBar onDrawerToggle={handleDrawerToggle} />
-      <Sidebar mobileOpen={mobileOpen} onDrawerToggle={handleDrawerToggle} />
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: { xs: 2, sm: 3 },
-          mt: "64px", // Height of TopBar
-          width: { sm: `calc(100% - 240px)` },
-        }}
-      >
-        <Outlet />
+
+      {/* Sidebar with toggling on mobile */}
+      <Box sx={{ display: "flex", flexGrow: 1 }}>
+        <Sidebar mobileOpen={mobileOpen} onDrawerToggle={handleDrawerToggle} />
+
+        {/* Main content area */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: { xs: 2, sm: 3 },
+            mt: { xs: 0, sm: "64px" }, // No margin on mobile, margin for larger screens
+            overflowY: "auto", // Allow scrolling if content is too long
+            width: { sm: `calc(100% - 240px)` }, // Adjust for sidebar width on larger screens
+            height: "100%", // Ensure it uses available height
+          }}
+        >
+          <Outlet />
+        </Box>
       </Box>
     </Box>
   );

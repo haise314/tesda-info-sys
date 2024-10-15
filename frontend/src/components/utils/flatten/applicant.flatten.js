@@ -91,11 +91,14 @@ export const flattenApplicantData = (applicant) => {
     highestEducationalAttainment: applicant.highestEducationalAttainment,
     employmentStatus: applicant.employmentStatus,
     clientType: applicant.clientType,
-    assessmentTitle: applicant.assessmentTitle,
-    assessmentType: applicant.assessmentType,
-    trainingCenterName: applicant.trainingCenterName,
-    applicationStatus: applicant.applicationStatus,
 
+    assessments: applicant.assessments.map((assessment) => ({
+      assessmentTitle: assessment.assessmentTitle,
+      assessmentType: assessment.assessmentType,
+      applicationStatus: assessment.applicationStatus,
+    })),
+
+    trainingCenterName: applicant.trainingCenterName,
     // Created and updated timestamps
     createdAt: applicant.createdAt?.$date || applicant.createdAt,
     updatedAt: applicant.updatedAt?.$date || applicant.updatedAt,

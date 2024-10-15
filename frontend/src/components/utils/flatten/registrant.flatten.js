@@ -52,7 +52,7 @@ export const flattenRegistrantData = (registrant) => {
     clientClassification: registrant.clientClassification,
     disabilityType: registrant.disabilityType,
     disabilityCause: registrant.disabilityCause,
-    course: registrant.course,
+    courses: registrant.course,
     hasScholarType: registrant.hasScholarType,
     scholarType: registrant.scholarType,
     registrationStatus: registrant.registrationStatus,
