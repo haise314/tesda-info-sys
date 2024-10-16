@@ -6,6 +6,7 @@ import { generatePlaceholderPassword } from "./registrant.controller.js";
 import User from "../models/user.model.js";
 import ImageUpload from "../models/image.model.js";
 import { upload } from "../config/multer.config.js";
+import mongoose from "mongoose";
 
 // Function to generate ULI
 const generateULI = (firstName, lastName, middleName, birthYear) => {
@@ -130,61 +131,57 @@ export const createApplicant = async (req, res) => {
   }
 };
 
-// Update an applicant
+// @desc    Update an applicant
 export const updateApplicant = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updateData = req.body;
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid Applicant ID" });
+  }
 
-    // If assessments are being updated, ensure it's an array with at least one assessment
-    if (updateData.assessments) {
-      if (
-        !Array.isArray(updateData.assessments) ||
-        updateData.assessments.length === 0
-      ) {
+  try {
+    console.log("Updating applicant with id:", id);
+    console.log("Update data received:", req.body);
+
+    // Validate assessments if they are provided
+    if (req.body.assessments) {
+      if (!Array.isArray(req.body.assessments)) {
         return res.status(400).json({
           success: false,
-          message: "Assessments must be an array with at least one assessment",
+          message: "Assessments must be an array",
         });
       }
+      // Additional validation for each assessment item can be added here if needed
     }
 
-    // Handle "Others" option for highestEducationalAttainment
-    if (
-      updateData.highestEducationalAttainment === "Others" &&
-      !updateData.otherHighestEducationalAttainment
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Please specify the other highest educational attainment",
-      });
-    }
+    // Use findOneAndUpdate to get the old document before update
+    const oldApplicant = await Applicant.findOne({ _id: id });
 
-    const updatedApplicant = await Applicant.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!updatedApplicant) {
+    if (!oldApplicant) {
       return res
         .status(404)
         .json({ success: false, message: "Applicant not found" });
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Applicant updated successfully",
-      data: updatedApplicant,
-    });
+    // Merge the old document with the new data
+    const updatedData = { ...oldApplicant.toObject(), ...req.body };
+
+    // Update the document
+    const updatedApplicant = await Applicant.findOneAndUpdate(
+      { _id: id },
+      updatedData,
+      { new: true, runValidators: true }
+    );
+
+    console.log("Updated applicant in database:", updatedApplicant);
+    res.status(200).json({ success: true, data: updatedApplicant });
   } catch (error) {
-    console.error("Error in updateApplicant:", error);
+    console.error("Update error:", error);
     if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      return res.status(400).json({ success: false, message: error.message });
     }
-    res.status(400).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 

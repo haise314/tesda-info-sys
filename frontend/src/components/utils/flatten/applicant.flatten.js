@@ -107,7 +107,7 @@ export const flattenApplicantData = (applicant) => {
 
 // Utility function to unflatten applicant data
 export const unflattenApplicantData = (flatData) => {
-  const { _id, ...rest } = flatData;
+  const { _id, assessments, ...rest } = flatData;
 
   return {
     _id,
@@ -191,10 +191,8 @@ export const unflattenApplicantData = (flatData) => {
     highestEducationalAttainment: rest.highestEducationalAttainment,
     employmentStatus: rest.employmentStatus,
     clientType: rest.clientType,
-    assessmentTitle: rest.assessmentTitle,
-    assessmentType: rest.assessmentType,
+    assessments: assessments, // Include the assessments array
     trainingCenterName: rest.trainingCenterName,
-    applicationStatus: rest.applicationStatus,
     createdAt: rest.createdAt,
     updatedAt: rest.updatedAt,
   };

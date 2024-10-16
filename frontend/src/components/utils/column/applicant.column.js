@@ -155,26 +155,56 @@ export const applicantColumns = [
     editable: true,
     renderCell: (params) =>
       params.row.workExperience
-        .map((exp) =>
-          `${exp.companyName || ""}, ${exp.position || ""} (${formatDate(
-            exp.inclusiveDates?.from
-          )} - ${formatDate(exp.inclusiveDates?.to)})`.trim()
-        )
+        .map((exp) => {
+          const companyName = exp.companyName || "";
+          const position = exp.position || "";
+          const fromDate = exp.inclusiveDates?.from
+            ? formatDate(exp.inclusiveDates.from)
+            : "N/A";
+          const toDate = exp.inclusiveDates?.to
+            ? formatDate(exp.inclusiveDates.to)
+            : "N/A";
+
+          return `${companyName}, ${position} (${fromDate} - ${toDate})`.trim();
+        })
         .join("; "),
   },
 
-  // Training Seminars
   {
     field: "trainingSeminarAttended",
     headerName: "Training/Seminars Attended",
     width: 300,
     renderCell: (params) =>
       params.row.trainingSeminarAttended
-        .map((seminar) =>
-          `${seminar.title || ""}, ${seminar.venue || ""} (${formatDate(
-            seminar.inclusiveDates?.from
-          )} - ${formatDate(seminar.inclusiveDates?.to)})`.trim()
-        )
+        .map((seminar) => {
+          const title = seminar.title || "";
+          const venue = seminar.venue || "";
+          const fromDate = seminar.inclusiveDates?.from
+            ? formatDate(seminar.inclusiveDates.from)
+            : "N/A";
+          const toDate = seminar.inclusiveDates?.to
+            ? formatDate(seminar.inclusiveDates.to)
+            : "N/A";
+
+          return `${title}, ${venue} (${fromDate} - ${toDate})`.trim();
+        })
+        .join("; "),
+  },
+  {
+    field: "licensureExaminationPassed",
+    headerName: "Licensure Examination Passed",
+    width: 300,
+    renderCell: (params) =>
+      params.row.licensureExaminationPassed
+        .map((exam) => {
+          const title = exam.title || "";
+          const venue = exam.examinationVenue || "";
+          const examDate = exam.dateOfExamination
+            ? formatDate(exam.dateOfExamination)
+            : "N/A";
+
+          return `${title}, ${venue} (${examDate})`.trim();
+        })
         .join("; "),
   },
 
@@ -185,13 +215,18 @@ export const applicantColumns = [
     width: 300,
     renderCell: (params) =>
       params.row.competencyAssessment
-        .map((assessment) =>
-          `${assessment.title || ""}, ${
-            assessment.industrySector || ""
-          } (${formatDate(assessment.dateIssued)} - ${formatDate(
-            assessment.expirationDate
-          )})`.trim()
-        )
+        .map((assessment) => {
+          const title = assessment.title || "";
+          const industrySector = assessment.industrySector || "";
+          const issuedDate = assessment.dateIssued
+            ? formatDate(assessment.dateIssued)
+            : "N/A";
+          const expirationDate = assessment.expirationDate
+            ? formatDate(assessment.expirationDate)
+            : "N/A";
+
+          return `${title}, ${industrySector} (${issuedDate} - ${expirationDate})`.trim();
+        })
         .join("; "),
   },
   {

@@ -94,21 +94,18 @@ const ApplicantTable = () => {
   const handleAssessmentSave = async (updatedAssessments) => {
     if (selectedApplicant) {
       try {
-        const updatedApplicant = {
-          ...selectedApplicant,
-          assessments: updatedAssessments,
-        };
         await updateApplicantMutation.mutateAsync({
           id: selectedApplicant._id,
-          ...updatedApplicant,
+          field: "assessments",
+          value: updatedAssessments,
         });
         queryClient.invalidateQueries(["applicants"]);
-        handleAssessmentDialogClose();
       } catch (error) {
         console.error("Failed to update assessments:", error);
         // Handle error (e.g., show an error message to the user)
       }
     }
+    handleAssessmentDialogClose();
   };
 
   // Modify the existing columns to add the onCellDoubleClick functionality for assessments
@@ -122,16 +119,29 @@ const ApplicantTable = () => {
     return column;
   });
 
-  // Update the updateApplicantMutation
   const updateApplicantMutation = useMutation({
     mutationFn: async (params) => {
+      console.log("Update applicant params:", params);
       const { id, field, value } = params;
+
       const currentRow = apiRef.current?.getRow(id);
       if (!currentRow) {
         throw new Error("Could not find row data");
       }
-      const updatedRow = { ...currentRow, [field]: value };
+      console.log("Applicant currentRow:", currentRow);
+
+      let updatedRow;
+      if (field === "assessments") {
+        // For assessments, we want to replace the entire array
+        updatedRow = { ...currentRow, assessments: value };
+      } else {
+        updatedRow = { ...currentRow, [field]: value };
+      }
+      console.log("Applicant updatedRow:", updatedRow);
+
       const unflattenedData = unflattenApplicantData(updatedRow);
+      console.log("Applicant unflattenedData:", unflattenedData);
+
       const response = await axios.put(
         `/api/applicants/${id}`,
         unflattenedData
@@ -165,7 +175,8 @@ const ApplicantTable = () => {
       const changedField = Object.keys(newRow).find(
         (key) => JSON.stringify(newRow[key]) !== JSON.stringify(oldRow[key])
       );
-      if (!changedField) return oldRow;
+
+      if (!changedField) return oldRow; // No changes
 
       try {
         await updateApplicantMutation.mutateAsync({
@@ -268,6 +279,7 @@ const ApplicantTable = () => {
           console.error("Error while saving:", error);
         }}
         onCellDoubleClick={(params) => {
+          console.log("Cell double click:", params);
           if (params.field === "assessments") {
             handleAssessmentEdit(params);
           }

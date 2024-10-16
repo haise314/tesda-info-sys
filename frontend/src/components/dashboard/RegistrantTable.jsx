@@ -39,22 +39,22 @@ import CourseEditDialog from "./CourseEdit.jsx";
 const fetchRegistrants = async () => {
   try {
     const response = await axios.get("/api/register");
-    console.log("Raw API response:", response);
-    console.log("Response data:", response.data);
+    // console.log("Raw API response:", response);
+    // console.log("Response data:", response.data);
 
     let flattenedData;
     if (Array.isArray(response.data.data)) {
-      console.log("Data is an array with length:", response.data.data.length);
+      // console.log("Data is an array with length:", response.data.data.length);
       flattenedData = response.data.data.map((registrant) => {
         const flattened = flattenRegistrantData(registrant);
         return flattened;
       });
     } else {
-      console.log("Data is a single object");
+      // console.log("Data is a single object");
       flattenedData = [flattenRegistrantData(response.data.data)];
     }
 
-    console.log("Final flattened data:", flattenedData);
+    // console.log("Final flattened data:", flattenedData);
     return flattenedData;
   } catch (error) {
     console.error("Error fetching registrants:", error);
@@ -142,16 +142,20 @@ const RegistrantTable = () => {
 
   const updateRegistrantMutation = useMutation({
     mutationFn: async (params) => {
+      console.log("Update registrant params:", params);
       const { id, field, value } = params;
 
       const currentRow = apiRef.current?.getRow(id);
       if (!currentRow) {
         throw new Error("Could not find row data");
       }
+      console.log("Registrant currentRow:", currentRow);
 
       const updatedRow = { ...currentRow, [field]: value };
+      console.log("Registrant updatedRow:", updatedRow);
 
       const unflattedData = unflattenRegistrantData(updatedRow);
+      console.log("Registrant unflattenedData:", unflattedData);
       const response = await axios.put(`/api/register/${id}`, unflattedData);
       return response.data;
     },
@@ -176,11 +180,13 @@ const RegistrantTable = () => {
       deleteRegistrantMutation.mutate(id);
     }
   };
+
   const processRowUpdate = React.useCallback(
     async (newRow, oldRow) => {
       const changedField = Object.keys(newRow).find(
         (key) => JSON.stringify(newRow[key]) !== JSON.stringify(oldRow[key])
       );
+      console.log("Changed field:", changedField);
       if (!changedField) return oldRow; // No changes
 
       try {
@@ -196,12 +202,6 @@ const RegistrantTable = () => {
     },
     [updateRegistrantMutation]
   );
-
-  // Make all columns editable
-  const editableColumns = registrantColumns.map((column) => ({
-    ...column,
-    editable: true,
-  }));
 
   // Add the actions column
   const columns = [
