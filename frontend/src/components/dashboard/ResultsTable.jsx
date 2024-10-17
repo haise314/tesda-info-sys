@@ -24,7 +24,10 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 
 const fetchResults = async () => {
   const response = await axios.get("/api/results");
-  return response.data;
+  return response.data.map((result) => ({
+    ...result,
+    id: `${result.uli}-${result.testCode}`, // Ensure each row has a unique id
+  }));
 };
 
 const getDefaultColumnVisibility = (columns) => {

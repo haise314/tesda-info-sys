@@ -17,6 +17,11 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  Paper,
+  Container,
+  Card,
+  CardContent,
+  Divider,
 } from "@mui/material";
 
 const answerSheetSchema = z.object({
@@ -86,6 +91,18 @@ const TestAnswerSheet = ({ uli }) => {
     enabled: !!sessionId,
   });
 
+  const renderQuestions = (questions, startIndex) => {
+    return questions.map((question, index) => (
+      <QuestionComponent
+        key={question._id}
+        question={question}
+        index={startIndex + index} // Use the cumulative index
+        control={control}
+        totalQuestions={test.questions.length} // Total questions in the entire test
+      />
+    ));
+  };
+
   // Submit answers mutation
   const submitAnswersMutation = useMutation({
     mutationFn: async (answerSheet) => {
@@ -94,33 +111,24 @@ const TestAnswerSheet = ({ uli }) => {
         uli,
         testId: testSession.test._id,
       });
-
       return answerSheetResponse.data;
     },
     onSuccess: (data) => {
       console.log("Answer sheet submitted successfully:", data);
       setSnackbarOpen(true);
-
-      // Delay the reset to allow the Snackbar to be visible
       setTimeout(() => {
         resetForm();
-      }, 2000); // 2 seconds delay
+      }, 2000);
     },
     onError: (error) => {
       console.error("Error submitting answer sheet:", error);
     },
   });
 
-  // Handle start session
   const handleStartSession = async () => {
     await startSessionMutation.mutateAsync({ testCode });
   };
 
-  const onSubmit = (data) => {
-    submitAnswersMutation.mutate(data);
-  };
-
-  // Set initial answers when test session data is loaded
   React.useEffect(() => {
     if (testSession && testSession.test) {
       setValue(
@@ -143,31 +151,33 @@ const TestAnswerSheet = ({ uli }) => {
 
   if (!sessionId) {
     return (
-      <Box sx={{ padding: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Welcome, User (ULI: {uli})
-        </Typography>
-        <Typography variant="body1" gutterBottom>
-          Enter the provided Test Code to start the test session
-        </Typography>
-        <Box sx={{ mt: 2 }}>
-          <TextField
-            label="Test Code"
-            value={testCode}
-            onChange={(e) => setTestCode(e.target.value)}
-            fullWidth
-          />
-          <Button
-            variant="contained"
-            onClick={handleStartSession}
-            disabled={startSessionMutation.isLoading}
-            fullWidth
-            sx={{ mt: 2 }}
-          >
-            {startSessionMutation.isLoading ? "Starting..." : "Start Test"}
-          </Button>
+      <Container maxWidth="sm">
+        <Box sx={{ padding: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Welcome, User (ULI: {uli})
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            Enter the provided Test Code to start the test session
+          </Typography>
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              label="Test Code"
+              value={testCode}
+              onChange={(e) => setTestCode(e.target.value)}
+              fullWidth
+            />
+            <Button
+              variant="contained"
+              onClick={handleStartSession}
+              disabled={startSessionMutation.isLoading}
+              fullWidth
+              sx={{ mt: 2 }}
+            >
+              {startSessionMutation.isLoading ? "Starting..." : "Start Test"}
+            </Button>
+          </Box>
         </Box>
-      </Box>
+      </Container>
     );
   }
 
@@ -177,67 +187,135 @@ const TestAnswerSheet = ({ uli }) => {
 
   const { test } = testSession;
 
+  // Group questions by passage
+  const questionsByPassage = test.questions.reduce((acc, question) => {
+    const passageIndex = question.passageIndex;
+    if (passageIndex >= 0) {
+      if (!acc[passageIndex]) {
+        acc[passageIndex] = [];
+      }
+      acc[passageIndex].push(question);
+    } else {
+      if (!acc[-1]) {
+        acc[-1] = [];
+      }
+      acc[-1].push(question);
+    }
+    return acc;
+  }, {});
+
   return (
-    <>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Typography variant="h4" gutterBottom>
-          Test Answer Sheet
-        </Typography>
+    <Container maxWidth="lg">
+      <form
+        onSubmit={handleSubmit((data) => submitAnswersMutation.mutate(data))}
+      >
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h4" gutterBottom>
+              Test Answer Sheet
+            </Typography>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle1">
+                Subject: {test.subject}
+              </Typography>
+              <Typography variant="subtitle1">
+                Test Code: {test.testCode}
+              </Typography>
+              <Typography variant="subtitle1">ULI: {uli}</Typography>
+            </Box>
+            <Paper sx={{ p: 2, bgcolor: "grey.50", mb: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Instructions
+              </Typography>
+              <Typography variant="body1">{test.instruction}</Typography>
+            </Paper>
+          </CardContent>
+        </Card>
 
-        <Typography variant="h6">User Information</Typography>
-        <TextField
-          label="ULI"
-          value={uli}
-          fullWidth
-          InputProps={{ readOnly: true }}
-          sx={{ mb: 2 }}
-        />
+        {/* Track the cumulative question count */}
+        {(() => {
+          let questionIndex = 0;
 
-        <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
-          Test Questions
-        </Typography>
-
-        {test.questions.map((question, index) => (
-          <FormControl
-            key={question._id}
-            component="fieldset"
-            margin="normal"
-            fullWidth
-          >
-            <FormLabel component="legend">{`${index + 1}. ${
-              question.questionText
-            }`}</FormLabel>
-            <Controller
-              name={`answers.${index}.selectedOption`}
-              control={control}
-              defaultValue=""
-              render={({ field }) => (
-                <RadioGroup {...field}>
-                  {question.options.map((option) => (
-                    <FormControlLabel
-                      key={option._id}
-                      value={option._id}
-                      control={<Radio />}
-                      label={option.text}
-                    />
-                  ))}
-                </RadioGroup>
+          return (
+            <>
+              {/* Independent questions (not associated with any passage) */}
+              {questionsByPassage[-1] && questionsByPassage[-1].length > 0 && (
+                <Paper sx={{ p: 3, mb: 4 }}>
+                  <Typography variant="h5" gutterBottom>
+                    General Questions
+                  </Typography>
+                  {renderQuestions(questionsByPassage[-1], questionIndex)}
+                  {/* Update questionIndex */}
+                  {(() => {
+                    questionIndex += questionsByPassage[-1].length;
+                    return null;
+                  })()}
+                </Paper>
               )}
-            />
-          </FormControl>
-        ))}
 
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          disabled={submitAnswersMutation.isLoading}
-          sx={{ mt: 2 }}
-        >
-          {submitAnswersMutation.isLoading
-            ? "Submitting..."
-            : "Submit Answer Sheet"}
-        </Button>
+              {/* Passages and their associated questions */}
+              {test.passages.map((passage, passageIndex) => {
+                if (!questionsByPassage[passageIndex]) return null;
+
+                return (
+                  <Paper key={passageIndex} sx={{ p: 3, mb: 4 }}>
+                    {/* Passage Section */}
+                    <Box sx={{ mb: 4 }}>
+                      <Typography variant="h5" gutterBottom>
+                        Passage {passageIndex + 1}
+                      </Typography>
+                      <Typography variant="body1" paragraph>
+                        {passage.content}
+                      </Typography>
+                      {passage.imageUrl && (
+                        <Box sx={{ mt: 2, textAlign: "center" }}>
+                          <img
+                            src={passage.imageUrl}
+                            alt={`Passage ${passageIndex + 1} illustration`}
+                            style={{ maxWidth: "100%", height: "auto" }}
+                          />
+                        </Box>
+                      )}
+                    </Box>
+
+                    <Divider sx={{ my: 3 }} />
+
+                    {/* Questions for this passage */}
+                    <Box>
+                      <Typography variant="h6" gutterBottom>
+                        Questions for Passage {passageIndex + 1}
+                      </Typography>
+                      {renderQuestions(
+                        questionsByPassage[passageIndex],
+                        questionIndex
+                      )}
+                      {/* Update questionIndex */}
+                      {(() => {
+                        questionIndex +=
+                          questionsByPassage[passageIndex].length;
+                        return null;
+                      })()}
+                    </Box>
+                  </Paper>
+                );
+              })}
+            </>
+          );
+        })()}
+
+        <Box sx={{ mt: 3, mb: 4, display: "flex", justifyContent: "flex-end" }}>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={submitAnswersMutation.isLoading}
+            size="large"
+          >
+            {submitAnswersMutation.isLoading
+              ? "Submitting..."
+              : "Submit Answer Sheet"}
+          </Button>
+        </Box>
       </form>
 
       <Snackbar
@@ -254,8 +332,71 @@ const TestAnswerSheet = ({ uli }) => {
           Test submitted successfully!
         </Alert>
       </Snackbar>
-    </>
+    </Container>
   );
 };
+
+// Extracted Question Component for better organization
+const QuestionComponent = ({ question, index, control, totalQuestions }) => (
+  <FormControl
+    component="fieldset"
+    margin="normal"
+    fullWidth
+    sx={{
+      mb: index === totalQuestions - 1 ? 0 : 3,
+      p: 2,
+      bgcolor: "grey.50",
+      borderRadius: 1,
+    }}
+  >
+    <FormLabel component="legend">
+      <Typography variant="body1" sx={{ fontWeight: "medium" }}>
+        {index + 1}. {question.questionText}
+      </Typography>
+    </FormLabel>
+
+    {question.questionImageUrl && (
+      <Box sx={{ mt: 2, mb: 2, textAlign: "center" }}>
+        <img
+          src={question.questionImageUrl}
+          alt={`Question ${index + 1} illustration`}
+          style={{ maxWidth: "100%", height: "auto" }}
+        />
+      </Box>
+    )}
+
+    <Controller
+      name={`answers.${index}.selectedOption`}
+      control={control}
+      defaultValue=""
+      render={({ field }) => (
+        <RadioGroup
+          {...field}
+          name={`question-${question._id}`} // Add unique name for each question
+          sx={{ mt: 1 }}
+        >
+          {question.options.map((option) => (
+            <Box key={option._id} sx={{ mb: option.imageUrl ? 2 : 0 }}>
+              <FormControlLabel
+                value={option._id}
+                control={<Radio />}
+                label={option.text}
+              />
+              {option.imageUrl && (
+                <Box sx={{ pl: 4, mt: 1 }}>
+                  <img
+                    src={option.imageUrl}
+                    alt={`Option illustration`}
+                    style={{ maxWidth: "100%", height: "auto" }}
+                  />
+                </Box>
+              )}
+            </Box>
+          ))}
+        </RadioGroup>
+      )}
+    />
+  </FormControl>
+);
 
 export default TestAnswerSheet;

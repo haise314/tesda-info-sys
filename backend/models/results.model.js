@@ -5,12 +5,20 @@ const resultSchema = new mongoose.Schema(
     uli: {
       type: String,
       required: true,
-      ref: "Answersheet",
+    },
+    testId: {
+      // Added to match answersheet model
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Test",
+      required: true,
     },
     testCode: {
       type: String,
       required: true,
-      ref: "Test",
+    },
+    subject: {
+      type: String,
+      required: true,
     },
     score: {
       type: Number,
@@ -29,5 +37,8 @@ const resultSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Create a compound unique index on uli and testId
+resultSchema.index({ uli: 1, testId: 1 }, { unique: true });
 
 export default mongoose.model("Result", resultSchema);

@@ -52,6 +52,24 @@ const fetchUserResults = async (uli) => {
   }
 };
 
+function getDefaultColumnVisibility(columns) {
+  const visibility = {};
+  columns.forEach((col) => {
+    visibility[col.field] = false;
+  });
+  return {
+    ...visibility,
+    uli: true,
+    testCode: true,
+    subject: true, // Added subject to default visible columns
+    score: true,
+    totalQuestions: !isMobile,
+    remarks: !isMobile,
+    createdAt: !isMobile,
+    actions: true,
+  };
+}
+
 const UserResultsList = () => {
   const { user } = useAuth();
   const uli = user?.uli;

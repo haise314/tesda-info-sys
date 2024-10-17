@@ -13,7 +13,7 @@ export const userColumns = [
     width: 120,
     editable: true,
     type: "singleSelect",
-    valueOptions: ["client", "user", "admin", "superadmin"],
+    valueOptions: ["client", "admin", "superadmin"],
   },
   {
     field: "createdAt",

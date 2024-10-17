@@ -112,51 +112,58 @@ export const deleteResult = async (req, res) => {
 
 export const calculateAllResults = async (req, res) => {
   try {
-    // Find all answersheets
-    const answersheets = await AnswerSheet.find({});
+    // Find all answersheets and populate the testId reference
+    const answersheets = await AnswerSheet.find({}).populate("testId");
     const results = [];
 
     // Process each answersheet
     for (const answersheet of answersheets) {
+      if (!answersheet.testId) {
+        console.log(`Skipping answersheet ${answersheet._id} - no test found`);
+        continue;
+      }
+
       // Check if result already exists
       const existingResult = await Result.findOne({
         uli: answersheet.uli,
+        testId: answersheet.testId._id,
       });
 
       if (!existingResult) {
-        // Find the corresponding test
-        const test = await Test.findById(answersheet.testId);
-        if (test) {
-          // Calculate score
-          let score = 0;
-          answersheet.answers.forEach((answer) => {
-            const question = test.questions.find(
-              (q) => q._id.toString() === answer.questionId.toString()
-            );
-            if (question) {
-              const correctOption = question.options.find(
-                (opt) => opt.isCorrect
-              );
-              if (
-                correctOption &&
-                correctOption._id.toString() ===
-                  answer.selectedOption.toString()
-              ) {
-                score++;
-              }
+        // Calculate score
+        let score = 0;
+        answersheet.answers.forEach((answer) => {
+          const question = answersheet.testId.questions.find(
+            (q) => q._id.toString() === answer.questionId.toString()
+          );
+
+          if (question) {
+            const correctOption = question.options.find((opt) => opt.isCorrect);
+            if (
+              correctOption &&
+              correctOption._id.toString() === answer.selectedOption.toString()
+            ) {
+              score++;
             }
-          });
+          }
+        });
 
-          // Create new result
-          const newResult = await Result.create({
-            uli: answersheet.uli,
-            testCode: test.testCode,
-            score,
-            totalQuestions: test.questions.length,
-          });
+        // Create new result
+        const newResult = await Result.create({
+          uli: answersheet.uli,
+          testId: answersheet.testId._id,
+          testCode: answersheet.testId.testCode,
+          subject: answersheet.testId.subject,
+          score,
+          totalQuestions: answersheet.testId.questions.length,
+        });
 
-          results.push(newResult);
-        }
+        console.log("New result created:", newResult);
+        results.push(newResult);
+      } else {
+        console.log(
+          `Result already exists for ULI ${answersheet.uli} and test ${answersheet.testId._id}`
+        );
       }
     }
 

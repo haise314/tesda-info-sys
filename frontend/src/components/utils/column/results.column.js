@@ -9,28 +9,29 @@ export const resultsColumns = [
   {
     field: "uli",
     headerName: "ULI",
-    width: 160,
-    editable: false,
+    width: 130,
   },
   {
     field: "testCode",
     headerName: "Test Code",
-    width: 120,
-    editable: false,
+    width: 130,
+  },
+  {
+    field: "subject", // Added subject column
+    headerName: "Subject",
+    width: 130,
   },
   {
     field: "score",
     headerName: "Score",
+    width: 100,
     type: "number",
-    width: 80,
-    editable: false,
   },
   {
     field: "totalQuestions",
     headerName: "Total Questions",
+    width: 130,
     type: "number",
-    width: 120,
-    editable: false,
   },
   {
     field: "remarks",
