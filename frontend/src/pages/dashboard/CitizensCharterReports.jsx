@@ -16,9 +16,9 @@ import {
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const fetchFeedbackData = async () => {
+const fetchCitizenCharterData = async () => {
   try {
-    const response = await axios.get("/api/feedback");
+    const response = await axios.get("/api/citizens-charter");
     return response.data.data;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -26,30 +26,43 @@ const fetchFeedbackData = async () => {
   }
 };
 
-const processFeedbackData = (feedbacks) => {
+const processCitizenCharterData = (feedbacks) => {
   if (!feedbacks || feedbacks.length === 0) {
     return [];
   }
 
-  // Define rating labels mapping to match CitizensCharter format
-  const ratingLabels = {
-    1: "Strongly Disagree",
-    2: "Disagree",
-    3: "Neutral",
-    4: "Agree",
-    5: "Strongly Agree",
+  // Define the mapping for ratings
+  const ratingMap = {
+    "Strongly Disagree": 1,
+    Disagree: 2,
+    Neutral: 3,
+    Agree: 4,
+    "Strongly Agree": 5,
   };
 
-  const questions =
-    feedbacks[0]?.feedbackQuestions?.map((q) => q.question) || [];
+  // Get all dimensions from serviceQualityDimensions
+  const dimensions = {
+    satisfaction: "Overall Satisfaction",
+    processingTime: "Processing Time",
+    documentCompliance: "Document Compliance",
+    processSimplicity: "Process Simplicity",
+    informationAccessibility: "Information Accessibility",
+    reasonableCost: "Reasonable Cost",
+    fairness: "Fairness",
+    staffRespect: "Staff Respect",
+    serviceDelivery: "Service Delivery",
+  };
 
-  return questions.map((question, index) => {
+  return Object.entries(dimensions).map(([key, question]) => {
     const ratings = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
     feedbacks.forEach((feedback) => {
-      const rating = feedback.feedbackQuestions[index]?.rating;
+      const rating = feedback.serviceQualityDimensions?.[key];
       if (rating) {
-        ratings[rating]++;
+        const numericRating = ratingMap[rating];
+        if (numericRating) {
+          ratings[numericRating]++;
+        }
       }
     });
 
@@ -88,7 +101,7 @@ const processFeedbackData = (feedbacks) => {
   });
 };
 
-const FeedbackCharts = () => {
+const CitizenCharterCharts = () => {
   const theme = useTheme();
   const isXSmallScreen = useMediaQuery(theme.breakpoints.down("xs"));
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -99,8 +112,8 @@ const FeedbackCharts = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["feedbackData"],
-    queryFn: fetchFeedbackData,
+    queryKey: ["citizenCharterData"],
+    queryFn: fetchCitizenCharterData,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     cacheTime: 0,
@@ -108,7 +121,7 @@ const FeedbackCharts = () => {
   });
 
   const chartData = React.useMemo(() => {
-    return processFeedbackData(feedbackData);
+    return processCitizenCharterData(feedbackData);
   }, [feedbackData]);
 
   const chartOptions = React.useMemo(
@@ -170,7 +183,7 @@ const FeedbackCharts = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 2 }}>
       <Typography variant="h5" gutterBottom align="center" sx={{ mb: 2 }}>
-        Customer Feedback Ratings
+        Citizens Charter Feedback Ratings
       </Typography>
       <Grid container spacing={2}>
         {chartData.map((chart, index) => (
@@ -201,4 +214,4 @@ const FeedbackCharts = () => {
   );
 };
 
-export default FeedbackCharts;
+export default CitizenCharterCharts;

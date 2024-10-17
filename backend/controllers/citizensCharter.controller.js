@@ -60,3 +60,16 @@ export const deleteCitizensCharter = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getAllCitizenCharter = async (req, res) => {
+  try {
+    const feedback = await CitizensCharter.find();
+    res.status(200).json({
+      success: true,
+      message: "Citizens charter feedback retrieved successfully",
+      data: feedback,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

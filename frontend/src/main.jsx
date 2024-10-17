@@ -49,6 +49,8 @@ import DeletedRegistrantTable from "./components/dashboard/DeletedRegistrantTabl
 import ClientRegistration from "./pages/dashboard/ClientRegistration.jsx";
 import ClientApplication from "./pages/dashboard/ClientApplication.jsx";
 import CitizensCharter from "./pages/public/CitizensCharter.jsx";
+import CitizensCharterReports from "./pages/dashboard/CitizensCharterReports.jsx";
+import FeedbackAnalytics from "./pages/dashboard/FeedbackAnalytics.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -176,6 +178,22 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
             <Feedback />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "citizens-charter",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <CitizensCharterReports />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "feedback-analytics",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <FeedbackAnalytics />
           </ProtectedRoute>
         ),
       },

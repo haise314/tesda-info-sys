@@ -2,15 +2,15 @@ import express from "express";
 import {
   createCitizensCharter,
   deleteCitizensCharter,
+  getAllCitizenCharter,
   getCitizensCharterById,
-  getCitizensCharters,
   updateCitizensCharter,
 } from "../controllers/citizensCharter.controller.js";
 
 const router = express.Router();
 
+router.get("/", getAllCitizenCharter);
 router.post("/", createCitizensCharter);
-router.get("/", getCitizensCharters);
 router.get("/:id", getCitizensCharterById);
 router.put("/:id", updateCitizensCharter);
 router.delete("/:id", deleteCitizensCharter);

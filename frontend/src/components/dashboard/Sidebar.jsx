@@ -149,9 +149,28 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
     },
     {
       title: "Feedback",
-      path: "feedback",
       icon: <FeedbackIcon />,
       roles: ["admin", "superadmin"],
+      children: [
+        {
+          title: "Customer Feedback",
+          path: "feedback",
+          icon: <FeedbackIcon />,
+          roles: ["admin", "superadmin"],
+        },
+        {
+          title: "Citizens Charter",
+          path: "citizens-charter",
+          icon: <FeedbackIcon />,
+          roles: ["admin", "superadmin"],
+        },
+        {
+          title: "Feedback Analytics",
+          path: "feedback-analytics",
+          icon: <FeedbackIcon />,
+          roles: ["admin", "superadmin"],
+        },
+      ],
     },
     {
       title: "Scheduling",

@@ -29,37 +29,32 @@ import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt
 import SentimentVerySatisfiedIcon from "@mui/icons-material/SentimentVerySatisfied";
 import { feedbackSchema } from "../../components/schema/feedback.schema";
 
-// Custom styling for the Container component
 const StyledContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(4),
   marginBottom: theme.spacing(4),
 }));
 
-// Custom styling for the Paper component
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
   borderRadius: theme.shape.borderRadius * 2,
   boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
 }));
 
-// Custom styling for the Rating component
 const StyledRating = styled(Rating)(({ theme }) => ({
   display: "flex",
-  justifyContent: "space-between", // Spreads the icons further apart
-  width: "80%", // Ensure the container takes full width for spreading
+  justifyContent: "space-between",
+  width: "80%",
   "& .MuiRating-icon": {
-    transform: "scale(2)", // Keeps the icons large
-    margin: theme.spacing(0, 4), // Increase the horizontal margin to spread icons more apart
-    marginLeft: theme.spacing(6.5),
+    transform: "scale(1.5)",
+    margin: theme.spacing(0, 2),
   },
   "& .MuiRating-iconEmpty .MuiSvgIcon-root": {
     color: theme.palette.action.disabled,
   },
   [theme.breakpoints.down("sm")]: {
     "& .MuiRating-icon": {
-      transform: "scale(1.5)", // Smaller icons for mobile screens
-      margin: theme.spacing(0, 2), // Reduce spacing on mobile for better fit
-      marginLeft: theme.spacing(1),
+      transform: "scale(1.2)",
+      margin: theme.spacing(0, 1),
     },
   },
 }));
@@ -75,13 +70,13 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
 }));
 
 const QuestionContainer = styled(Box)(({ theme }) => ({
-  marginBottom: theme.spacing(8),
+  marginBottom: theme.spacing(4),
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
   "& .question-text": {
-    marginBottom: theme.spacing(4),
-    fontSize: "1.2rem",
+    marginBottom: theme.spacing(2),
+    fontSize: "1.1rem",
     fontWeight: 500,
     textAlign: "center",
   },
@@ -94,19 +89,20 @@ const RatingContainer = styled(Box)(({ theme }) => ({
   width: "100%",
 }));
 
-const RatingLabelContainer = styled(Box)(({ theme }) => ({
+const RatingLegend = styled(Box)(({ theme }) => ({
   display: "flex",
-  justifyContent: "center",
-  width: "75%",
+  justifyContent: "space-between",
+  width: "80%",
   marginTop: theme.spacing(1),
+  [theme.breakpoints.down("sm")]: {
+    width: "100%",
+  },
 }));
 
 const RatingLabel = styled(Typography)(({ theme }) => ({
   fontSize: "0.75rem",
   color: theme.palette.text.secondary,
   textAlign: "center",
-  width: "20%",
-  padding: theme.spacing(0, 1),
 }));
 
 const customIcons = {
@@ -132,10 +128,10 @@ const customIcons = {
   },
 };
 
-function IconContainer(props) {
+const IconContainer = (props) => {
   const { value, ...other } = props;
   return <span {...other}>{customIcons[value].icon}</span>;
-}
+};
 
 const FeedbackForm = () => {
   const {
@@ -152,14 +148,14 @@ const FeedbackForm = () => {
       mobileNumber: "",
       emailAddress: "",
       feedbackQuestions: [
-        { question: "Mabilis na serbisyo", rating: null },
-        { question: "Mahusay na serbisyo", rating: null },
-        { question: "Malinis at maayos na tanggapan", rating: null },
-        { question: "May malasakit at nauunawaan ang serbisyo", rating: null },
-        { question: "Makatwiran ang presyo ng piling serbisyo", rating: null },
-        { question: "Mapagkakatiwalaan ang serbisyo", rating: null },
-        { question: "Magalang at tapat na serbisyo", rating: null },
-        { question: "Abot ang lahat ng serbisyo ng TESDA", rating: null },
+        { question: "Mabilis na serbisyo", rating: "" },
+        { question: "Mahusay na serbisyo", rating: "" },
+        { question: "Malinis at maayos na tanggapan", rating: "" },
+        { question: "May malasakit at nauunawaan ang serbisyo", rating: "" },
+        { question: "Makatwiran ang presyo ng piling serbisyo", rating: "" },
+        { question: "Mapagkakatiwalaan ang serbisyo", rating: "" },
+        { question: "Magalang at tapat na serbisyo", rating: "" },
+        { question: "Abot ang lahat ng serbisyo ng TESDA", rating: "" },
       ],
       recommendInstitution: false,
       suggestion: "",
@@ -200,7 +196,7 @@ const FeedbackForm = () => {
   return (
     <StyledContainer maxWidth="md">
       <StyledPaper>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <Box component="form" onSubmit={handleSubmit(onSubmit)}>
           <Typography
             variant="h4"
             align="center"
@@ -208,7 +204,7 @@ const FeedbackForm = () => {
             color="primary"
             sx={{ fontWeight: 700 }}
           >
-            TESDA Feedback Form
+            Customer Feedback Form
           </Typography>
 
           <FormSection>
@@ -318,6 +314,7 @@ const FeedbackForm = () => {
               </Grid>
             </Grid>
           </FormSection>
+
           <FormSection>
             <SectionTitle variant="h6" align="center">
               Service Evaluation
@@ -331,21 +328,24 @@ const FeedbackForm = () => {
                   <Controller
                     name={`feedbackQuestions.${index}.rating`}
                     control={control}
-                    render={({ field }) => (
-                      <StyledRating
-                        {...field}
-                        IconContainerComponent={IconContainer}
-                        getLabelText={(value) => customIcons[value].label}
-                        highlightSelectedOnly
-                        onChange={(_, newValue) => field.onChange(newValue)}
-                      />
+                    rules={{ required: "This field is required" }}
+                    render={({ field, fieldState: { error } }) => (
+                      <>
+                        <StyledRating
+                          {...field}
+                          onChange={(_, value) => field.onChange(value)}
+                          IconContainerComponent={IconContainer}
+                          getLabelText={(value) => customIcons[value].label}
+                          highlightSelectedOnly
+                        />
+                        {error && (
+                          <Typography color="error" variant="caption">
+                            {"This field is required"}
+                          </Typography>
+                        )}
+                      </>
                     )}
                   />
-                  <RatingLabelContainer>
-                    {Object.values(customIcons).map((icon, i) => (
-                      <RatingLabel key={i}>{icon.label}</RatingLabel>
-                    ))}
-                  </RatingLabelContainer>
                 </RatingContainer>
               </QuestionContainer>
             ))}
@@ -398,7 +398,7 @@ const FeedbackForm = () => {
               {mutation.isLoading ? "Submitting..." : "Submit Feedback"}
             </Button>
           </Box>
-        </form>
+        </Box>
       </StyledPaper>
 
       <Snackbar

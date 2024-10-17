@@ -21,13 +21,93 @@ import {
   Box,
   Typography,
   Container,
+  Paper,
+  Grid,
+  Snackbar,
+  Alert,
+  InputLabel,
+  FormHelperText,
 } from "@mui/material";
 import axios from "axios";
+import {
+  qualityDimensions,
+  serviceTypes,
+} from "../../components/utils/enums/citizensCharter.enum.js";
+
+const StyledContainer = styled(Container)(({ theme }) => ({
+  marginTop: theme.spacing(4),
+  marginBottom: theme.spacing(4),
+}));
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  borderRadius: theme.shape.borderRadius * 2,
+  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+}));
 
 const StyledRating = styled(Rating)(({ theme }) => ({
+  display: "flex",
+  justifyContent: "space-between",
+  width: "80%",
+  "& .MuiRating-icon": {
+    transform: "scale(1.5)",
+    margin: theme.spacing(0, 2),
+  },
   "& .MuiRating-iconEmpty .MuiSvgIcon-root": {
     color: theme.palette.action.disabled,
   },
+  [theme.breakpoints.down("sm")]: {
+    "& .MuiRating-icon": {
+      transform: "scale(1.2)",
+      margin: theme.spacing(0, 1),
+    },
+  },
+}));
+
+const FormSection = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(4),
+}));
+
+const SectionTitle = styled(Typography)(({ theme }) => ({
+  marginBottom: theme.spacing(2),
+  color: theme.palette.primary.main,
+  fontWeight: 600,
+}));
+
+const QuestionContainer = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(4),
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  "& .question-text": {
+    marginBottom: theme.spacing(2),
+    fontSize: "1.1rem",
+    fontWeight: 500,
+    textAlign: "center",
+  },
+}));
+
+const RatingContainer = styled(Box)(({ theme }) => ({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  width: "100%",
+}));
+
+const RatingLegend = styled(Box)(({ theme }) => ({
+  display: "flex",
+  justifyContent: "space-between",
+  width: "80%",
+  marginTop: theme.spacing(1),
+  [theme.breakpoints.down("sm")]: {
+    width: "100%",
+  },
+}));
+
+const RatingLabel = styled(Typography)(({ theme }) => ({
+  fontSize: "0.75rem",
+  color: theme.palette.text.secondary,
+  textAlign: "center",
 }));
 
 const customIcons = {
@@ -64,21 +144,28 @@ const CitizensCharter = () => {
     watch,
     handleSubmit,
     control,
+    reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
       serviceQualityDimensions: {
-        satisfaction: 3,
-        processingTime: 3,
-        documentCompliance: 3,
-        processSimplicity: 3,
-        informationAccessibility: 3,
-        reasonableCost: 3,
-        fairness: 3,
-        staffRespect: 3,
-        serviceDelivery: 3,
+        satisfaction: "",
+        processingTime: "",
+        documentCompliance: "",
+        processSimplicity: "",
+        informationAccessibility: "",
+        reasonableCost: "",
+        fairness: "",
+        staffRespect: "",
+        serviceDelivery: "",
       },
     },
+  });
+
+  const [snackbar, setSnackbar] = React.useState({
+    open: false,
+    message: "",
+    severity: "success",
   });
 
   const createCharter = async (data) => {
@@ -91,7 +178,6 @@ const CitizensCharter = () => {
       5: "Strongly Agree",
     };
 
-    // Transform the numeric ratings to text values as required by the schema
     const transformedData = {
       ...data,
       serviceQualityDimensions: Object.keys(
@@ -105,7 +191,6 @@ const CitizensCharter = () => {
       ),
     };
 
-    // Ensure required fields are not empty strings
     if (!transformedData.emailAddress) delete transformedData.emailAddress;
     if (!transformedData.name) delete transformedData.name;
     if (!transformedData.employeeName) delete transformedData.employeeName;
@@ -118,11 +203,18 @@ const CitizensCharter = () => {
   const mutation = useMutation({
     mutationFn: createCharter,
     onSuccess: () => {
-      alert("Form submitted successfully!");
+      setSnackbar({
+        open: true,
+        message: "Form submitted successfully!",
+        severity: "success",
+      });
     },
     onError: (error) => {
-      console.error("Submission error:", error);
-      alert(`Error submitting form: ${error.message}`);
+      setSnackbar({
+        open: true,
+        message: `Error submitting form: ${error.message}`,
+        severity: "error",
+      });
     },
   });
 
@@ -130,299 +222,347 @@ const CitizensCharter = () => {
     mutation.mutate(data);
   };
 
-  const serviceTypes = [
-    "Customer Inquiry and Feedback Through Assistance and Complaint Desk",
-    "Customer Inquiry and Feedback Through Calls",
-    "Application for Assessment and Certification",
-    "Payment of Training and Support Fund",
-    "Application for Scholarship and Enrollment",
-    "Application of Competency Assessment",
-    "Issuance of Certificate of Training",
-    "Replacement of Lost Training Certificate",
-    "Community-Based Training",
-    "Customer Inquiry and Feedback Electronic Mails",
-    "Conduct of Training Induction Program",
-    "Availment of Scholarship Program",
-    "Payment of Scholarship Voucher",
-    "Catering Services",
-  ];
-
-  const qualityDimensions = [
-    {
-      name: "satisfaction",
-      label:
-        "I was satisfied with the service I received at the office I visited.",
-    },
-    {
-      name: "processingTime",
-      label: "The time I spent for processing my transaction was reasonable.",
-    },
-    {
-      name: "documentCompliance",
-      label:
-        "The office follows the necessary documents and steps based on the information provided.",
-    },
-    {
-      name: "processSimplicity",
-      label: "The processing steps, including payment are easy and simple.",
-    },
-    {
-      name: "informationAccessibility",
-      label:
-        "I can quickly and easily find information about my transaction from the office or its website.",
-    },
-    {
-      name: "reasonableCost",
-      label: "I paid a reasonable amount for my transaction.",
-    },
-    {
-      name: "fairness",
-      label:
-        'I feel the office is fair to everyone, "or no sports", in my transaction.',
-    },
-    {
-      name: "staffRespect",
-      label:
-        "I was treated with respect by the staff, and (if I ever asked for help) I knew they would be willing to help me.",
-    },
-    {
-      name: "serviceDelivery",
-      label:
-        "I got what I needed from the government office, if rejected, it was adequately explained to me.",
-    },
-  ];
+  const handleCloseSnackbar = (_, reason) => {
+    if (reason === "clickaway") return;
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   return (
-    <Container maxWidth="md">
-      <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Citizens Charter Form
-        </Typography>
-
-        <TextField
-          fullWidth
-          label="Email Address"
-          margin="normal"
-          {...register("emailAddress")}
-          error={!!errors.emailAddress}
-          helperText={errors.emailAddress?.message}
-        />
-
-        <TextField
-          fullWidth
-          label="Name"
-          margin="normal"
-          {...register("name")}
-          error={!!errors.name}
-          helperText={errors.name?.message}
-        />
-
-        <FormControl fullWidth margin="normal">
-          <FormLabel>Gender</FormLabel>
-          <RadioGroup row>
-            <FormControlLabel
-              value="Male"
-              control={<Radio {...register("gender", { required: true })} />}
-              label="Male"
-            />
-            <FormControlLabel
-              value="Female"
-              control={<Radio {...register("gender", { required: true })} />}
-              label="Female"
-            />
-            <FormControlLabel
-              value="Other"
-              control={<Radio {...register("gender", { required: true })} />}
-              label="Other"
-            />
-          </RadioGroup>
-        </FormControl>
-
-        <TextField
-          fullWidth
-          label="Age"
-          type="number"
-          margin="normal"
-          {...register("age")}
-          error={!!errors.age}
-          helperText={errors.age?.message}
-        />
-
-        <FormControl fullWidth margin="normal">
-          <FormLabel>Citizens Charter Service Type</FormLabel>
-          <Select
-            {...register("serviceType", { required: true })}
-            defaultValue=""
+    <StyledContainer maxWidth="md">
+      <StyledPaper>
+        <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+          <Typography
+            variant="h4"
+            align="center"
+            gutterBottom
+            color="primary"
+            sx={{ fontWeight: 700 }}
           >
-            {serviceTypes.map((type) => (
-              <MenuItem key={type} value={type}>
-                {type}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            Citizens Charter Form
+          </Typography>
 
-        <FormControl fullWidth margin="normal">
-          <FormLabel>Client Type</FormLabel>
-          <RadioGroup row>
-            <FormControlLabel
-              value="Citizen"
-              control={
-                <Radio {...register("clientType", { required: true })} />
-              }
-              label="Citizen"
-            />
-            <FormControlLabel
-              value="Business"
-              control={
-                <Radio {...register("clientType", { required: true })} />
-              }
-              label="Business"
-            />
-            <FormControlLabel
-              value="Government Employee/Agency"
-              control={
-                <Radio {...register("clientType", { required: true })} />
-              }
-              label="Government Employee/Agency"
-            />
-          </RadioGroup>
-        </FormControl>
-
-        <FormControl fullWidth margin="normal">
-          <FormLabel>Transaction Type</FormLabel>
-          <Select
-            {...register("transactionType", { required: true })}
-            defaultValue=""
-          >
-            <MenuItem value="Assessment and Certification">
-              Assessment and Certification
-            </MenuItem>
-            <MenuItem value="Program Registration">
-              Program Registration
-            </MenuItem>
-            <MenuItem value="Training">Training</MenuItem>
-            <MenuItem value="Scholarship">Scholarship</MenuItem>
-            <MenuItem value="Administrative">Administrative</MenuItem>
-            <MenuItem value="Others">Others</MenuItem>
-          </Select>
-        </FormControl>
-
-        {watch("transactionType") === "Others" && (
-          <TextField
-            fullWidth
-            label="Please specify"
-            margin="normal"
-            {...register("otherTransactionType", { required: true })}
-          />
-        )}
-
-        <FormControl fullWidth margin="normal">
-          <FormLabel>Knowledge of Citizens Charter</FormLabel>
-          <RadioGroup>
-            <FormControlLabel
-              value="I know the Citizens Charter and I saw it in the office I visited."
-              control={
-                <Radio
-                  {...register("citizensCharterKnowledge", { required: true })}
+          <FormSection>
+            <SectionTitle variant="h6">Personal Information</SectionTitle>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Email Address"
+                  {...register("emailAddress")}
+                  error={!!errors.emailAddress}
+                  helperText={errors.emailAddress?.message}
                 />
-              }
-              label="I know the Citizens Charter and I saw it in the office I visited."
-            />
-            <FormControlLabel
-              value="I know the Citizens Charter but I didn't see it in the office I went to."
-              control={
-                <Radio
-                  {...register("citizensCharterKnowledge", { required: true })}
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Name"
+                  {...register("name")}
+                  error={!!errors.name}
+                  helperText={errors.name?.message}
                 />
-              }
-              label="I know the Citizens Charter but I didn't see it in the office I went to."
-            />
-            <FormControlLabel
-              value="I learned about the Citizens Charter when I saw it in the office I visited."
-              control={
-                <Radio
-                  {...register("citizensCharterKnowledge", { required: true })}
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <FormControl fullWidth error={!!errors.gender}>
+                  <FormLabel>Gender</FormLabel>
+                  <RadioGroup row>
+                    <FormControlLabel
+                      value="Male"
+                      control={
+                        <Radio
+                          {...register("gender", {
+                            required: "Gender is required",
+                          })}
+                        />
+                      }
+                      label="Male"
+                    />
+                    <FormControlLabel
+                      value="Female"
+                      control={
+                        <Radio
+                          {...register("gender", {
+                            required: "Gender is required",
+                          })}
+                        />
+                      }
+                      label="Female"
+                    />
+                    <FormControlLabel
+                      value="Other"
+                      control={
+                        <Radio
+                          {...register("gender", {
+                            required: "Gender is required",
+                          })}
+                        />
+                      }
+                      label="Other"
+                    />
+                  </RadioGroup>
+                  <FormHelperText>{errors.gender?.message}</FormHelperText>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Age"
+                  type="number"
+                  {...register("age")}
+                  error={!!errors.age}
+                  helperText={errors.age?.message}
                 />
-              }
-              label="I learned about the Citizens Charter when I saw it in the office I visited."
-            />
-            <FormControlLabel
-              value="I don't know what the Citizens Charter is and I didn't see any in the office I went to"
-              control={
-                <Radio
-                  {...register("citizensCharterKnowledge", { required: true })}
-                />
-              }
-              label="I don't know what the Citizens Charter is and I didn't see any in the office I went to"
-            />
-          </RadioGroup>
-        </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Service Type</InputLabel>
+                  <Select
+                    {...register("serviceType", {
+                      required: true,
+                      message: "Please select a service type",
+                    })}
+                    defaultValue=""
+                  >
+                    {serviceTypes.map((type) => (
+                      <MenuItem key={type} value={type}>
+                        {type}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </FormSection>
 
-        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-          Service Quality Dimensions
-        </Typography>
-
-        {qualityDimensions.map((dimension) => (
-          <FormControl key={dimension.name} fullWidth margin="normal">
-            <FormLabel>{dimension.label}</FormLabel>
-            <Controller
-              name={`serviceQualityDimensions.${dimension.name}`}
-              control={control}
-              defaultValue={3}
-              rules={{ required: true }}
-              render={({ field }) => (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <StyledRating
-                    {...field}
-                    IconContainerComponent={IconContainer}
-                    getLabelText={(value) => customIcons[value].label}
-                    highlightSelectedOnly
+          <FormSection>
+            <SectionTitle variant="h6">Client Information</SectionTitle>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <FormControl fullWidth error={!!errors.clientType}>
+                  <FormLabel>Client Type</FormLabel>
+                  <RadioGroup row>
+                    <FormControlLabel
+                      value="Citizen"
+                      control={
+                        <Radio
+                          {...register("clientType", {
+                            required: "Please select a client type",
+                          })}
+                        />
+                      }
+                      label="Citizen"
+                    />
+                    <FormControlLabel
+                      value="Business"
+                      control={
+                        <Radio
+                          {...register("clientType", {
+                            required: "Please select a client type",
+                          })}
+                        />
+                      }
+                      label="Business"
+                    />
+                    <FormControlLabel
+                      value="Government Employee/Agency"
+                      control={
+                        <Radio
+                          {...register("clientType", {
+                            required: "Please select a client type",
+                          })}
+                        />
+                      }
+                      label="Government Employee/Agency"
+                    />
+                  </RadioGroup>
+                  <FormHelperText>{errors.clientType?.message}</FormHelperText>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth error={!!errors.transactionType}>
+                  <InputLabel>Transaction Type</InputLabel>
+                  <Select
+                    {...register("transactionType", {
+                      required: "Please select a transaction type",
+                    })}
+                    defaultValue=""
+                  >
+                    <MenuItem value="Assessment and Certification">
+                      Assessment and Certification
+                    </MenuItem>
+                    <MenuItem value="Program Registration">
+                      Program Registration
+                    </MenuItem>
+                    <MenuItem value="Training">Training</MenuItem>
+                    <MenuItem value="Scholarship">Scholarship</MenuItem>
+                    <MenuItem value="Administrative">Administrative</MenuItem>
+                    <MenuItem value="Others">Others</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    {errors.transactionType?.message}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+              {watch("transactionType") === "Others" && (
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Please specify"
+                    {...register("otherTransactionType", {
+                      required: "Please specify the transaction type",
+                    })}
+                    error={!!errors.otherTransactionType}
+                    helperText={errors.otherTransactionType?.message}
                   />
-                  <Typography variant="body2" color="text.secondary">
-                    {field.value
-                      ? customIcons[field.value].label
-                      : "Select a rating"}
-                  </Typography>
-                </Box>
+                </Grid>
               )}
+            </Grid>
+          </FormSection>
+
+          <FormSection>
+            <SectionTitle variant="h6">Citizens Charter Knowledge</SectionTitle>
+            <FormControl fullWidth error={!!errors.citizensCharterKnowledge}>
+              <RadioGroup>
+                <FormControlLabel
+                  value="I know the Citizens Charter and I saw it in the office I visited."
+                  control={
+                    <Radio
+                      {...register("citizensCharterKnowledge", {
+                        required: "Please select an option",
+                      })}
+                    />
+                  }
+                  label="I know the Citizens Charter and I saw it in the office I visited."
+                />
+                <FormControlLabel
+                  value="I know the Citizens Charter but I didn't see it in the office I went to."
+                  control={
+                    <Radio
+                      {...register("citizensCharterKnowledge", {
+                        required: "Please select an option",
+                      })}
+                    />
+                  }
+                  label="I know the Citizens Charter but I didn't see it in the office I went to."
+                />
+                <FormControlLabel
+                  value="I learned about the Citizens Charter when I saw it in the office I visited."
+                  control={
+                    <Radio
+                      {...register("citizensCharterKnowledge", {
+                        required: "Please select an option",
+                      })}
+                    />
+                  }
+                  label="I learned about the Citizens Charter when I saw it in the office I visited."
+                />
+                <FormControlLabel
+                  value="I don't know what the Citizens Charter is and I didn't see any in the office I went to"
+                  control={
+                    <Radio
+                      {...register("citizensCharterKnowledge", {
+                        required: "Please select an option",
+                      })}
+                    />
+                  }
+                  label="I don't know what the Citizens Charter is and I didn't see any in the office I went to"
+                />
+              </RadioGroup>
+              <FormHelperText>
+                {errors.citizensCharterKnowledge?.message}
+              </FormHelperText>
+            </FormControl>
+          </FormSection>
+          <FormSection>
+            <SectionTitle variant="h6" align="center">
+              Service Quality Dimensions
+            </SectionTitle>
+            {qualityDimensions.map((dimension) => (
+              <QuestionContainer key={dimension.name}>
+                <Typography className="question-text">
+                  {dimension.label}
+                </Typography>
+                <RatingContainer>
+                  <Controller
+                    name={`serviceQualityDimensions.${dimension.name}`}
+                    control={control}
+                    defaultValue={3}
+                    rules={{ required: "This field is required" }}
+                    render={({ field, fieldState: { error } }) => (
+                      <>
+                        <StyledRating
+                          {...field}
+                          IconContainerComponent={IconContainer}
+                          getLabelText={(value) => customIcons[value].label}
+                          highlightSelectedOnly
+                        />
+                        {error && (
+                          <FormHelperText error>{error.message}</FormHelperText>
+                        )}
+                      </>
+                    )}
+                  />
+                </RatingContainer>
+              </QuestionContainer>
+            ))}
+          </FormSection>
+
+          <FormSection>
+            <TextField
+              fullWidth
+              label="Suggestions"
+              multiline
+              rows={4}
+              {...register("suggestions")}
+              error={!!errors.suggestions}
+              helperText={errors.suggestions?.message}
             />
-          </FormControl>
-        ))}
+          </FormSection>
 
-        {/* Suggestions Field */}
-        <TextField
-          fullWidth
-          label="Suggestions"
-          margin="normal"
-          multiline
-          rows={4}
-          {...register("suggestions")}
-          error={!!errors.suggestions}
-          helperText={errors.suggestions?.message}
-        />
+          <FormSection>
+            <TextField
+              fullWidth
+              label="Employee Name"
+              {...register("employeeName")}
+              error={!!errors.employeeName}
+              helperText={errors.employeeName?.message}
+            />
+          </FormSection>
 
-        {/* Employee Name Field */}
-        <TextField
-          fullWidth
-          label="Employee Name"
-          margin="normal"
-          {...register("employeeName")}
-          error={!!errors.employeeName}
-          helperText={errors.employeeName?.message}
-        />
+          <Box sx={{ display: "flex", justifyContent: "center" }}>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              size="large"
+              sx={{
+                px: 4,
+                py: 1.5,
+                borderRadius: 2,
+                fontSize: "1.1rem",
+              }}
+              onClick={() => reset()}
+            >
+              Submit
+            </Button>
+          </Box>
+        </Box>
+      </StyledPaper>
 
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          fullWidth
-          sx={{ mt: 3, mb: 2 }}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
         >
-          Submit
-        </Button>
-      </Box>
-    </Container>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </StyledContainer>
   );
 };
 
