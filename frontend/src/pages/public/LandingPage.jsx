@@ -259,6 +259,14 @@ const LandingPage = () => {
               color="primary"
             >
               Provide Feedback
+            </Button>{" "}
+            <Button
+              component={Link}
+              to="/citizens-charter"
+              variant="contained"
+              color="primary"
+            >
+              Client Satisfaction Measurement
             </Button>
           </CardContent>
         </Card>

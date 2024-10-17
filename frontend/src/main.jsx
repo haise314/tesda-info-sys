@@ -46,9 +46,9 @@ import NewsTable from "./components/dashboard/NewsTable.jsx";
 import NewsList from "./components/dashboard/NewsList.jsx";
 import DeletedApplicantTable from "./components/dashboard/DeletedApplicantTable.jsx";
 import DeletedRegistrantTable from "./components/dashboard/DeletedRegistrantTable.jsx";
-import ClientDashboard from "./pages/dashboard/ClientDashboard.jsx";
 import ClientRegistration from "./pages/dashboard/ClientRegistration.jsx";
 import ClientApplication from "./pages/dashboard/ClientApplication.jsx";
+import CitizensCharter from "./pages/public/CitizensCharter.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -90,6 +90,10 @@ const router = createBrowserRouter([
         element: <FeedbackForm />,
       },
       {
+        path: "citizens-charter",
+        element: <CitizensCharter />,
+      },
+      {
         path: "unauthorized",
         element: <Unauthorized />,
       },
@@ -108,14 +112,6 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["client", "admin", "superadmin"]}>
             <Profile />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "client-dashboard",
-        element: (
-          <ProtectedRoute allowedRoles={["client"]}>
-            <ClientDashboard />
           </ProtectedRoute>
         ),
       },
