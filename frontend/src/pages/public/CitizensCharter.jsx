@@ -159,6 +159,11 @@ const CitizensCharter = () => {
         staffRespect: "",
         serviceDelivery: "",
       },
+      transactionType: "",
+      otherTransactionType: "",
+      gender: "",
+      clientType: "",
+      citizensCharterKnowledge: "",
     },
   });
 
@@ -167,6 +172,8 @@ const CitizensCharter = () => {
     message: "",
     severity: "success",
   });
+
+  const transactionType = watch("transactionType");
 
   const createCharter = async (data) => {
     // Transform ratings to text values based on the number
@@ -191,10 +198,26 @@ const CitizensCharter = () => {
       ),
     };
 
-    if (!transformedData.emailAddress) delete transformedData.emailAddress;
-    if (!transformedData.name) delete transformedData.name;
-    if (!transformedData.employeeName) delete transformedData.employeeName;
-    if (!transformedData.suggestions) delete transformedData.suggestions;
+    // if (!transformedData.emailAddress) delete transformedData.emailAddress;
+    // if (!transformedData.name) delete transformedData.name;
+    // if (!transformedData.employeeName) delete transformedData.employeeName;
+    // if (!transformedData.suggestions) delete transformedData.suggestions;
+
+    // Clean up optional fields
+    const optionalFields = [
+      "emailAddress",
+      "name",
+      "employeeName",
+      "suggestions",
+    ];
+    optionalFields.forEach((field) => {
+      if (!transformedData[field]) delete transformedData[field];
+    });
+
+    // Handle otherTransactionType
+    if (transformedData.transactionType !== "Others") {
+      delete transformedData.otherTransactionType;
+    }
 
     const response = await axios.post("/api/citizens-charter", transformedData);
     return response.data;
@@ -208,6 +231,7 @@ const CitizensCharter = () => {
         message: "Form submitted successfully!",
         severity: "success",
       });
+      reset(); // Only reset after successful submission
     },
     onError: (error) => {
       setSnackbar({
@@ -265,41 +289,30 @@ const CitizensCharter = () => {
               <Grid item xs={12} sm={4}>
                 <FormControl fullWidth error={!!errors.gender}>
                   <FormLabel>Gender</FormLabel>
-                  <RadioGroup row>
-                    <FormControlLabel
-                      value="Male"
-                      control={
-                        <Radio
-                          {...register("gender", {
-                            required: "Gender is required",
-                          })}
+                  <Controller
+                    name="gender"
+                    control={control}
+                    rules={{ required: "Gender is required" }}
+                    render={({ field }) => (
+                      <RadioGroup {...field} row>
+                        <FormControlLabel
+                          value="Male"
+                          control={<Radio />}
+                          label="Male"
                         />
-                      }
-                      label="Male"
-                    />
-                    <FormControlLabel
-                      value="Female"
-                      control={
-                        <Radio
-                          {...register("gender", {
-                            required: "Gender is required",
-                          })}
+                        <FormControlLabel
+                          value="Female"
+                          control={<Radio />}
+                          label="Female"
                         />
-                      }
-                      label="Female"
-                    />
-                    <FormControlLabel
-                      value="Other"
-                      control={
-                        <Radio
-                          {...register("gender", {
-                            required: "Gender is required",
-                          })}
+                        <FormControlLabel
+                          value="Other"
+                          control={<Radio />}
+                          label="Other"
                         />
-                      }
-                      label="Other"
-                    />
-                  </RadioGroup>
+                      </RadioGroup>
+                    )}
+                  />
                   <FormHelperText>{errors.gender?.message}</FormHelperText>
                 </FormControl>
               </Grid>
@@ -314,21 +327,23 @@ const CitizensCharter = () => {
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <FormControl fullWidth>
+                <FormControl fullWidth error={!!errors.serviceType}>
                   <InputLabel>Service Type</InputLabel>
-                  <Select
-                    {...register("serviceType", {
-                      required: true,
-                      message: "Please select a service type",
-                    })}
-                    defaultValue=""
-                  >
-                    {serviceTypes.map((type) => (
-                      <MenuItem key={type} value={type}>
-                        {type}
-                      </MenuItem>
-                    ))}
-                  </Select>
+                  <Controller
+                    name="serviceType"
+                    control={control}
+                    rules={{ required: "Please select a service type" }}
+                    render={({ field }) => (
+                      <Select {...field} label="Service Type">
+                        {serviceTypes.map((type) => (
+                          <MenuItem key={type} value={type}>
+                            {type}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    )}
+                  />
+                  <FormHelperText>{errors.serviceType?.message}</FormHelperText>
                 </FormControl>
               </Grid>
             </Grid>
@@ -381,38 +396,48 @@ const CitizensCharter = () => {
               <Grid item xs={12}>
                 <FormControl fullWidth error={!!errors.transactionType}>
                   <InputLabel>Transaction Type</InputLabel>
-                  <Select
-                    {...register("transactionType", {
-                      required: "Please select a transaction type",
-                    })}
-                    defaultValue=""
-                  >
-                    <MenuItem value="Assessment and Certification">
-                      Assessment and Certification
-                    </MenuItem>
-                    <MenuItem value="Program Registration">
-                      Program Registration
-                    </MenuItem>
-                    <MenuItem value="Training">Training</MenuItem>
-                    <MenuItem value="Scholarship">Scholarship</MenuItem>
-                    <MenuItem value="Administrative">Administrative</MenuItem>
-                    <MenuItem value="Others">Others</MenuItem>
-                  </Select>
+                  <Controller
+                    name="transactionType"
+                    control={control}
+                    rules={{ required: "Please select a transaction type" }}
+                    render={({ field }) => (
+                      <Select {...field} label="Transaction Type">
+                        <MenuItem value="Assessment and Certification">
+                          Assessment and Certification
+                        </MenuItem>
+                        <MenuItem value="Program Registration">
+                          Program Registration
+                        </MenuItem>
+                        <MenuItem value="Training">Training</MenuItem>
+                        <MenuItem value="Scholarship">Scholarship</MenuItem>
+                        <MenuItem value="Administrative">
+                          Administrative
+                        </MenuItem>
+                        <MenuItem value="Others">Others</MenuItem>
+                      </Select>
+                    )}
+                  />
                   <FormHelperText>
                     {errors.transactionType?.message}
                   </FormHelperText>
                 </FormControl>
               </Grid>
-              {watch("transactionType") === "Others" && (
+
+              {transactionType === "Others" && (
                 <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Please specify"
-                    {...register("otherTransactionType", {
-                      required: "Please specify the transaction type",
-                    })}
-                    error={!!errors.otherTransactionType}
-                    helperText={errors.otherTransactionType?.message}
+                  <Controller
+                    name="otherTransactionType"
+                    control={control}
+                    rules={{ required: "Please specify the transaction type" }}
+                    render={({ field, fieldState: { error } }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        label="Please specify"
+                        error={!!error}
+                        helperText={error?.message}
+                      />
+                    )}
                   />
                 </Grid>
               )}
@@ -541,7 +566,6 @@ const CitizensCharter = () => {
                 borderRadius: 2,
                 fontSize: "1.1rem",
               }}
-              onClick={() => reset()}
             >
               Submit
             </Button>
