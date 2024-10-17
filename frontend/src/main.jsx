@@ -51,6 +51,7 @@ import ClientApplication from "./pages/dashboard/ClientApplication.jsx";
 import CitizensCharter from "./pages/public/CitizensCharter.jsx";
 import CitizensCharterReports from "./pages/dashboard/CitizensCharterReports.jsx";
 import FeedbackAnalytics from "./pages/dashboard/FeedbackAnalytics.jsx";
+import ClientAnalytics from "./components/dashboard/ClientAnalytics.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -162,6 +163,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
             <Applicants />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "client-analytics",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <ClientAnalytics />
           </ProtectedRoute>
         ),
       },

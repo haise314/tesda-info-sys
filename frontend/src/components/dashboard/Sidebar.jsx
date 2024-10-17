@@ -164,6 +164,19 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
           icon: <FeedbackIcon />,
           roles: ["admin", "superadmin"],
         },
+      ],
+    },
+    {
+      title: "Analytics",
+      icon: <FeedIcon />,
+      roles: ["admin", "superadmin"],
+      children: [
+        {
+          title: "Client Analytics",
+          path: "client-analytics",
+          icon: <FeedIcon />,
+          roles: ["admin", "superadmin"],
+        },
         {
           title: "Feedback Analytics",
           path: "feedback-analytics",
