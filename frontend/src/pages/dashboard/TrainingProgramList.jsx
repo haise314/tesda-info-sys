@@ -1,52 +1,48 @@
-import { Box, Typography, CircularProgress, Alert } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import TrainingProgramListItem from "../../components/dashboard/TrainingProgramCard";
+import React from "react";
+import {
+  Container,
+  Typography,
+  Paper,
+  Box,
+  Divider,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
+import TrainingProgramList from "../../components/dashboard/subcomponent/TrainingProgramList";
+import { useTrainingPrograms } from "../public/components/useTrainingPrograms";
 
-// Axios instance to interact with the backend
-const api = axios.create({
-  baseURL: "/api", // assuming your backend is running on '/api'
-});
-
-// Function to fetch training programs from the backend
-const fetchTrainingPrograms = async () => {
-  const { data } = await api.get("/programs/");
-  return data;
-};
-
-const TrainingProgramList = () => {
-  // Use React Query to fetch data
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["trainingPrograms"],
-    queryFn: fetchTrainingPrograms,
-  });
+const TrainingProgram = () => {
+  const { data: programs, isLoading, error } = useTrainingPrograms();
 
   if (isLoading) {
-    return <CircularProgress />;
+    return (
+      <Container sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+        <CircularProgress />
+      </Container>
+    );
   }
 
   if (error) {
-    return <Alert severity="error">Error loading programs</Alert>;
+    return (
+      <Container sx={{ py: 4 }}>
+        <Alert severity="error">Error loading programs: {error.message}</Alert>
+      </Container>
+    );
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Available Course/Qualifications
-      </Typography>
-
-      {/* Render list of Training Programs */}
-      {data.length > 0 ? (
-        data.map((program) => (
-          <TrainingProgramListItem key={program._id} program={program} />
-        ))
-      ) : (
-        <Typography variant="body1" color="textSecondary">
-          No training programs available.
-        </Typography>
-      )}
-    </Box>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          background: "linear-gradient(to right bottom, #ffffff, #f8f9fa)",
+        }}
+      >
+        <TrainingProgramList programs={programs || []} />
+      </Paper>
+    </Container>
   );
 };
 
-export default TrainingProgramList;
+export default TrainingProgram;

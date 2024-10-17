@@ -52,6 +52,7 @@ import CitizensCharter from "./pages/public/CitizensCharter.jsx";
 import CitizensCharterReports from "./pages/dashboard/CitizensCharterReports.jsx";
 import FeedbackAnalytics from "./pages/dashboard/FeedbackAnalytics.jsx";
 import ClientAnalytics from "./components/dashboard/ClientAnalytics.jsx";
+import NewsPage from "./pages/public/NewsPage.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -95,6 +96,10 @@ const router = createBrowserRouter([
       {
         path: "citizens-charter",
         element: <CitizensCharter />,
+      },
+      {
+        path: "news",
+        element: <NewsPage />,
       },
       {
         path: "unauthorized",

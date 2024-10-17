@@ -10,61 +10,33 @@ import {
   Container,
   Paper,
   Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Divider,
 } from "@mui/material";
-import {
-  AnnouncementOutlined,
-  FeedbackOutlined,
-  SchoolOutlined,
-} from "@mui/icons-material";
-import heroImage from "../../assets/banner.jpg";
+import { SchoolOutlined } from "@mui/icons-material";
 import { Link } from "react-router-dom";
+import heroImage from "../../assets/banner.jpg";
 import programsImage from "../../assets/programs.jpg";
 import enrollmentImage from "../../assets/enrollment.jpg";
 import assessmentImage from "../../assets/assessment.jpg";
 import featuredImage from "../../assets/program1.jpg";
-
-const newsItems = [
-  {
-    title: "New Training Program: Web Development",
-    content:
-      "TESDA launches a new program in Web Development to meet growing industry demands.",
-    date: "May 15, 2023",
-  },
-  {
-    title: "TESDA Partners with Local Industries",
-    content:
-      "New partnerships aim to enhance job placement opportunities for TESDA graduates.",
-    date: "May 10, 2023",
-  },
-  {
-    title: "Upcoming Free Assessment Day",
-    content:
-      "TESDA announces a free assessment day for various NC II certifications.",
-    date: "May 5, 2023",
-  },
-];
+import NewsSection from "./components/NewsSection";
+import FeedbackSection from "./components/FeedbackSection";
 
 const cardItems = [
   {
     title: "Programs",
     description:
       "Explore TESDA-accredited programs and opportunities for skills development.",
-    imageUrl: programsImage, // Replace with your image path
+    imageUrl: programsImage,
   },
   {
     title: "Enrollment",
     description: "Find out how to enroll in various TESDA training programs.",
-    imageUrl: enrollmentImage, // Replace with your image path
+    imageUrl: enrollmentImage,
   },
   {
     title: "Assessment",
     description: "Discover TESDA's assessment programs and certifications.",
-    imageUrl: assessmentImage, // Replace with your image path
+    imageUrl: assessmentImage,
   },
 ];
 
@@ -82,7 +54,7 @@ const LandingPage = () => {
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
           backgroundImage: `url(${heroImage})`,
-          height: { xs: "300px", md: "auto" }, // Added responsive height
+          height: { xs: "300px", md: "auto" },
         }}
       >
         <Box
@@ -97,8 +69,6 @@ const LandingPage = () => {
         />
         <Grid container>
           <Grid item xs={12} md={6}>
-            {" "}
-            {/* Changed md={6} to xs={12} md={6} for mobile responsiveness */}
             <Box
               sx={{
                 position: "relative",
@@ -131,8 +101,6 @@ const LandingPage = () => {
         <Grid container spacing={4} sx={{ mb: 4 }}>
           {cardItems.map((item, index) => (
             <Grid item xs={12} sm={6} md={4} key={index}>
-              {" "}
-              {/* Changed md={4} to xs={12} sm={6} md={4} for better responsiveness */}
               <Card
                 sx={{
                   height: "100%",
@@ -140,11 +108,10 @@ const LandingPage = () => {
                   flexDirection: "column",
                 }}
               >
-                {/* CardMedia for adding the image */}
                 <CardMedia
                   component="img"
-                  height="200" // You can adjust the height
-                  image={item.imageUrl} // Image URL from the array
+                  height="200"
+                  image={item.imageUrl}
                   alt={item.title}
                 />
                 <CardContent sx={{ flexGrow: 1 }}>
@@ -171,49 +138,10 @@ const LandingPage = () => {
           ))}
         </Grid>
 
-        {/* News Feed Section */}
+        {/* News and Featured Program Section */}
         <Grid container spacing={4} sx={{ mb: 4 }}>
           <Grid item xs={12} md={8}>
-            <Card>
-              <CardContent>
-                <Typography variant="h5" gutterBottom>
-                  <AnnouncementOutlined
-                    sx={{ mr: 1, verticalAlign: "middle" }}
-                  />
-                  Latest News and Updates
-                </Typography>
-                <List>
-                  {newsItems.map((item, index) => (
-                    <React.Fragment key={index}>
-                      <ListItem alignItems="flex-start">
-                        <ListItemAvatar>
-                          <Avatar alt="News" />
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={item.title}
-                          secondary={
-                            <React.Fragment>
-                              <Typography
-                                sx={{ display: "inline" }}
-                                component="span"
-                                variant="body2"
-                                color="text.primary"
-                              >
-                                {item.date}
-                              </Typography>
-                              {` — ${item.content}`}
-                            </React.Fragment>
-                          }
-                        />
-                      </ListItem>
-                      {index < newsItems.length - 1 && (
-                        <Divider variant="inset" component="li" />
-                      )}
-                    </React.Fragment>
-                  ))}
-                </List>
-              </CardContent>
-            </Card>
+            <NewsSection />
           </Grid>
           <Grid item xs={12} md={4}>
             <Card>
@@ -242,34 +170,9 @@ const LandingPage = () => {
         </Grid>
 
         {/* Feedback Section */}
-        <Card sx={{ mb: 4 }}>
-          <CardContent>
-            <Typography variant="h5" gutterBottom>
-              <FeedbackOutlined sx={{ mr: 1, verticalAlign: "middle" }} />
-              We Value Your Feedback
-            </Typography>
-            <Typography variant="body1" paragraph>
-              Your opinions and suggestions help us improve our services. Share
-              your thoughts with us!
-            </Typography>
-            <Button
-              component={Link}
-              to="/feedback"
-              variant="contained"
-              color="primary"
-            >
-              Provide Feedback
-            </Button>{" "}
-            <Button
-              component={Link}
-              to="/citizens-charter"
-              variant="contained"
-              color="primary"
-            >
-              Client Satisfaction Measurement
-            </Button>
-          </CardContent>
-        </Card>
+        <Box sx={{ mb: 4 }}>
+          <FeedbackSection />
+        </Box>
       </Container>
     </Box>
   );

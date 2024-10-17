@@ -42,7 +42,7 @@ const Header = () => {
   };
 
   const menuItems = [
-    { title: "Training Program", path: "/programs", icon: <SchoolIcon /> },
+    { title: "Course/Qualificaitons", path: "/programs", icon: <SchoolIcon /> },
     { title: "Register", path: "/register", icon: <PersonAddIcon /> },
     { title: "Application", path: "/apply", icon: <ReceiptIcon /> },
     { title: "MATB", path: "/MATB", icon: <ReceiptIcon /> },
