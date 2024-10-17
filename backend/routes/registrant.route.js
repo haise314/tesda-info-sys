@@ -7,6 +7,8 @@ import {
   getSingleRegistrant,
   getRegistrantByUli,
   deleteCourse,
+  addCourseByUli,
+  createFromApplicant,
 } from "../controllers/registrant.controller.js";
 
 const router = express.Router();
@@ -18,5 +20,7 @@ router.put("/:id", updateRegistrant);
 router.delete("/:id", deleteRegistrant);
 router.get("/uli/:uli", getRegistrantByUli);
 router.delete("/:registrantId/courses/:courseId", deleteCourse);
+router.post("/:uli/course", addCourseByUli);
+router.post("/:uli/create-from-applicant", createFromApplicant);
 
 export default router;

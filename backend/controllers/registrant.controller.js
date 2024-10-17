@@ -4,7 +4,79 @@ import DeletedRegistrant from "../models/Deleted/deletedRegistrant.model.js";
 import User from "../models/user.model.js";
 import { generateToken } from "./user.controller.js";
 import bcrypt from "bcryptjs";
+import Applicant from "../models/applicant.model.js";
+import {
+  clientClassifications,
+  employmentTypes,
+  employmentStatuses as registrantEmploymentStatuses,
+  educationalAttainments,
+  disabilityTypes,
+  disabilityCauses,
+  scholarTypes,
+  civilStatues as registrantCivilStatuses,
+  registrationStatuses,
+} from "../utils/registrant.enums.js";
 
+import {
+  employmentStatuses as applicantEmploymentStatuses,
+  civilStatues as applicantCivilStatuses,
+  highestEducationalAttainments,
+} from "../utils/applicant.enums.js";
+
+// Helper function to map civil status between models
+function mapCivilStatus(applicantCivilStatus) {
+  const civilStatusMap = {
+    Single: "Single",
+    Married: "Married",
+    Separated: "Separated",
+    "Widow/er": "Widower",
+  };
+
+  return civilStatusMap[applicantCivilStatus] || "Single"; // Default to Single if mapping not found
+}
+
+// Helper function to map employment status
+function mapEmploymentStatus(applicantEmploymentStatus) {
+  const employmentStatusMap = {
+    Casual: "Wage-Employed",
+    "Job Order": "Wage-Employed",
+    Probationary: "Wage-Employed",
+    Permanent: "Wage-Employed",
+    "Self-Employed": "Self-Employed",
+    OFW: "Wage-Employed",
+  };
+
+  return employmentStatusMap[applicantEmploymentStatus] || "Unemployed";
+}
+
+// Helper function to map employment type
+function mapEmploymentType(applicantEmploymentStatus) {
+  const employmentTypeMap = {
+    Casual: "Casual",
+    "Job Order": "Job Order",
+    Probationary: "Probationary",
+    Permanent: "Permanent",
+    "Self-Employed": "None",
+    OFW: "None",
+  };
+
+  return employmentTypeMap[applicantEmploymentStatus] || "None";
+}
+
+// Helper function to map educational attainment
+function mapEducationalAttainment(applicantEducation) {
+  const educationMap = {
+    "Elementary Graduate": "Elementary Graduate",
+    "High School Graduate": "High School Graduate",
+    "TVET Graduate":
+      "Post-Secondary Non-Tertiary/Technical Vocational Graduate",
+    "College Level": "College Undergraduate",
+    "College Graduate": "College Graduate",
+    Others: "No Grade Completed", // You might want to adjust this default
+  };
+
+  return educationMap[applicantEducation] || "No Grade Completed";
+}
 // Function to generate a placeholder password
 export const generatePlaceholderPassword = (length = 12) => {
   const chars =
@@ -380,5 +452,170 @@ export const deleteCourse = async (req, res) => {
   } catch (error) {
     console.error("Error in deleteCourse:", error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// @desc    Add a course to a registrant by ULI
+export const addCourseByUli = async (req, res) => {
+  try {
+    const { uli } = req.params;
+    const {
+      courseName,
+      registrationStatus = "Pending",
+      hasScholarType = false,
+      scholarType = null,
+      otherScholarType = null,
+    } = req.body;
+
+    if (!courseName) {
+      return res.status(400).json({
+        success: false,
+        message: "Course name is required",
+      });
+    }
+
+    // Find the registrant by ULI
+    const registrant = await Registrant.findOne({ uli });
+
+    if (!registrant) {
+      return res.status(404).json({
+        success: false,
+        message: "Registrant not found",
+      });
+    }
+
+    // Create the new course object
+    const newCourse = {
+      courseName,
+      registrationStatus,
+      hasScholarType,
+      scholarType,
+      otherScholarType: scholarType === "Others" ? otherScholarType : null,
+    };
+
+    // Add the course to the registrant's courses array
+    registrant.course.push(newCourse);
+
+    // Save the updated registrant
+    await registrant.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Course added successfully",
+      data: registrant,
+    });
+  } catch (error) {
+    console.error("Error in addCourseByUli:", error);
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const createFromApplicant = async (req, res) => {
+  try {
+    const { uli } = req.body;
+    console.log("Request body:", req.body);
+
+    // Find existing applicant record
+    const existingApplicant = await Applicant.findOne({ uli });
+    if (!existingApplicant) {
+      return res.status(404).json({ message: "Applicant record not found" });
+    }
+
+    // Map common fields
+    const commonFields = {
+      uli,
+      name: existingApplicant.name,
+      completeMailingAddress: existingApplicant.completeMailingAddress,
+      contact: {
+        email: existingApplicant.contact.email || "",
+        mobileNumber: existingApplicant.contact.mobileNumber || "",
+      },
+      personalInformation: {
+        sex: existingApplicant.sex,
+        civilStatus: mapCivilStatus(existingApplicant.civilStatus),
+        nationality: req.body.nationality,
+        birthdate: existingApplicant.birthdate,
+        age: existingApplicant.age,
+        birthplace: {
+          city: existingApplicant.birthplace,
+          province: existingApplicant.completeMailingAddress.province,
+          region: existingApplicant.completeMailingAddress.region,
+        },
+      },
+      // Map parent information from father's information
+      parent: {
+        name: {
+          firstName: existingApplicant.fatherName.firstName,
+          middleName: existingApplicant.fatherName.middleName,
+          lastName: existingApplicant.fatherName.lastName,
+        },
+        completeMailingAddress: {
+          street: existingApplicant.completeMailingAddress.street,
+          barangay: existingApplicant.completeMailingAddress.barangay,
+          district: existingApplicant.completeMailingAddress.district,
+          city: existingApplicant.completeMailingAddress.city,
+          province: existingApplicant.completeMailingAddress.province,
+          region: existingApplicant.completeMailingAddress.region,
+        },
+      },
+      role: "client",
+    };
+
+    // Handle enum fields with proper validation and mapping
+    const registrantData = {
+      ...commonFields,
+      // Use provided employment status or map from applicant's status
+      employmentStatus:
+        req.body.employmentStatus ||
+        mapEmploymentStatus(existingApplicant.employmentStatus),
+
+      // Use provided employment type or map from applicant's status
+      employmentType:
+        req.body.employmentType ||
+        mapEmploymentType(existingApplicant.employmentStatus),
+
+      // Use provided education or map from applicant's education
+      education:
+        req.body.education ||
+        mapEducationalAttainment(
+          existingApplicant.highestEducationalAttainment
+        ),
+
+      // Required fields from request body
+      clientClassification: req.body.clientClassification,
+      otherClientClassification:
+        req.body.clientClassification === "Others"
+          ? req.body.otherClientClassification
+          : undefined,
+
+      // Optional fields - set to 'None' if empty
+      disabilityType: req.body.disabilityType || "None",
+      disabilityCause: req.body.disabilityCause || "None",
+
+      // Handle course array with proper schema validation
+      course: req.body.course.map((course) => ({
+        ...course,
+        scholarType: course.hasScholarType ? course.scholarType : "None",
+        otherScholarType:
+          course.scholarType === "Others" ? course.otherScholarType : undefined,
+      })),
+    };
+
+    console.log("New registrant data:", registrantData);
+    const newRegistrant = new Registrant(registrantData);
+    await newRegistrant.save();
+    res.status(201).json(newRegistrant);
+  } catch (error) {
+    console.error("Error creating registrant:", error);
+    res.status(500).json({ message: error.message });
   }
 };

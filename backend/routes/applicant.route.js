@@ -11,6 +11,8 @@ import {
   addCompetencyAssessment,
   getApplicantByUli,
   deleteAssessment,
+  addAssessmentByUli,
+  createFromRegistrant,
 } from "../controllers/applicant.controller.js";
 
 const router = express.Router();
@@ -23,6 +25,8 @@ router.put("/:id", updateApplicant);
 router.delete("/:id", deleteApplicant);
 router.get("/uli/:uli", getApplicantByUli);
 router.delete("/:applicantId/assessments/:assessmentId", deleteAssessment);
+router.post("/:uli/assessment", addAssessmentByUli);
+router.post("/:uli/create-from-registrant", createFromRegistrant);
 
 // Dynamic field addition routes
 router.post("/:id/work-experience", addWorkExperience);

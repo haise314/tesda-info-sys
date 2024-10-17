@@ -46,6 +46,9 @@ import NewsTable from "./components/dashboard/NewsTable.jsx";
 import NewsList from "./components/dashboard/NewsList.jsx";
 import DeletedApplicantTable from "./components/dashboard/DeletedApplicantTable.jsx";
 import DeletedRegistrantTable from "./components/dashboard/DeletedRegistrantTable.jsx";
+import ClientDashboard from "./pages/dashboard/ClientDashboard.jsx";
+import ClientRegistration from "./pages/dashboard/ClientRegistration.jsx";
+import ClientApplication from "./pages/dashboard/ClientApplication.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -105,6 +108,30 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["client", "admin", "superadmin"]}>
             <Profile />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "client-dashboard",
+        element: (
+          <ProtectedRoute allowedRoles={["client"]}>
+            <ClientDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "client-registration",
+        element: (
+          <ProtectedRoute allowedRoles={["client"]}>
+            <ClientRegistration />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "client-application",
+        element: (
+          <ProtectedRoute allowedRoles={["client"]}>
+            <ClientApplication />
           </ProtectedRoute>
         ),
       },

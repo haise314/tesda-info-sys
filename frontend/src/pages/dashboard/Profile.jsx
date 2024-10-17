@@ -16,6 +16,7 @@ import ProfileImage from "../../components/dashboard/ProfileImage";
 import ApplicantDetails from "../../components/dashboard/ApplicantDetails";
 import RegistrantDetails from "../../components/dashboard/RegistrantDetails";
 import TabPanel from "./TabPanel";
+import CourseAssessmentList from "../../components/dashboard/CourseAssessmentList";
 
 const fetchData = async (url) => {
   const { data } = await axios.get(url);
@@ -177,33 +178,42 @@ const Profile = () => {
                 <Typography>Role: {user?.role}</Typography>
               </Box>
             </TabPanel>
-            {console.log(
-              "ApplicantQuery.data.data",
-              applicantQuery?.data?.data
-            )}
+
             <TabPanel value={activeTab} index={1}>
               {applicantQuery.data ? (
-                <ApplicantDetails
-                  data={applicantQuery.data}
-                  handlePrintPDF={() =>
-                    handlePrintClickApplicant(applicantQuery.data?.data)
-                  }
-                  isPrinting={isPrinting}
-                />
+                <>
+                  <ApplicantDetails
+                    data={applicantQuery.data}
+                    handlePrintPDF={() =>
+                      handlePrintClickApplicant(applicantQuery.data?.data)
+                    }
+                    isPrinting={isPrinting}
+                  />
+                  <CourseAssessmentList
+                    type="assessments"
+                    data={applicantQuery.data?.data}
+                  />
+                </>
               ) : (
                 <Typography>No applicant data available.</Typography>
               )}
             </TabPanel>
-            {console.log("RegistrantQuery.data", registrantQuery?.data?.data)}
+
             <TabPanel value={activeTab} index={2}>
               {registrantQuery.data ? (
-                <RegistrantDetails
-                  data={registrantQuery.data.data}
-                  handlePrintPDF={() =>
-                    handlePrintClick(registrantQuery.data.data)
-                  }
-                  isPrinting={isPrinting}
-                />
+                <>
+                  <RegistrantDetails
+                    data={registrantQuery.data.data}
+                    handlePrintPDF={() =>
+                      handlePrintClick(registrantQuery.data.data)
+                    }
+                    isPrinting={isPrinting}
+                  />
+                  <CourseAssessmentList
+                    type="courses"
+                    data={registrantQuery.data?.data}
+                  />
+                </>
               ) : (
                 <Typography>No registrant data available.</Typography>
               )}

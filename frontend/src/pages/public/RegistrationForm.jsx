@@ -520,8 +520,8 @@ function RegistrationForm() {
             <TextField
               sx={{
                 width: {
-                  xs: "100%", // Width for extra-small screens
-                  md: "70%", // Width for medium screens
+                  xs: "100%",
+                  md: "70%",
                 },
               }}
               {...register("personalInformation.nationality")}
@@ -532,8 +532,8 @@ function RegistrationForm() {
           </Stack>
 
           <Divider sx={{ margin: 3 }} />
-          {/* Employment Information */}
 
+          {/* Employment Information */}
           <Typography variant="h6">
             Employment Information (Before Training)
           </Typography>
