@@ -3,7 +3,14 @@ import axios from "axios";
 export const verifyRecaptcha = async (token) => {
   try {
     const response = await axios.post(
-      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`
+      "https://www.google.com/recaptcha/api/siteverify",
+      null,
+      {
+        params: {
+          secret: process.env.RECAPTCHA_SECRET_KEY,
+          response: token,
+        },
+      }
     );
 
     console.log("reCAPTCHA verification response:", response.data);

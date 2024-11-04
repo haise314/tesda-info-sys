@@ -7,20 +7,17 @@ const ReCAPTCHAWrapper = ({ onVerify, siteKey }) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Check if reCAPTCHA script is loaded
     const checkRecaptchaLoad = () => {
       if (window.grecaptcha) {
         setIsLoaded(true);
       }
     };
 
-    // Add load event listener
     const script = document.querySelector('script[src*="recaptcha"]');
     if (script) {
       script.addEventListener("load", checkRecaptchaLoad);
     }
 
-    // Initial check
     checkRecaptchaLoad();
 
     return () => {

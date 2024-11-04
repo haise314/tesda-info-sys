@@ -38,8 +38,12 @@ export const registerUser = async (req, res) => {
 
     console.log("Registration request body:", req.body);
 
-    // Extract birth year from birthdate
-    const birthYear = new Date(birthdate).getFullYear();
+    // Validate birthdate format
+    const birthDateObj = new Date(birthdate);
+    if (isNaN(birthDateObj)) {
+      return res.status(400).json({ message: "Invalid birthdate format" });
+    }
+    const birthYear = birthDateObj.getFullYear();
 
     // Generate ULI using user's name and birth year
     const uli = generateULI(
@@ -49,11 +53,11 @@ export const registerUser = async (req, res) => {
       birthYear
     );
 
-    // Check if generated ULI already exists
+    // Check if the ULI already exists
     const userExists = await User.findOne({ uli });
     if (userExists) {
       return res.status(400).json({
-        message: "Registration failed. Please try again.",
+        message: "User with this ULI already exists.",
       });
     }
 
