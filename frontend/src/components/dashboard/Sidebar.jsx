@@ -53,12 +53,12 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       roles: ["client"],
       children: [
         {
-          title: "Registration",
+          title: "Course/Qualification Registration",
           path: "client-registration",
           roles: ["client"],
         },
         {
-          title: "Application",
+          title: "Assessment Application",
           path: "client-application",
           roles: ["client"],
         },
