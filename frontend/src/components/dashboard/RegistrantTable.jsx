@@ -1,170 +1,129 @@
-import React, { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import {
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  TextField,
+  MenuItem,
+  Alert,
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  IconButton,
+} from "@mui/material";
 import {
   DataGrid,
   GridActionsCellItem,
   GridToolbar,
   useGridApiRef,
 } from "@mui/x-data-grid";
-import {
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  useMediaQuery,
-  Stack,
-  Container,
-  Box,
-  CircularProgress,
-  Typography,
-  Select,
-  MenuItem,
-} from "@mui/material";
-import { useTheme } from "@emotion/react";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import AddIcon from "@mui/icons-material/Add";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { registrantColumns } from "../utils/column/registrant.column.js";
-import { TableContainer } from "../../layouts/TableContainer";
-import {
-  unflattenRegistrantData,
-  flattenRegistrantData,
-} from "../utils/flatten/registrant.flatten.js";
-import { registrationStatuses } from "../utils/enums/registrant.enums.js";
-import CourseEditDialog from "./CourseEdit.jsx";
+import React, { useState, useEffect } from "react";
 
-const fetchRegistrants = async () => {
-  try {
-    const response = await axios.get("/api/register");
-    // console.log("Raw API response:", response);
-    // console.log("Response data:", response.data);
-
-    let flattenedData;
-    if (Array.isArray(response.data.data)) {
-      // console.log("Data is an array with length:", response.data.data.length);
-      flattenedData = response.data.data.map((registrant) => {
-        const flattened = flattenRegistrantData(registrant);
-        return flattened;
-      });
-    } else {
-      // console.log("Data is a single object");
-      flattenedData = [flattenRegistrantData(response.data.data)];
-    }
-
-    // console.log("Final flattened data:", flattenedData);
-    return flattenedData;
-  } catch (error) {
-    console.error("Error fetching registrants:", error);
-    throw error;
-  }
-};
-
-const getDefaultColumnVisibility = (columns) => {
-  const visibility = {};
-  columns.forEach((col) => {
-    visibility[col.field] = false;
-  });
-  return visibility;
-};
+const columns = [
+  { field: "uli", headerName: "ULI", width: 200 },
+  {
+    field: "courses",
+    headerName: "Courses",
+    width: 300,
+    renderCell: (params) => (
+      <Box sx={{ py: 1 }}>
+        {params.value.map((course, index) => (
+          <Typography key={index} variant="body2">
+            {course.courseName} - {course.registrationStatus}
+            {course.hasScholarType && ` (${course.scholarType})`}
+          </Typography>
+        ))}
+      </Box>
+    ),
+  },
+  { field: "disabilityType", headerName: "Disability Type", width: 150 },
+  { field: "disabilityCause", headerName: "Disability Cause", width: 150 },
+  {
+    field: "createdAt",
+    headerName: "Created At",
+    width: 200,
+    valueFormatter: (params) => new Date(params.value).toLocaleDateString(),
+  },
+];
 
 const RegistrantTable = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [rows, setRows] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [openCourseDialog, setOpenCourseDialog] = useState(false);
+  const [selectedRegistrant, setSelectedRegistrant] = useState(null);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    uli: "",
+    disabilityType: "",
+    disabilityCause: "",
+    course: [],
+  });
+  const [courseData, setCourseData] = useState({
+    courseName: "",
+    registrationStatus: "Pending",
+    hasScholarType: false,
+    scholarType: "",
+    otherScholarType: "",
+  });
+
   const queryClient = useQueryClient();
   const apiRef = useGridApiRef();
-  const [rows, setRows] = useState([]);
-  const [selectedRegistrant, setSelectedRegistrant] = useState(null);
-  const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
 
-  const {
-    data: registrants,
-    isLoading,
-    error,
-  } = useQuery({
+  const { data: registrants, isLoading } = useQuery({
     queryKey: ["registrants"],
-    queryFn: fetchRegistrants,
+    queryFn: async () => {
+      const response = await axios.get("/api/register");
+      return response.data.data;
+    },
   });
 
   useEffect(() => {
     if (registrants) {
-      setRows(registrants);
+      const formattedRows = registrants.map((reg) => ({
+        ...reg,
+        id: reg._id,
+        courses: reg.course,
+      }));
+      setRows(formattedRows);
     }
   }, [registrants]);
 
-  const handleCourseEdit = (params) => {
-    const registrant = rows.find((row) => row._id === params.id);
-    console.log("Selected registrant:", registrant);
-    if (registrant) {
-      const registrantWithCourses = {
-        ...registrant,
-        courses: Array.isArray(registrant.courses) ? registrant.courses : [],
-      };
-      setSelectedRegistrant(registrantWithCourses);
-      setIsCourseDialogOpen(true);
-    }
-  };
-
-  const handleCourseDialogClose = () => {
-    setIsCourseDialogOpen(false);
-    setSelectedRegistrant(null);
-  };
-
-  const handleCourseSave = async (updatedCourses) => {
-    if (selectedRegistrant) {
-      try {
-        await updateRegistrantMutation.mutateAsync({
-          id: selectedRegistrant._id,
-          field: "course",
-          value: updatedCourses,
-        });
-        queryClient.invalidateQueries(["registrants"]);
-      } catch (error) {
-        console.error("Failed to update courses:", error);
-        // Handle error (e.g., show an error message to the user)
-      }
-    }
-    handleCourseDialogClose();
-  };
-
-  // Modify the existing courses column to add the onCellDoubleClick functionality
-  const modifiedColumns = registrantColumns.map((column) => {
-    if (column.field === "courses") {
-      return {
-        ...column,
-        editable: false, // Disable inline editing
-      };
-    }
-    return column;
-  });
-
-  const updateRegistrantMutation = useMutation({
-    mutationFn: async (params) => {
-      console.log("Update registrant params:", params);
-      const { id, field, value } = params;
-
-      const currentRow = apiRef.current?.getRow(id);
-      if (!currentRow) {
-        throw new Error("Could not find row data");
-      }
-      console.log("Registrant currentRow:", currentRow);
-
-      const updatedRow = { ...currentRow, [field]: value };
-      console.log("Registrant updatedRow:", updatedRow);
-
-      const unflattedData = unflattenRegistrantData(updatedRow);
-      console.log("Registrant unflattenedData:", unflattedData);
-      const response = await axios.put(`/api/register/${id}`, unflattedData);
+  const createRegistrantMutation = useMutation({
+    mutationFn: async (data) => {
+      const response = await axios.post("/api/register", data);
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["registrants"]);
+      setOpenDialog(false);
+      resetForm();
     },
     onError: (error) => {
-      console.error("Update error:", error);
-      alert("Failed to update registrant. Please try again.");
+      setError(error.response?.data?.message || "Failed to create registrant");
+    },
+  });
+
+  const updateRegistrantMutation = useMutation({
+    mutationFn: async ({ id, ...data }) => {
+      const response = await axios.put(`/api/register/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["registrants"]);
+      setOpenDialog(false);
+      resetForm();
+    },
+    onError: (error) => {
+      setError(error.response?.data?.message || "Failed to update registrant");
     },
   });
 
@@ -175,60 +134,106 @@ const RegistrantTable = () => {
     },
   });
 
-  const handleDeleteClick = (id) => () => {
+  const addCourseMutation = useMutation({
+    mutationFn: async ({ uli, courseData }) => {
+      const response = await axios.post(
+        `/api/register/${uli}/course`,
+        courseData
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["registrants"]);
+      setOpenCourseDialog(false);
+      setCourseData({
+        courseName: "",
+        registrationStatus: "Pending",
+        hasScholarType: false,
+        scholarType: "",
+        otherScholarType: "",
+      });
+    },
+  });
+
+  const resetForm = () => {
+    setFormData({
+      uli: "",
+      disabilityType: "",
+      disabilityCause: "",
+      course: [],
+    });
+    setSelectedRegistrant(null);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (selectedRegistrant) {
+      updateRegistrantMutation.mutate({
+        id: selectedRegistrant.id,
+        ...formData,
+      });
+    } else {
+      createRegistrantMutation.mutate(formData);
+    }
+  };
+
+  const handleAddCourse = (e) => {
+    e.preventDefault();
+    addCourseMutation.mutate({
+      uli: selectedRegistrant.uli,
+      courseData,
+    });
+  };
+
+  const handleEdit = (registrant) => {
+    setSelectedRegistrant(registrant);
+    setFormData({
+      uli: registrant.uli,
+      disabilityType: registrant.disabilityType,
+      disabilityCause: registrant.disabilityCause,
+      course: registrant.courses,
+    });
+    setOpenDialog(true);
+  };
+
+  const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this registrant?")) {
       deleteRegistrantMutation.mutate(id);
     }
   };
 
-  const processRowUpdate = React.useCallback(
-    async (newRow, oldRow) => {
-      const changedField = Object.keys(newRow).find(
-        (key) => JSON.stringify(newRow[key]) !== JSON.stringify(oldRow[key])
-      );
-      console.log("Changed field:", changedField);
-      if (!changedField) return oldRow; // No changes
+  const handleAddCourseClick = (registrant) => {
+    setSelectedRegistrant(registrant);
+    setOpenCourseDialog(true);
+  };
 
-      try {
-        await updateRegistrantMutation.mutateAsync({
-          id: newRow._id,
-          field: changedField,
-          value: newRow[changedField],
-        });
-        return newRow;
-      } catch (error) {
-        return oldRow;
-      }
-    },
-    [updateRegistrantMutation]
-  );
-
-  // Add the actions column
-  const columns = [
-    ...modifiedColumns,
-    {
-      field: "actions",
-      type: "actions",
-      headerName: "Actions",
-      width: 100,
-      getActions: ({ id }) => [
-        <GridActionsCellItem
-          icon={<DeleteIcon />}
-          label="Delete"
-          onClick={handleDeleteClick(id)}
-          color="inherit"
-        />,
-      ],
-    },
-  ];
-
-  const handleAddClick = () => {
-    console.log("Add new registrant");
+  const actionColumn = {
+    field: "actions",
+    headerName: "Actions",
+    width: 150,
+    renderCell: (params) => (
+      <Box sx={{ display: "flex", gap: 1 }}>
+        <IconButton size="small" onClick={() => handleEdit(params.row)}>
+          <EditIcon />
+        </IconButton>
+        <IconButton
+          size="small"
+          onClick={() => handleAddCourseClick(params.row)}
+        >
+          <MenuBookIcon />
+        </IconButton>
+        <IconButton size="small" onClick={() => handleDelete(params.row.id)}>
+          <DeleteIcon />
+        </IconButton>
+      </Box>
+    ),
   };
 
   if (isLoading) {
     return (
-      <Container
+      <Box
         sx={{
           display: "flex",
           justifyContent: "center",
@@ -236,96 +241,164 @@ const RegistrantTable = () => {
           height: "100vh",
         }}
       >
-        <Box sx={{ textAlign: "center" }}>
-          <CircularProgress size={60} />
-          <Typography variant="h6" sx={{ mt: 2 }}>
-            Loading Registrant Data...
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-  if (error) {
-    return (
-      <Container>
-        <Typography color="error" variant="h6">
-          Error loading data: {error.message}
-        </Typography>
-      </Container>
+        <Typography>Loading Registrant Data...</Typography>
+      </Box>
     );
   }
 
   return (
-    <TableContainer>
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        spacing={2}
+    <Box sx={{ p: 4 }}>
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => setOpenDialog(true)}
         sx={{ mb: 2 }}
-        alignItems={{ xs: "stretch", sm: "center" }}
       >
-        <Button
-          fullWidth={isMobile}
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAddClick}
-        >
-          Add Registrant
-        </Button>
-      </Stack>
+        Add Registrant
+      </Button>
 
-      <DataGrid
-        apiRef={apiRef}
-        rows={rows}
-        columns={columns}
-        slots={{
-          toolbar: GridToolbar,
-        }}
-        slotProps={{
-          toolbar: {
-            showQuickFilter: true,
-            quickFilterProps: { debounceMs: 500 },
-          },
-        }}
-        getRowId={(row) => row._id}
-        processRowUpdate={processRowUpdate}
-        onProcessRowUpdateError={(error) => {
-          console.error("Error while saving:", error);
-        }}
-        onCellDoubleClick={(params) => {
-          console.log("Cell double click:", params);
-          if (params.field === "courses") {
-            handleCourseEdit(params);
-          }
-        }}
-        initialState={{
-          columns: {
-            columnVisibilityModel: {
-              ...getDefaultColumnVisibility(registrantColumns),
-              uli: true,
-              fullName: true,
-              email: !isMobile,
-              clientClassification: !isMobile,
-              courses: true,
-              createdAt: !isMobile,
-              actions: true,
-            },
-          },
-          pagination: {
-            paginationModel: { pageSize: isMobile ? 5 : 10 },
-          },
-        }}
-        pageSizeOptions={isMobile ? [5, 10] : [10, 25, 50]}
-        density={isMobile ? "compact" : "standard"}
-      />
-      {selectedRegistrant && (
-        <CourseEditDialog
-          open={isCourseDialogOpen}
-          onClose={handleCourseDialogClose}
-          courses={selectedRegistrant.courses}
-          onSave={handleCourseSave}
-        />
-      )}
-    </TableContainer>
+      <Card>
+        <CardContent>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Registrants
+          </Typography>
+          <DataGrid
+            apiRef={apiRef}
+            rows={rows}
+            columns={[...columns, actionColumn]}
+            slots={{
+              toolbar: GridToolbar,
+            }}
+            slotProps={{
+              toolbar: {
+                showQuickFilter: true,
+                quickFilterProps: { debounceMs: 500 },
+              },
+            }}
+            initialState={{
+              pagination: { paginationModel: { pageSize: 10 } },
+            }}
+            pageSizeOptions={[5, 10, 25, 50]}
+            sx={{ height: 600 }}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Registrant Form Dialog */}
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>
+          {selectedRegistrant ? "Edit Registrant" : "Add New Registrant"}
+        </DialogTitle>
+        <form onSubmit={handleSubmit}>
+          <DialogContent>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <TextField
+                label="ULI"
+                value={formData.uli}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, uli: e.target.value }))
+                }
+                fullWidth
+              />
+              <TextField
+                select
+                label="Disability Type"
+                value={formData.disabilityType}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    disabilityType: e.target.value,
+                  }))
+                }
+                fullWidth
+              >
+                <MenuItem value="Physical">Physical</MenuItem>
+                <MenuItem value="Mental">Mental</MenuItem>
+                <MenuItem value="None">None</MenuItem>
+              </TextField>
+              <TextField
+                select
+                label="Disability Cause"
+                value={formData.disabilityCause}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    disabilityCause: e.target.value,
+                  }))
+                }
+                fullWidth
+              >
+                <MenuItem value="Congenital">Congenital</MenuItem>
+                <MenuItem value="Illness">Illness</MenuItem>
+                <MenuItem value="Accident">Accident</MenuItem>
+                <MenuItem value="None">None</MenuItem>
+              </TextField>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+            <Button type="submit" variant="contained">
+              {selectedRegistrant ? "Update" : "Create"}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Add Course Dialog */}
+      <Dialog
+        open={openCourseDialog}
+        onClose={() => setOpenCourseDialog(false)}
+      >
+        <DialogTitle>Add Course</DialogTitle>
+        <form onSubmit={handleAddCourse}>
+          <DialogContent>
+            <DialogContentText sx={{ mb: 2 }}>
+              Add a new course for {selectedRegistrant?.uli}
+            </DialogContentText>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <TextField
+                label="Course Name"
+                value={courseData.courseName}
+                onChange={(e) =>
+                  setCourseData((prev) => ({
+                    ...prev,
+                    courseName: e.target.value,
+                  }))
+                }
+                fullWidth
+              />
+              <TextField
+                select
+                label="Registration Status"
+                value={courseData.registrationStatus}
+                onChange={(e) =>
+                  setCourseData((prev) => ({
+                    ...prev,
+                    registrationStatus: e.target.value,
+                  }))
+                }
+                fullWidth
+              >
+                <MenuItem value="Pending">Pending</MenuItem>
+                <MenuItem value="Approved">Approved</MenuItem>
+                <MenuItem value="Rejected">Rejected</MenuItem>
+              </TextField>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenCourseDialog(false)}>Cancel</Button>
+            <Button type="submit" variant="contained">
+              Add Course
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+    </Box>
   );
 };
 

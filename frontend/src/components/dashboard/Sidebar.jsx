@@ -88,12 +88,12 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       roles: ["superadmin"],
       children: [
         {
-          title: "Archived Registrants",
+          title: "Archived Course Registrants",
           path: "deleted-registrants",
           roles: ["superadmin"],
         },
         {
-          title: "Archived Applicants",
+          title: "Archived Assessment Applicants",
           path: "deleted-applicants",
           roles: ["superadmin"],
         },
