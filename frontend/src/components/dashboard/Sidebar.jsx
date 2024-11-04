@@ -71,22 +71,29 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       children: [
         { title: "Users", path: "users", roles: ["superadmin"] },
         {
-          title: "Registrants",
+          title: "Course/Qualifications",
           path: "clients",
           roles: ["admin", "superadmin"],
         },
         {
-          title: "Applicants",
+          title: "Assessment Applications",
           path: "applicants",
           roles: ["admin", "superadmin"],
         },
+      ],
+    },
+    {
+      title: "Archive",
+      icon: <PeopleIcon />,
+      roles: ["superadmin"],
+      children: [
         {
-          title: "Deleted Registrants",
+          title: "Archived Registrants",
           path: "deleted-registrants",
           roles: ["superadmin"],
         },
         {
-          title: "Deleted Applicants",
+          title: "Archived Applicants",
           path: "deleted-applicants",
           roles: ["superadmin"],
         },

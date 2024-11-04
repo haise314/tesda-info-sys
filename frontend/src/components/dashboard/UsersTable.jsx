@@ -12,35 +12,124 @@ import {
   Button,
   CircularProgress,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Stack,
+  TextField,
   Typography,
   useMediaQuery,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Alert,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import { userColumns } from "../utils/column/users.column.js";
-import { TableContainer } from "../../layouts/TableContainer";
-import { useTheme } from "@emotion/react";
 
-const fetchUsersForTable = async () => {
-  const response = await axios.post("/api/auth/users");
-  return response.data;
+// Form Fields Component
+const UserFormFields = ({ formData, setFormData, isEdit }) => {
+  return (
+    <Stack spacing={2}>
+      {!isEdit && (
+        <>
+          <TextField
+            fullWidth
+            label="First Name"
+            value={formData.name?.firstName || ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                name: { ...prev.name, firstName: e.target.value },
+              }))
+            }
+            required
+          />
+          <TextField
+            fullWidth
+            label="Last Name"
+            value={formData.name?.lastName || ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                name: { ...prev.name, lastName: e.target.value },
+              }))
+            }
+            required
+          />
+          <TextField
+            fullWidth
+            label="Email"
+            type="email"
+            value={formData.contact?.email || ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                contact: { ...prev.contact, email: e.target.value },
+              }))
+            }
+            required
+          />
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            value={formData.password || ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                password: e.target.value,
+              }))
+            }
+            required
+          />
+        </>
+      )}
+      <FormControl fullWidth>
+        <InputLabel>Role</InputLabel>
+        <Select
+          value={formData.role || ""}
+          label="Role"
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, role: e.target.value }))
+          }
+        >
+          <MenuItem value="client">Client</MenuItem>
+          <MenuItem value="admin">Admin</MenuItem>
+          <MenuItem value="superadmin">Super Admin</MenuItem>
+        </Select>
+      </FormControl>
+    </Stack>
+  );
 };
 
 const UsersTable = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [rows, setRows] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [formData, setFormData] = useState({
+    name: { firstName: "", lastName: "" },
+    contact: { email: "" },
+    password: "",
+    role: "client",
+  });
+  const [editMode, setEditMode] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [error, setError] = useState("");
+
   const queryClient = useQueryClient();
   const apiRef = useGridApiRef();
-  const [rows, setRows] = useState([]);
 
-  const {
-    data: users,
-    isLoading,
-    error,
-  } = useQuery({
+  // Fetch Users Query
+  const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
-    queryFn: fetchUsersForTable,
+    queryFn: async () => {
+      const response = await axios.post("/api/auth/users");
+      return response.data;
+    },
   });
 
   useEffect(() => {
@@ -49,9 +138,30 @@ const UsersTable = () => {
     }
   }, [users]);
 
+  // Create User Mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (userData) => {
+      const response = await axios.post("/api/auth/register", userData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["users"]);
+      setOpenDialog(false);
+      setFormData({
+        name: { firstName: "", lastName: "" },
+        contact: { email: "" },
+        password: "",
+        role: "client",
+      });
+    },
+    onError: (error) => {
+      setError(error.response?.data?.message || "Failed to create user");
+    },
+  });
+
+  // Update User Mutation
   const updateUserMutation = useMutation({
-    mutationFn: async (params) => {
-      const { id, ...updateData } = params;
+    mutationFn: async ({ id, ...updateData }) => {
       const response = await axios.put(
         `/api/auth/users/update/${id}`,
         updateData
@@ -60,13 +170,14 @@ const UsersTable = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["users"]);
+      setOpenDialog(false);
     },
     onError: (error) => {
-      console.error("Update error:", error);
-      alert("Failed to update user. Please try again.");
+      setError(error.response?.data?.message || "Failed to update user");
     },
   });
 
+  // Delete User Mutation
   const deleteUserMutation = useMutation({
     mutationFn: (id) => axios.delete(`/api/auth/users/delete/${id}`),
     onSuccess: () => {
@@ -74,70 +185,81 @@ const UsersTable = () => {
     },
   });
 
-  const handleDeleteClick = (id) => () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (editMode && selectedUser) {
+      updateUserMutation.mutate({
+        id: selectedUser.id,
+        ...formData,
+      });
+    } else {
+      createUserMutation.mutate(formData);
+    }
+  };
+
+  const handleEditClick = (user) => {
+    setSelectedUser(user);
+    setFormData({
+      ...user,
+      password: "", // Don't populate password in edit mode
+    });
+    setEditMode(true);
+    setOpenDialog(true);
+  };
+
+  const handleDeleteClick = (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       deleteUserMutation.mutate(id);
     }
   };
 
-  const processRowUpdate = React.useCallback(
-    async (newRow, oldRow) => {
-      console.log("Processing row update:", newRow, oldRow);
-      const changedField = Object.keys(newRow).find(
-        (key) => newRow[key] !== oldRow[key]
-      );
-      if (!changedField) return oldRow; // No changes
+  const handleAddClick = () => {
+    setEditMode(false);
+    setSelectedUser(null);
+    setFormData({
+      name: { firstName: "", lastName: "" },
+      contact: { email: "" },
+      password: "",
+      role: "client",
+    });
+    setOpenDialog(true);
+  };
 
-      try {
-        const updatedUser = await updateUserMutation.mutateAsync({
-          id: newRow.id,
-          [changedField]: newRow[changedField],
-        });
-        console.log("Update successful:", updatedUser);
-        return updatedUser;
-      } catch (error) {
-        console.error("Update failed:", error);
-        return oldRow;
-      }
-    },
-    [updateUserMutation]
-  );
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setError("");
+  };
+
   const columns = [
-    ...userColumns.map((col) => ({ ...col, editable: true })),
+    ...userColumns,
     {
       field: "actions",
       type: "actions",
       headerName: "Actions",
       width: 100,
-      getActions: ({ id }) => [
+      getActions: ({ row }) => [
+        <GridActionsCellItem
+          icon={<EditIcon />}
+          label="Edit"
+          onClick={() => handleEditClick(row)}
+        />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
           label="Delete"
-          onClick={handleDeleteClick(id)}
-          color="inherit"
+          onClick={() => handleDeleteClick(row.id)}
         />,
       ],
     },
   ];
 
-  const handleAddClick = () => {
-    console.log("Add new user");
-    // Implement the logic to add a new user
-  };
-
   if (isLoading) {
     return (
-      <Container
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <Box sx={{ textAlign: "center" }}>
+      <Container className="flex justify-center items-center h-screen">
+        <Box className="text-center">
           <CircularProgress size={60} />
-          <Typography variant="h6" sx={{ mt: 2 }}>
+          <Typography variant="h6" className="mt-4">
             Loading User Data...
           </Typography>
         </Box>
@@ -145,26 +267,10 @@ const UsersTable = () => {
     );
   }
 
-  if (error) {
-    return (
-      <Container>
-        <Typography color="error" variant="h6">
-          Error loading data: {error.message}
-        </Typography>
-      </Container>
-    );
-  }
-
   return (
-    <TableContainer>
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        spacing={2}
-        sx={{ mb: 2 }}
-        alignItems={{ xs: "stretch", sm: "center" }}
-      >
+    <div className="p-4">
+      <Stack direction="row" spacing={2} className="mb-4">
         <Button
-          fullWidth={isMobile}
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleAddClick}
@@ -172,6 +278,7 @@ const UsersTable = () => {
           Add User
         </Button>
       </Stack>
+
       <DataGrid
         apiRef={apiRef}
         rows={rows}
@@ -185,28 +292,46 @@ const UsersTable = () => {
             quickFilterProps: { debounceMs: 500 },
           },
         }}
-        processRowUpdate={processRowUpdate}
-        onProcessRowUpdateError={(error) => {
-          console.error("Error while saving:", error);
-        }}
         initialState={{
-          columns: {
-            columnVisibilityModel: {
-              uli: true,
-              role: true,
-              createdAt: !isMobile,
-              updatedAt: !isMobile,
-              actions: true,
-            },
-          },
           pagination: {
-            paginationModel: { pageSize: isMobile ? 5 : 10 },
+            paginationModel: { pageSize: 10 },
           },
         }}
-        pageSizeOptions={isMobile ? [5, 10] : [10, 25, 50]}
-        density={isMobile ? "compact" : "standard"}
+        pageSizeOptions={[5, 10, 25, 50]}
+        className="h-[600px]"
       />
-    </TableContainer>
+
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <form onSubmit={handleSubmit}>
+          <DialogTitle>{editMode ? "Edit User" : "Add New User"}</DialogTitle>
+          <DialogContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                {error}
+              </Alert>
+            )}
+            <Box className="mt-4">
+              <UserFormFields
+                formData={formData}
+                setFormData={setFormData}
+                isEdit={editMode}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button type="submit" variant="contained">
+              {editMode ? "Update" : "Create"}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+    </div>
   );
 };
 
