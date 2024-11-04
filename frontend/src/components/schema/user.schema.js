@@ -96,7 +96,10 @@ export const registrationSchema = z
   })
   .refine(
     (data) => {
-      if (data.employmentStatus === "Employed") {
+      if (
+        data.employmentStatus === "Wage-Employed" ||
+        data.employmentStatus === "UnderEmployed"
+      ) {
         return !!data.employmentType;
       }
       return true;
