@@ -1,12 +1,7 @@
 import mongoose from "mongoose";
-
 import {
   applicationStatuses,
   assessmentTypes,
-  civilStatues,
-  clientTypes,
-  employmentStatuses,
-  highestEducationalAttainments,
 } from "../utils/applicant.enums.js";
 
 const workExperienceSchema = new mongoose.Schema({
@@ -128,7 +123,6 @@ const competencyAssessmentSchema = new mongoose.Schema({
   },
 });
 
-// Define a schema for each assessment with related fields
 const assessmentSchema = new mongoose.Schema({
   assessmentTitle: {
     type: String,
@@ -152,7 +146,7 @@ const applicantSchema = new mongoose.Schema(
     uli: {
       type: String,
       required: true,
-      unique: true,
+      ref: "User", // Reference to User model
     },
     trainingCenterName: {
       type: String,
@@ -163,170 +157,14 @@ const applicantSchema = new mongoose.Schema(
       required: true,
     },
     assessments: {
-      type: [assessmentSchema], // Store multiple assessments with titles, types, and statuses
+      type: [assessmentSchema],
       required: true,
       validate: {
         validator: function (v) {
-          return v.length > 0; // Ensure at least one assessment is registered
+          return v.length > 0;
         },
         message: "At least one assessment must be provided.",
       },
-    },
-    clientType: {
-      type: String,
-      enum: clientTypes,
-      required: true,
-    },
-    name: {
-      firstName: {
-        type: String,
-        required: true,
-      },
-      middleName: {
-        type: String,
-        required: false,
-        default: "",
-      },
-      lastName: {
-        type: String,
-        required: true,
-      },
-      extension: {
-        type: String,
-        required: false,
-        default: "",
-      },
-    },
-    completeMailingAddress: {
-      street: {
-        type: String,
-        required: true,
-      },
-      barangay: {
-        type: String,
-        required: true,
-      },
-      district: {
-        type: String,
-        required: true,
-      },
-      city: {
-        type: String,
-        required: true,
-      },
-      province: {
-        type: String,
-        required: true,
-      },
-      region: {
-        type: String,
-        required: true,
-      },
-      zipCode: {
-        type: String,
-        required: true,
-      },
-    },
-    motherName: {
-      firstName: {
-        type: String,
-        required: true,
-      },
-      middleName: {
-        type: String,
-        required: false,
-        default: "",
-      },
-      lastName: {
-        type: String,
-        required: true,
-      },
-      extension: {
-        type: String,
-        required: false,
-        default: "",
-      },
-    },
-    fatherName: {
-      firstName: {
-        type: String,
-        required: true,
-      },
-      middleName: {
-        type: String,
-        required: false,
-        default: "",
-      },
-      lastName: {
-        type: String,
-        required: true,
-      },
-      extension: {
-        type: String,
-        required: false,
-        default: "",
-      },
-    },
-    sex: {
-      type: String,
-      enum: ["Male", "Female", "Others"],
-      required: true,
-    },
-    civilStatus: {
-      type: String,
-      enum: civilStatues,
-      required: true,
-    },
-    contact: {
-      telephoneNumber: {
-        type: String,
-        required: false,
-      },
-      mobileNumber: {
-        type: String,
-        required: false,
-      },
-      email: {
-        type: String,
-        required: false,
-      },
-      fax: {
-        type: String,
-        required: false,
-      },
-      others: {
-        type: String,
-        required: false,
-      },
-    },
-    highestEducationalAttainment: {
-      type: String,
-      enum: highestEducationalAttainments,
-      required: true,
-    },
-    otherHighestEducationalAttainment: {
-      type: String,
-      required: function () {
-        return this.highestEducationalAttainment === "Others";
-      },
-    },
-    employmentStatus: {
-      type: String,
-      enum: employmentStatuses,
-      required: true,
-    },
-    birthdate: {
-      type: Date,
-      required: true,
-    },
-    birthplace: {
-      type: String,
-      required: true,
-    },
-    age: {
-      type: Number,
-      required: true,
-      min: 0,
     },
     workExperience: {
       type: [workExperienceSchema],
@@ -344,11 +182,6 @@ const applicantSchema = new mongoose.Schema(
       type: [competencyAssessmentSchema],
       required: false,
     },
-    role: {
-      type: String,
-      required: true,
-      default: "client",
-    },
   },
   {
     timestamps: true,
@@ -356,5 +189,4 @@ const applicantSchema = new mongoose.Schema(
 );
 
 const Applicant = mongoose.model("Applicant", applicantSchema);
-
 export default Applicant;

@@ -40,7 +40,6 @@ import EventCalendarClient from "./components/dashboard/EventCalendarClient.jsx"
 import TestList from "./pages/dashboard/TestList.jsx";
 import TestSessionTable from "./components/dashboard/TestSessionTable.jsx";
 import ResultsTable from "./components/dashboard/ResultsTable.jsx";
-import UserTestResults from "./components/dashboard/UserTestResults.jsx";
 import UserResultsList from "./components/dashboard/UserTestResults.jsx";
 import NewsTable from "./components/dashboard/NewsTable.jsx";
 import NewsList from "./components/dashboard/NewsList.jsx";

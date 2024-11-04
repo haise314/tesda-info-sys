@@ -521,101 +521,115 @@ export const addCourseByUli = async (req, res) => {
 
 export const createFromApplicant = async (req, res) => {
   try {
-    const { uli } = req.body;
-    console.log("Request body:", req.body);
+    const { uli } = req.params;
+    console.log("ULI:", uli);
+    const {
+      employmentStatus,
+      employmentType,
+      education,
+      clientClassification,
+      otherClientClassification,
+      disabilityType,
+      disabilityCause,
+      course,
+    } = req.body;
+    console.log("Creating registrant from applicant:", req.body);
 
-    // Find existing applicant record
-    const existingApplicant = await Applicant.findOne({ uli });
-    if (!existingApplicant) {
-      return res.status(404).json({ message: "Applicant record not found" });
+    // Validate ULI format (assuming FLM-YY-XXX-XXXXX-XXX format)
+    // const uliRegex = /^FLM-\d{2}-\d{3}-\d{5}-\d{3}$/;
+    // if (!uliRegex.test(uli)) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Invalid ULI format",
+    //   });
+    // }
+
+    // Check if registration already exists for this ULI
+    const existingRegistration = await Registrant.findOne({ uli });
+    if (existingRegistration) {
+      return res.status(400).json({
+        success: false,
+        message: "Registration already exists for this ULI",
+      });
     }
 
-    // Map common fields
-    const commonFields = {
+    // Validate required fields based on conditional requirements
+    if (clientClassification === "Others" && !otherClientClassification) {
+      return res.status(400).json({
+        success: false,
+        message: "Other client classification must be specified",
+      });
+    }
+
+    // Validate courses array
+    if (!course || !Array.isArray(course) || course.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one course is required",
+      });
+    }
+
+    // Validate each course
+    for (const courseItem of course) {
+      if (!courseItem.courseName) {
+        return res.status(400).json({
+          success: false,
+          message: "Course name is required for all courses",
+        });
+      }
+
+      if (courseItem.hasScholarType && !courseItem.scholarType) {
+        return res.status(400).json({
+          success: false,
+          message: "Scholar type is required when hasScholarType is true",
+        });
+      }
+
+      if (courseItem.scholarType === "Others" && !courseItem.otherScholarType) {
+        return res.status(400).json({
+          success: false,
+          message: "Other scholar type must be specified",
+        });
+      }
+    }
+
+    // Create new registration
+    const newRegistration = new Registrant({
       uli,
-      name: existingApplicant.name,
-      completeMailingAddress: existingApplicant.completeMailingAddress,
-      contact: {
-        email: existingApplicant.contact.email || "",
-        mobileNumber: existingApplicant.contact.mobileNumber || "",
-      },
-      personalInformation: {
-        sex: existingApplicant.sex,
-        civilStatus: mapCivilStatus(existingApplicant.civilStatus),
-        nationality: req.body.nationality,
-        birthdate: existingApplicant.birthdate,
-        age: existingApplicant.age,
-        birthplace: {
-          city: existingApplicant.birthplace,
-          province: existingApplicant.completeMailingAddress.province,
-          region: existingApplicant.completeMailingAddress.region,
-        },
-      },
-      // Map parent information from father's information
-      parent: {
-        name: {
-          firstName: existingApplicant.fatherName.firstName,
-          middleName: existingApplicant.fatherName.middleName,
-          lastName: existingApplicant.fatherName.lastName,
-        },
-        completeMailingAddress: {
-          street: existingApplicant.completeMailingAddress.street,
-          barangay: existingApplicant.completeMailingAddress.barangay,
-          district: existingApplicant.completeMailingAddress.district,
-          city: existingApplicant.completeMailingAddress.city,
-          province: existingApplicant.completeMailingAddress.province,
-          region: existingApplicant.completeMailingAddress.region,
-        },
-      },
-      role: "client",
-    };
-
-    // Handle enum fields with proper validation and mapping
-    const registrantData = {
-      ...commonFields,
-      // Use provided employment status or map from applicant's status
-      employmentStatus:
-        req.body.employmentStatus ||
-        mapEmploymentStatus(existingApplicant.employmentStatus),
-
-      // Use provided employment type or map from applicant's status
-      employmentType:
-        req.body.employmentType ||
-        mapEmploymentType(existingApplicant.employmentStatus),
-
-      // Use provided education or map from applicant's education
-      education:
-        req.body.education ||
-        mapEducationalAttainment(
-          existingApplicant.highestEducationalAttainment
-        ),
-
-      // Required fields from request body
-      clientClassification: req.body.clientClassification,
-      otherClientClassification:
-        req.body.clientClassification === "Others"
-          ? req.body.otherClientClassification
-          : undefined,
-
-      // Optional fields - set to 'None' if empty
-      disabilityType: req.body.disabilityType || "None",
-      disabilityCause: req.body.disabilityCause || "None",
-
-      // Handle course array with proper schema validation
-      course: req.body.course.map((course) => ({
-        ...course,
-        scholarType: course.hasScholarType ? course.scholarType : "None",
-        otherScholarType:
-          course.scholarType === "Others" ? course.otherScholarType : undefined,
+      disabilityType,
+      disabilityCause,
+      course: course.map((c) => ({
+        courseName: c.courseName,
+        registrationStatus: "Pending", // Default status as defined in the model
+        hasScholarType: c.hasScholarType,
+        scholarType: c.scholarType,
+        otherScholarType: c.otherScholarType,
       })),
-    };
+    });
 
-    console.log("New registrant data:", registrantData);
-    const newRegistrant = new Registrant(registrantData);
-    await newRegistrant.save();
-    res.status(201).json(newRegistrant);
+    // Save the registration
+    const savedRegistration = await newRegistration.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Registration created successfully",
+      data: savedRegistration,
+    });
   } catch (error) {
-    console.error("Error creating registrant:", error);
-    res.status(500).json({ message: error.message });
+    // Handle specific MongoDB validation errors
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: Object.values(error.errors).map((err) => err.message),
+      });
+    }
+
+    // Handle other errors
+    console.error("Error creating registration:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };

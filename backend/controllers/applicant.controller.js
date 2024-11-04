@@ -469,123 +469,96 @@ export const addAssessmentByUli = async (req, res) => {
 
 export const createFromRegistrant = async (req, res) => {
   try {
-    const { uli } = req.body;
-    console.log("Creating applicant from registrant with ULI:", uli);
+    const { uli } = req.params;
+    console.log("ULI:", uli);
+    const {
+      trainingCenterName,
+      addressLocation,
+      assessments,
+      workExperience,
+      trainingSeminarAttended,
+      licensureExaminationPassed,
+      competencyAssessment,
+    } = req.body;
 
-    // Find existing registrant record
-    const existingRegistrant = await Registrant.findOne({ uli });
-    if (!existingRegistrant) {
-      return res.status(404).json({ message: "Registrant record not found" });
-    }
-
-    // Map completeMailingAddress while preserving existing zipCode if provided
-    const completeMailingAddress = {
-      street: existingRegistrant.completeMailingAddress.street,
-      barangay: existingRegistrant.completeMailingAddress.barangay,
-      district: existingRegistrant.completeMailingAddress.district,
-      city: existingRegistrant.completeMailingAddress.city,
-      province: existingRegistrant.completeMailingAddress.province,
-      region: existingRegistrant.completeMailingAddress.region,
-      zipCode: req.body.completeMailingAddress?.zipCode || "",
-    };
-
-    // Map contact information while preserving any additional fields from req.body
-    const contact = {
-      email: existingRegistrant.contact.email,
-      mobileNumber: existingRegistrant.contact.mobileNumber,
-      telephoneNumber: req.body.contact?.telephoneNumber || "",
-      fax: req.body.contact?.fax || "",
-      others: req.body.contact?.others || "",
-    };
-
-    // Map educational attainment
-    const educationMap = {
-      "Elementary Undergraduate": "Elementary Graduate",
-      "Elementary Graduate": "Elementary Graduate",
-      "Junior High School Undergraduate": "High School Graduate",
-      "Junior High School Graduate": "High School Graduate",
-      "Senior High School Undergraduate": "High School Graduate",
-      "Senior High School Graduate": "High School Graduate",
-      "Post Secondary": "College Level",
-      "College Undergraduate": "College Level",
-      "College Graduate": "College Graduate",
-      Masteral: "College Graduate",
-      Doctoral: "College Graduate",
-      "TVET Graduate": "TVET Graduate",
-    };
-
-    // Base fields from registrant
-    const commonFields = {
-      uli,
-      name: existingRegistrant.name,
-      completeMailingAddress,
-      contact,
-      sex: existingRegistrant.personalInformation.sex,
-      civilStatus:
-        civilStatuesMap[existingRegistrant.personalInformation.civilStatus] ||
-        "Single",
-      birthdate: existingRegistrant.personalInformation.birthdate,
-      age: existingRegistrant.personalInformation.age,
-      birthplace: existingRegistrant.personalInformation.birthplace.city,
-      employmentStatus:
-        employmentStatusMap[existingRegistrant.employmentStatus] ||
-        "Self-Employed",
-      highestEducationalAttainment:
-        educationMap[existingRegistrant.education] || "Others",
-      role: "client",
-    };
-
-    // Required fields that must come from req.body
-    const requiredNewFields = {
-      trainingCenterName: req.body.trainingCenterName,
-      addressLocation: req.body.addressLocation,
-      assessments: req.body.assessments,
-      clientType: req.body.clientType,
-      motherName: req.body.motherName,
-      fatherName: req.body.fatherName,
-    };
-
-    // Optional arrays that should be initialized if not provided
-    const optionalArrays = {
-      workExperience: req.body.workExperience || [],
-      trainingSeminarAttended: req.body.trainingSeminarAttended || [],
-      licensureExaminationPassed: req.body.licensureExaminationPassed || [],
-      competencyAssessment: req.body.competencyAssessment || [],
-    };
-
-    // Handle "Others" case for educational attainment
-    if (commonFields.highestEducationalAttainment === "Others") {
-      commonFields.otherHighestEducationalAttainment =
-        req.body.otherHighestEducationalAttainment || "";
-    }
-
-    // Merge all the fields together
-    const applicantData = {
-      ...commonFields,
-      ...requiredNewFields,
-      ...optionalArrays,
-    };
-
-    console.log("New applicant data:", applicantData);
-
-    // Validate required fields before saving
-    const missingFields = [];
-    for (const [key, value] of Object.entries(requiredNewFields)) {
-      if (!value) missingFields.push(key);
-    }
-
-    if (missingFields.length > 0) {
+    // Check if applicant already exists for this ULI
+    const existingApplicant = await Applicant.findOne({ uli });
+    if (existingApplicant) {
       return res.status(400).json({
-        message: "Missing required fields",
-        fields: missingFields,
+        success: false,
+        message: "Application already exists for this ULI",
       });
     }
 
-    const newApplicant = new Applicant(applicantData);
-    await newApplicant.save();
-    res.status(201).json(newApplicant);
+    // Validate required fields
+    if (!trainingCenterName || !addressLocation) {
+      return res.status(400).json({
+        success: false,
+        message: "Training center name and address location are required",
+      });
+    }
+
+    // Validate assessments array
+    if (
+      !assessments ||
+      !Array.isArray(assessments) ||
+      assessments.length === 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one assessment must be provided",
+      });
+    }
+
+    // Validate each assessment
+    for (const assessment of assessments) {
+      if (!assessment.assessmentTitle || !assessment.assessmentType) {
+        return res.status(400).json({
+          success: false,
+          message: "Assessment title and type are required for all assessments",
+        });
+      }
+    }
+
+    // Create new applicant
+    const newApplicant = new Applicant({
+      uli,
+      trainingCenterName,
+      addressLocation,
+      assessments: assessments.map((assessment) => ({
+        assessmentTitle: assessment.assessmentTitle,
+        assessmentType: assessment.assessmentType,
+        applicationStatus: assessment.applicationStatus || "For Approval",
+      })),
+      workExperience: workExperience || [],
+      trainingSeminarAttended: trainingSeminarAttended || [],
+      licensureExaminationPassed: licensureExaminationPassed || [],
+      competencyAssessment: competencyAssessment || [],
+    });
+
+    // Save the applicant
+    const savedApplicant = await newApplicant.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Application created successfully",
+      data: savedApplicant,
+    });
   } catch (error) {
-    console.error("Error creating applicant:", error);
-    res.status(500).json({ message: error.message });
+    // Handle specific MongoDB validation errors
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: Object.values(error.errors).map((err) => err.message),
+      });
+    }
+
+    // Handle other errors
+    console.error("Error creating application:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };

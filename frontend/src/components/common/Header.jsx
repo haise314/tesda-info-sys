@@ -39,9 +39,9 @@ const Header = () => {
 
   const menuItems = [
     { title: "Course/Qualifications", path: "/programs", icon: <SchoolIcon /> },
-    { title: "Register", path: "/register", icon: <PersonAddIcon /> },
-    { title: "Application", path: "/apply", icon: <ReceiptIcon /> },
-    { title: "MATB", path: "/MATB", icon: <ReceiptIcon /> },
+    // { title: "Register", path: "/register", icon: <PersonAddIcon /> },
+    // { title: "Application", path: "/apply", icon: <ReceiptIcon /> },
+    // { title: "MATB", path: "/MATB", icon: <ReceiptIcon /> },
     { title: "Login", path: "/login", icon: <LoginIcon /> },
   ];
 

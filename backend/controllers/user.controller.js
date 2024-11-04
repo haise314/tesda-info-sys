@@ -3,27 +3,71 @@ import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Registrant from "../models/registrant.model.js";
+import { verifyRecaptcha } from "../utils/recaptcha.js";
+
+// Helper function to generate ULI
+const generateULI = (firstName, lastName, middleName, birthYear) => {
+  // Get first letters of names, defaulting to 'X' if undefined
+  const firstInitial = (firstName ? firstName[0] : "X").toUpperCase();
+  const lastInitial = (lastName ? lastName[0] : "X").toUpperCase();
+  const middleInitial = (middleName ? middleName[0] : "X").toUpperCase();
+
+  // Extract last two digits of birth year
+  const yearStr = birthYear.toString();
+  const yearDigits =
+    yearStr.length >= 4 ? yearStr.slice(-2) : yearStr.padStart(2, "0");
+
+  // Generate a random 3-digit number (YYY)
+  const randomNumbers = Math.floor(100 + Math.random() * 900); // Ensures a 3-digit number
+
+  // Combine all parts
+  return `${firstInitial}${lastInitial}${middleInitial}-${yearDigits}-${randomNumbers}-03907-001`;
+};
 
 export const registerUser = async (req, res) => {
   try {
-    const { uli, password } = req.body;
+    const { name, birthdate, captchaToken, ...otherFields } = req.body;
 
-    // Check if user already exists
-    const userExists = await User.findOne({ uli });
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
+    // Verify reCAPTCHA token first
+    const isValidCaptcha = await verifyRecaptcha(captchaToken);
+    if (!isValidCaptcha) {
+      return res.status(400).json({
+        message: "reCAPTCHA verification failed. Please try again.",
+      });
     }
 
-    // Create user
+    console.log("Registration request body:", req.body);
+
+    // Extract birth year from birthdate
+    const birthYear = new Date(birthdate).getFullYear();
+
+    // Generate ULI using user's name and birth year
+    const uli = generateULI(
+      name.firstName,
+      name.lastName,
+      name.middleName,
+      birthYear
+    );
+
+    // Check if generated ULI already exists
+    const userExists = await User.findOne({ uli });
+    if (userExists) {
+      return res.status(400).json({
+        message: "Registration failed. Please try again.",
+      });
+    }
+
+    // Create user with generated ULI and all other fields
     const user = await User.create({
+      ...otherFields,
+      name,
+      birthdate,
       uli,
-      password,
-      // role will be set to "client" by default
     });
 
     if (user) {
       res.status(201).json({
-        _id: user._id,
+        id: user._id,
         uli: user.uli,
         role: user.role,
         token: generateToken(user._id),
