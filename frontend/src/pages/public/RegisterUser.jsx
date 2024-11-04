@@ -38,6 +38,7 @@ import {
 } from "../../components/utils/enums/registrant.enums";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useAuth } from "../../context/AuthContext";
+import ReCAPTCHAWrapper from "./RecaptchaWrapper";
 
 const RegisterUser = () => {
   const { login } = useAuth();
@@ -1200,9 +1201,9 @@ const RegisterUser = () => {
               xs={12}
               sx={{ display: "flex", justifyContent: "center", mt: 2 }}
             >
-              <ReCAPTCHA
-                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                onChange={handleCaptchaChange}
+              <ReCAPTCHAWrapper
+                siteKey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                onVerify={handleCaptchaChange}
               />
             </Grid>
 
