@@ -1201,9 +1201,13 @@ const RegisterUser = () => {
               xs={12}
               sx={{ display: "flex", justifyContent: "center", mt: 2 }}
             >
-              <ReCAPTCHAWrapper
+              {/* <ReCAPTCHAWrapper
                 siteKey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                 onVerify={handleCaptchaChange}
+              /> */}
+              <ReCAPTCHA
+                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                onChange={handleCaptchaChange}
               />
             </Grid>
 
