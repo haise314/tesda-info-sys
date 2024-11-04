@@ -30,7 +30,6 @@ export const registrationSchema = z
     // Account Details
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
-
     // Personal Information
     name: nameSchema,
     sex: z.enum(["Male", "Female"], {
@@ -58,7 +57,6 @@ export const registrationSchema = z
       province: z.string().min(1, "Province of birth is required"),
       region: z.string().min(1, "Region of birth is required"),
     }),
-
     // Contact & Address
     contact: z.object({
       telephoneNumber: z.string().optional(),
@@ -68,7 +66,6 @@ export const registrationSchema = z
       others: z.string().optional(),
     }),
     completeMailingAddress: addressSchema,
-
     // Employment & Education
     employmentStatus: z.enum(employmentStatuses, {
       required_error: "Employment status is required",
@@ -77,11 +74,11 @@ export const registrationSchema = z
       .enum(employmentTypes, {
         required_error: "Employment type is required",
       })
-      .optional(),
+      .nullable() // Allow null values
+      .optional(), // Make the field optional
     education: z.enum(educationalAttainments, {
       required_error: "Educational attainment is required",
     }),
-
     // Family Information
     motherName: nameSchema,
     fatherName: nameSchema,
@@ -98,7 +95,7 @@ export const registrationSchema = z
     (data) => {
       if (
         data.employmentStatus === "Wage-Employed" ||
-        data.employmentStatus === "UnderEmployed"
+        data.employmentStatus === "Underemployed"
       ) {
         return !!data.employmentType;
       }
@@ -106,7 +103,7 @@ export const registrationSchema = z
     },
     {
       message:
-        "Employment type is required when employment status is 'Employed'",
+        "Employment type is required for your selected employment status",
       path: ["employmentType"],
     }
   )

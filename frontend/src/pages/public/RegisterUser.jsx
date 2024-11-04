@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -298,6 +298,12 @@ const RegisterUser = () => {
       setError("root", undefined);
     }
   };
+
+  useEffect(() => {
+    if (["Unemployed", "Self-Employed"].includes(employmentStatus)) {
+      setValue("employmentType", null); // Reset to null when disabled
+    }
+  }, [employmentStatus, setValue]);
 
   return (
     <Container component="main" maxWidth="md">
@@ -1005,6 +1011,7 @@ const RegisterUser = () => {
               <Controller
                 name="employmentType"
                 control={control}
+                defaultValue={null} // Set default value to null instead of empty string
                 render={({ field }) => (
                   <TextField
                     {...field}
@@ -1016,6 +1023,7 @@ const RegisterUser = () => {
                     )}
                     error={!!errors.employmentType}
                     helperText={errors.employmentType?.message}
+                    value={field.value || ""} // Handle null value in display
                   >
                     {employmentTypes.map((type) => (
                       <MenuItem key={type} value={type}>

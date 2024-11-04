@@ -126,7 +126,9 @@ const userSchema = new mongoose.Schema(
       enum: employmentTypes,
       required: function () {
         // Add logic here for when employmentType is required based on employmentStatus
-        return ["Employed", "Self-Employed"].includes(this.employmentStatus);
+        return ["Underemployed", "Wage-Employed"].includes(
+          this.employmentStatus
+        );
       },
     },
 
