@@ -112,7 +112,7 @@ const RegisterUser = () => {
   });
 
   const employmentStatus = watch("employmentStatus");
-  // const watchedFields = watch();
+  const watchedFields = watch();
   const watchClientClassification = watch("clientClassification");
 
   // Watch the birthdate field to calculate age dynamically
