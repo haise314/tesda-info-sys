@@ -19,6 +19,7 @@ import newsRoutes from "./routes/news.route.js";
 import deletedApplicantRoutes from "./routes/deletedApplicant.route.js";
 import deletedRegistrantRoutes from "./routes/deletedRegistrant.route.js";
 import citizenscharterRoutes from "./routes/citizenscharter.route.js";
+import pdfRoutes from "./routes/pdfRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -38,6 +39,7 @@ app.use(
 
 app.use("/uploads", express.static(path.join(__dirname, "backend/uploads")));
 
+app.use("/api", pdfRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/register", registrantRoutes);
 app.use("/api/applicants", applicantRoutes);

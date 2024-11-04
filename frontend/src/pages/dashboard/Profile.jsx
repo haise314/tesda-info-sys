@@ -8,6 +8,8 @@ import {
   Tab,
   CircularProgress,
   Box,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useAuth } from "../../context/AuthContext";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
@@ -36,20 +38,36 @@ const handlePrintPDF = async (data) => {
       { data },
       {
         responseType: "blob",
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
     );
 
+    // Create a blob from the PDF stream
     const blob = new Blob([response.data], { type: "application/pdf" });
+
+    // Create a URL for the blob
     const url = window.URL.createObjectURL(blob);
+
+    // Create a temporary link element
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "registrant-details.pdf");
+    const fileName = `registrant-details-${data.uli}.pdf`;
+    link.setAttribute("download", fileName);
+
+    // Append to body, click programmatically and cleanup
     document.body.appendChild(link);
     link.click();
-    link.remove();
+
+    // Cleanup
+    document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+
+    return true;
   } catch (error) {
     console.error("Error generating PDF:", error);
+    throw new Error(error.response?.data?.message || "Error generating PDF");
   }
 };
 
@@ -60,6 +78,9 @@ const handlePrintPDFApplicant = async (data) => {
       { data },
       {
         responseType: "blob",
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
     );
 
@@ -67,13 +88,19 @@ const handlePrintPDFApplicant = async (data) => {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "registrant-details.pdf");
+    const fileName = `applicant-details-${data.uli}.pdf`;
+    link.setAttribute("download", fileName);
+
     document.body.appendChild(link);
     link.click();
-    link.remove();
+
+    document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+
+    return true;
   } catch (error) {
     console.error("Error generating PDF:", error);
+    throw new Error(error.response?.data?.message || "Error generating PDF");
   }
 };
 
@@ -82,6 +109,11 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [isPrinting, setIsPrinting] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const queryClient = useQueryClient();
 
   const uli = useMemo(() => user?.uli, [user?.uli]);
@@ -122,7 +154,18 @@ const Profile = () => {
   const handlePrintClick = async (data) => {
     setIsPrinting(true);
     try {
-      await handlePrintPDF(data);
+      await handlePrintPDF({ ...data, uli });
+      setSnackbar({
+        open: true,
+        message: "PDF generated successfully",
+        severity: "success",
+      });
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message || "Error generating PDF",
+        severity: "error",
+      });
     } finally {
       setIsPrinting(false);
     }
@@ -131,7 +174,18 @@ const Profile = () => {
   const handlePrintClickApplicant = async (data) => {
     setIsPrinting(true);
     try {
-      await handlePrintPDFApplicant(data);
+      await handlePrintPDFApplicant({ ...data, uli });
+      setSnackbar({
+        open: true,
+        message: "PDF generated successfully",
+        severity: "success",
+      });
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message || "Error generating PDF",
+        severity: "error",
+      });
     } finally {
       setIsPrinting(false);
     }
@@ -144,6 +198,10 @@ const Profile = () => {
   const handleImageUpload = (image) => {
     setProfileImage(image);
     queryClient.setQueryData(["image", uli], image);
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
   const isLoading = queries.some((query) => query.isLoading);
@@ -251,6 +309,21 @@ const Profile = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
