@@ -124,7 +124,7 @@ const ClientRegistrationForm = () => {
   return (
     <Paper elevation={3} sx={{ p: 4, maxWidth: 800, mx: "auto", my: 4 }}>
       <Typography variant="h5" gutterBottom>
-        Complete Registration
+        Course/Qualification Registration Form
       </Typography>
       <Divider sx={{ mb: 3 }} />
 
