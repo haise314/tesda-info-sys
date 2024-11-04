@@ -112,7 +112,7 @@ const RegisterUser = () => {
   });
 
   const employmentStatus = watch("employmentStatus");
-  const watchedFields = watch();
+  // const watchedFields = watch();
   const watchClientClassification = watch("clientClassification");
 
   // Watch the birthdate field to calculate age dynamically
@@ -1219,10 +1219,10 @@ const RegisterUser = () => {
           </Grid>
         </form>
 
-        <Typography variant="h6" sx={{ mt: 4 }}>
+        {/* <Typography variant="h6" sx={{ mt: 4 }}>
           Form State:
         </Typography>
-        <pre>{JSON.stringify(watchedFields, null, 2)}</pre>
+        <pre>{JSON.stringify(watchedFields, null, 2)}</pre> */}
 
         {errors.root && (
           <Typography color="error" sx={{ mt: 2 }}>
