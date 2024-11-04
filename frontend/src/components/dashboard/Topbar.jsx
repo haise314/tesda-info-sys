@@ -41,8 +41,8 @@ const TopBar = ({ onDrawerToggle }) => {
   };
 
   const getDashboardTitle = () => {
-    if (user?.role?.includes("superadmin")) return "Super Admin Dashboard";
-    if (user?.role?.includes("admin")) return "Admin Dashboard";
+    if (user?.role?.includes("superadmin")) return "Admin Dashboard";
+    if (user?.role?.includes("admin")) return "Employee Dashboard";
     return "Client Dashboard";
   };
 

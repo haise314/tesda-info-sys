@@ -138,21 +138,9 @@ const RegisterUser = () => {
       return axios.post("/api/auth/register", transformedData);
     },
     onSuccess: (response) => {
-      // The registration response now includes the user data and token
       console.log("Registration successful:", response.data);
-
-      // Log the user in using the response data
       login(response.data);
-
-      // If you need to handle the first-time login dialog
-      localStorage.setItem("newUserPassword", "true");
-
-      // // Navigate to dashboard or show password change dialog
-      // if (localStorage.getItem("newUserPassword")) {
-      //   // setOpenDialog(true);
-      // } else {
       navigate("/dashboard");
-      // }
     },
     onError: (error) => {
       console.error(

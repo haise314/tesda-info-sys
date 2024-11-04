@@ -46,7 +46,7 @@ app.use("/api/tests", testRoutes);
 app.use("/api/answer-sheets", answerSheetRoutes);
 app.use("/api/test-sessions", testSessionRoutes);
 app.use("/api/programs", trainingProgramRoutes);
-app.use("/api", imageRouter);
+app.use("/api/images", imageRouter);
 app.use("/api", pdfRouter);
 app.use("/api/events", eventRoutes);
 app.use("/api/results", resultsRoutes);

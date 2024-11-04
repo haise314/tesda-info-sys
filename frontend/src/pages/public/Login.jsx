@@ -94,11 +94,11 @@ const Login = () => {
       login(response.data);
 
       // Check if it's the first login (using placeholder password)
-      if (localStorage.getItem("newUserPassword")) {
-        setOpenDialog(true);
-      } else {
-        navigate(location.state?.from || "/dashboard");
-      }
+      // if (localStorage.getItem("newUserPassword")) {
+      //   setOpenDialog(true);
+      // } else {
+      navigate(location.state?.from || "/dashboard");
+      // }
     },
     onError: (error) => {
       console.error("Login error:", error.response?.data || error.message);

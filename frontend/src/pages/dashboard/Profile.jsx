@@ -10,17 +10,23 @@ import {
   Box,
 } from "@mui/material";
 import { useAuth } from "../../context/AuthContext";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import ProfileImage from "../../components/dashboard/ProfileImage";
 import ApplicantDetails from "../../components/dashboard/ApplicantDetails";
 import RegistrantDetails from "../../components/dashboard/RegistrantDetails";
 import TabPanel from "./TabPanel";
 import CourseAssessmentList from "../../components/dashboard/CourseAssessmentList";
+import ImageUploadForm from "../public/components/ImageUploadForm";
 
 const fetchData = async (url) => {
   const { data } = await axios.get(url);
   return data;
+};
+
+const fetchImageByUli = async (uli) => {
+  const response = await axios.get(`/api/image/uli/${uli}`);
+  return response.data.data;
 };
 
 const handlePrintPDF = async (data) => {
@@ -75,6 +81,8 @@ const Profile = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
+  const queryClient = useQueryClient();
 
   const uli = useMemo(() => user?.uli, [user?.uli]);
 
@@ -96,11 +104,20 @@ const Profile = () => {
         retry: 1,
         refetchOnWindowFocus: false,
       },
+      {
+        queryKey: ["image", uli],
+        queryFn: () => fetchImageByUli(uli),
+        enabled: !!uli,
+        staleTime: 1000 * 60 * 5,
+        retry: 1,
+        refetchOnWindowFocus: false,
+      },
     ],
   });
 
   const applicantQuery = queries[0];
   const registrantQuery = queries[1];
+  const imageQuery = queries[2];
 
   const handlePrintClick = async (data) => {
     setIsPrinting(true);
@@ -118,6 +135,15 @@ const Profile = () => {
     } finally {
       setIsPrinting(false);
     }
+  };
+
+  const handleImageSelect = (file) => {
+    setProfileImage(file);
+  };
+
+  const handleImageUpload = (image) => {
+    setProfileImage(image);
+    queryClient.setQueryData(["image", uli], image);
   };
 
   const isLoading = queries.some((query) => query.isLoading);
@@ -147,7 +173,11 @@ const Profile = () => {
           alignItems="center"
         >
           <Box display="flex" flexDirection="column" alignItems="center">
-            <ProfileImage uli={uli} />
+            {imageQuery.data ? (
+              <ProfileImage uli={uli} imageUrl={`${imageQuery.data.url}`} />
+            ) : (
+              <ImageUploadForm onImageUpload={handleImageUpload} />
+            )}
             <Typography variant="h4" gutterBottom sx={{ mt: 2 }}>
               {uli || "User Name"}
             </Typography>
