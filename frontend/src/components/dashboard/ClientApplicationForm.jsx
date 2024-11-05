@@ -34,6 +34,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
+import AssessmentSelectField from "./subcomponent/AssessmentSelectField";
+import TrainingCenterSelectField from "./subcomponent/TrainingCenterSelectionField";
 
 const ClientApplicationForm = () => {
   const { user } = useAuth();
@@ -777,19 +779,10 @@ const ClientApplicationForm = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <Controller
-              name="trainingCenterName"
+            <TrainingCenterSelectField
               control={control}
-              rules={{ required: "Training center name is required" }}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Training Center Name"
-                  fullWidth
-                  error={!!errors.trainingCenterName}
-                  helperText={errors.trainingCenterName?.message}
-                />
-              )}
+              errors={errors}
+              name="trainingCenterName"
             />
           </Grid>
 
@@ -818,19 +811,13 @@ const ClientApplicationForm = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <Controller
-              name="assessments[0].assessmentTitle"
+            <AssessmentSelectField
               control={control}
-              rules={{ required: "Assessment title is required" }}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Assessment Title"
-                  fullWidth
-                  error={!!errors.assessments?.[0]?.assessmentTitle}
-                  helperText={errors.assessments?.[0]?.assessmentTitle?.message}
-                />
-              )}
+              index={0} // or whatever index you're using
+              errors={errors}
+              // Optionally override the default name if needed:
+              // name="customAssessmentField"
+              // required={false} // if you want to make it optional
             />
           </Grid>
 

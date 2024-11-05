@@ -87,7 +87,12 @@ export const civilStatues = [
   "Common Law/Live-in",
 ];
 
-export const scholarTypes = ["TWSP", "PESFA", "STEP", "Others"];
+export const scholarTypes = [
+  "Training for Work Scholarship (TWSP)",
+  "Private Education Student Financial Assistance (PESFA)",
+  "Special Training for Employment Program (STEP)",
+  "Others",
+];
 
 export const registrationStatuses = [
   "Pending",

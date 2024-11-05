@@ -193,35 +193,61 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       ],
     },
     {
-      title: "Scheduling",
-      path: "scheduling",
-      icon: <CalendarMonthIcon />,
-      roles: ["admin", "superadmin"],
-    },
-    {
-      title: "Event Calendar",
-      path: "event-calendar",
-      icon: <CalendarMonthIcon />,
-      roles: ["admin", "superadmin"],
-    },
-    {
-      title: "Schedules",
-      path: "event-calendar-client",
-      icon: <CalendarMonthIcon />,
-      roles: ["client"],
-    },
-    {
-      title: "News and Updates",
-      path: "news-list",
+      title: "System Management",
       icon: <FeedIcon />,
-      roles: ["client"],
+      roles: ["superadmin"],
+      children: [
+        {
+          title: "Context",
+          path: "Context",
+          icon: <FeedIcon />,
+          roles: ["admin", "superadmin"],
+        },
+        {
+          title: "Assessments",
+          path: "Assessments",
+          icon: <FeedIcon />,
+          roles: ["admin", "superadmin"],
+        },
+        {
+          title: "Training Centers",
+          path: "Training-Centers",
+          icon: <FeedIcon />,
+          roles: ["admin", "superadmin"],
+        },
+        {
+          title: "Scheduling",
+          path: "scheduling",
+          icon: <CalendarMonthIcon />,
+          roles: ["admin", "superadmin"],
+        },
+        {
+          title: "Event Calendar",
+          path: "event-calendar",
+          icon: <CalendarMonthIcon />,
+          roles: ["admin", "superadmin"],
+        },
+        {
+          title: "Schedules",
+          path: "event-calendar-client",
+          icon: <CalendarMonthIcon />,
+          roles: ["client"],
+        },
+        {
+          title: "News and Updates",
+          path: "news-list",
+          icon: <FeedIcon />,
+          roles: ["client"],
+        },
+        {
+          title: "News Create",
+          path: "news-create",
+          icon: <FeedIcon />,
+          roles: ["admin", "superadmin"],
+        },
+      ],
     },
-    {
-      title: "News Create",
-      path: "news-create",
-      icon: <FeedIcon />,
-      roles: ["admin", "superadmin"],
-    },
+
     {
       title: "Logout",
       icon: <LogoutIcon />,

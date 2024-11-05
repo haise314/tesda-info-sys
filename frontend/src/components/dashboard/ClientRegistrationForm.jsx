@@ -32,6 +32,7 @@ import {
   disabilityCauses,
   scholarTypes,
 } from "../../components/utils/enums/registrant.enums";
+import ProgramSelectField from "./subcomponent/ProgramsSelectField";
 
 const ClientRegistrationForm = () => {
   const { user } = useAuth();
@@ -160,21 +161,11 @@ const ClientRegistrationForm = () => {
               >
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
-                    <Controller
-                      name={`course.${index}.courseName`}
+                    <ProgramSelectField
                       control={control}
-                      rules={{ required: "Course name is required" }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          label="Course Name"
-                          fullWidth
-                          error={!!errors.course?.[index]?.courseName}
-                          helperText={
-                            errors.course?.[index]?.courseName?.message
-                          }
-                        />
-                      )}
+                      name={`course.${index}.courseName`}
+                      index={index}
+                      errors={errors?.course?.[index]}
                     />
                   </Grid>
 

@@ -8,11 +8,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  Select,
-  MenuItem,
   FormControl,
   InputLabel,
+  Select,
+  MenuItem,
   CircularProgress,
   Alert,
 } from "@mui/material";
@@ -21,17 +20,30 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { assessmentTypes } from "../../components/utils/enums/applicant.enums.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import ClientApplicationForm from "../../components/dashboard/ClientApplicationForm.jsx";
+import AssessmentSelectField from "../../components/dashboard/subcomponent/AssessmentSelectField.jsx";
+import { useForm, Controller } from "react-hook-form";
 
 const Assessments = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newAssessment, setNewAssessment] = useState({
-    assessmentTitle: "",
-    assessmentType: "",
-  });
   const [error, setError] = useState("");
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const uli = useMemo(() => user?.uli, [user?.uli]);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+    watch,
+  } = useForm({
+    defaultValues: {
+      assessmentTitle: "",
+      assessmentType: "",
+    },
+  });
+
+  const formValues = watch();
 
   const {
     data: applicantData,
@@ -76,21 +88,13 @@ const Assessments = () => {
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
-    setNewAssessment({
-      assessmentTitle: "",
-      assessmentType: "",
-    });
+    reset();
     setError("");
   };
 
-  const handleAddAssessment = () => {
-    if (!newAssessment.assessmentTitle || !newAssessment.assessmentType) {
-      setError("Please fill in all required fields");
-      return;
-    }
-
+  const onSubmit = (data) => {
     addAssessmentMutation.mutate({
-      ...newAssessment,
+      ...data,
       applicationStatus: "For Approval",
     });
   };
@@ -102,7 +106,6 @@ const Assessments = () => {
 
   const assessments = applicantData?.data?.assessments || [];
 
-  // If there's no data, render the application form instead
   if (!applicantData?.data || !assessments.length) {
     return <ClientApplicationForm />;
   }
@@ -148,61 +151,58 @@ const Assessments = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Add New Assessment</DialogTitle>
-        <DialogContent>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Assessment Title"
-            fullWidth
-            required
-            value={newAssessment.assessmentTitle}
-            onChange={(e) =>
-              setNewAssessment({
-                ...newAssessment,
-                assessmentTitle: e.target.value,
-              })
-            }
-          />
-          <FormControl fullWidth sx={{ mt: 2 }} required>
-            <InputLabel>Assessment Type</InputLabel>
-            <Select
-              value={newAssessment.assessmentType}
-              onChange={(e) =>
-                setNewAssessment({
-                  ...newAssessment,
-                  assessmentType: e.target.value,
-                })
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogTitle>Add New Assessment</DialogTitle>
+          <DialogContent>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+            <AssessmentSelectField
+              control={control}
+              index={0}
+              errors={errors}
+              name="assessmentTitle"
+              required={true}
+            />
+            <FormControl fullWidth sx={{ mt: 2 }} required>
+              <InputLabel>Assessment Type</InputLabel>
+              <Controller
+                name="assessmentType"
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    label="Assessment Type"
+                    error={!!errors.assessmentType}
+                  >
+                    {assessmentTypes.map((type) => (
+                      <MenuItem key={type} value={type}>
+                        {type}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                )}
+              />
+            </FormControl>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button
+              type="submit"
+              color="primary"
+              disabled={
+                addAssessmentMutation.isPending ||
+                !formValues.assessmentTitle ||
+                !formValues.assessmentType
               }
-              label="Assessment Type"
             >
-              {assessmentTypes.map((type) => (
-                <MenuItem key={type} value={type}>
-                  {type}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button
-            onClick={handleAddAssessment}
-            color="primary"
-            disabled={
-              addAssessmentMutation.isPending ||
-              !newAssessment.assessmentTitle ||
-              !newAssessment.assessmentType
-            }
-          >
-            {addAssessmentMutation.isPending ? "Adding..." : "Add"}
-          </Button>
-        </DialogActions>
+              {addAssessmentMutation.isPending ? "Adding..." : "Add"}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
     </Box>
   );

@@ -52,6 +52,10 @@ import CitizensCharterReports from "./pages/dashboard/CitizensCharterReports.jsx
 import FeedbackAnalytics from "./pages/dashboard/FeedbackAnalytics.jsx";
 import ClientAnalytics from "./components/dashboard/ClientAnalytics.jsx";
 import NewsPage from "./pages/public/NewsPage.jsx";
+import { SelectionsProvider } from "./context/SelectionContext.jsx";
+import Context from "./pages/dashboard/Context.jsx";
+import AssessmentsPage from "./pages/dashboard/AssessmentsPage.jsx";
+import TrainingCenterPage from "./pages/dashboard/TrainingCenterPage.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -346,6 +350,30 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: "Context",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <Context />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "Assessments",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <AssessmentsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "Training-Centers",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <TrainingCenterPage />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);
@@ -358,7 +386,9 @@ createRoot(document.getElementById("root")).render(
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <RouterProvider router={router} />
+            <SelectionsProvider>
+              <RouterProvider router={router} />
+            </SelectionsProvider>
           </LocalizationProvider>
         </QueryClientProvider>
       </AuthProvider>

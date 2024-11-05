@@ -21,18 +21,34 @@ import AddIcon from "@mui/icons-material/Add";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../context/AuthContext.jsx";
 import ClientRegistrationForm from "../../components/dashboard/ClientRegistrationForm.jsx";
+import ProgramSelectField from "../../components/dashboard/subcomponent/ProgramsSelectField.jsx";
+import { useForm, Controller } from "react-hook-form";
 
 const Courses = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newCourse, setNewCourse] = useState({
-    courseName: "",
-    hasScholarType: false,
-    scholarType: "",
-    otherScholarType: "",
-  });
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const uli = useMemo(() => user?.uli, [user?.uli]);
+
+  const {
+    control,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      courseName: "",
+      hasScholarType: false,
+      scholarType: "",
+      otherScholarType: "",
+    },
+  });
+
+  // Watch all form values
+  const formValues = watch();
+  const hasScholarType = formValues.hasScholarType;
+  const scholarType = formValues.scholarType;
 
   const {
     data: registrantData,
@@ -68,26 +84,36 @@ const Courses = () => {
     },
   });
 
-  const handleOpenDialog = () => setIsDialogOpen(true);
+  const handleOpenDialog = () => {
+    setIsDialogOpen(true);
+  };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
-    setNewCourse({
-      courseName: "",
-      hasScholarType: false,
-      scholarType: "",
-      otherScholarType: "",
-    });
+    reset();
   };
 
-  const handleAddCourse = () => {
+  const onSubmit = (data) => {
     addCourseMutation.mutate({
-      ...newCourse,
+      ...data,
       registrationStatus: "Pending",
     });
   };
 
-  const scholarTypes = ["TWSP", "PESFA", "STEP", "Others"];
+  const scholarTypes = [
+    "Training for Work Scholarship (TWSP)",
+    "Private Education Student Financial Assistance (PESFA)",
+    "Special Training for Employment Program (STEP)",
+    "Others",
+  ];
+
+  // Function to check if form is valid for submission
+  const isFormValid = () => {
+    if (!formValues.courseName) return false;
+    if (hasScholarType && !scholarType) return false;
+    if (scholarType === "Others" && !formValues.otherScholarType) return false;
+    return true;
+  };
 
   if (!uli) return <Typography>Please log in to view courses.</Typography>;
   if (isLoading) return <CircularProgress />;
@@ -96,7 +122,6 @@ const Courses = () => {
 
   const courses = registrantData?.data?.course || [];
 
-  // If there's no data, render the registration form instead
   if (!registrantData?.data || !courses.length) {
     return <ClientRegistrationForm />;
   }
@@ -130,83 +155,90 @@ const Courses = () => {
       </Button>
 
       <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>Add New Course</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Course Name"
-            fullWidth
-            value={newCourse.courseName}
-            onChange={(e) =>
-              setNewCourse({ ...newCourse, courseName: e.target.value })
-            }
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={newCourse.hasScholarType}
-                onChange={(e) =>
-                  setNewCourse({
-                    ...newCourse,
-                    hasScholarType: e.target.checked,
-                  })
-                }
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogTitle>Add New Course</DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2 }}>
+              <ProgramSelectField
+                control={control}
+                name="courseName"
+                rules={{ required: true }}
+                errors={errors}
+                index={0}
               />
-            }
-            label="Apply for Scholarship"
-          />
-          {newCourse.hasScholarType && (
-            <>
-              <FormControl fullWidth sx={{ mt: 2 }}>
-                <InputLabel>Scholarship Type</InputLabel>
-                <Select
-                  value={newCourse.scholarType}
-                  label="Scholarship Type"
-                  onChange={(e) =>
-                    setNewCourse({ ...newCourse, scholarType: e.target.value })
+            </Box>
+
+            <Controller
+              name="hasScholarType"
+              control={control}
+              render={({ field: { onChange, value } }) => (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={value}
+                      onChange={(e) => onChange(e.target.checked)}
+                    />
                   }
-                >
-                  {scholarTypes.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              {newCourse.scholarType === "Others" && (
-                <TextField
-                  margin="dense"
-                  label="Specify Other Scholarship"
-                  fullWidth
-                  value={newCourse.otherScholarType}
-                  onChange={(e) =>
-                    setNewCourse({
-                      ...newCourse,
-                      otherScholarType: e.target.value,
-                    })
-                  }
+                  label="Apply for Scholarship"
                 />
               )}
-            </>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button
-            onClick={handleAddCourse}
-            color="primary"
-            disabled={
-              addCourseMutation.isPending ||
-              !newCourse.courseName ||
-              (newCourse.hasScholarType && !newCourse.scholarType) ||
-              (newCourse.scholarType === "Others" &&
-                !newCourse.otherScholarType)
-            }
-          >
-            {addCourseMutation.isPending ? "Adding..." : "Add"}
-          </Button>
-        </DialogActions>
+            />
+
+            {hasScholarType && (
+              <>
+                <FormControl fullWidth sx={{ mt: 2 }}>
+                  <InputLabel>Scholarship Type</InputLabel>
+                  <Controller
+                    name="scholarType"
+                    control={control}
+                    rules={{ required: hasScholarType }}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        label="Scholarship Type"
+                        error={!!errors.scholarType}
+                      >
+                        {scholarTypes.map((type) => (
+                          <MenuItem key={type} value={type}>
+                            {type}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    )}
+                  />
+                </FormControl>
+
+                {scholarType === "Others" && (
+                  <Controller
+                    name="otherScholarType"
+                    control={control}
+                    rules={{ required: scholarType === "Others" }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        margin="dense"
+                        label="Specify Other Scholarship"
+                        fullWidth
+                        error={!!errors.otherScholarType}
+                        helperText={errors.otherScholarType?.message}
+                      />
+                    )}
+                  />
+                )}
+              </>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button
+              type="submit"
+              color="primary"
+              disabled={!isFormValid() || addCourseMutation.isPending}
+            >
+              {addCourseMutation.isPending ? "Adding..." : "Add"}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
     </Box>
   );
