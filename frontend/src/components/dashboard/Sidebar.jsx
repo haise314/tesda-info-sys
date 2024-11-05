@@ -122,6 +122,12 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       ],
     },
     {
+      title: "MATB Test",
+      path: "MATB-client",
+      icon: <Quiz />,
+      roles: ["client"],
+    },
+    {
       title: "MATB",
       icon: <Quiz />,
       roles: ["admin", "superadmin"],

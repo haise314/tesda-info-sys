@@ -374,6 +374,14 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: "MATB-client",
+        element: (
+          <ProtectedRoute allowedRoles={["client"]}>
+            <MATBform />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);
