@@ -203,12 +203,12 @@ const Sidebar = ({ mobileOpen, onDrawerToggle }) => {
       icon: <FeedIcon />,
       roles: ["superadmin"],
       children: [
-        {
-          title: "Context",
-          path: "Context",
-          icon: <FeedIcon />,
-          roles: ["admin", "superadmin"],
-        },
+        // {
+        //   title: "Context",
+        //   path: "Context",
+        //   icon: <FeedIcon />,
+        //   roles: ["admin", "superadmin"],
+        // },
         {
           title: "Assessments",
           path: "Assessments",
