@@ -87,9 +87,15 @@ const CourseFormFields = ({
                 handleCourseChange(index, "scholarType", e.target.value)
               }
             >
-              <MenuItem value="TWSP">TWSP</MenuItem>
-              <MenuItem value="PESFA">PESFA</MenuItem>
-              <MenuItem value="STEP">STEP</MenuItem>
+              <MenuItem value="Training for Work Scholarship (TWSP)">
+                Training for Work Scholarship (TWSP)
+              </MenuItem>
+              <MenuItem value="PESFPrivate Education Student Financial Assistance (PESFA)">
+                Private Education Student Financial Assistance (PESFA)
+              </MenuItem>
+              <MenuItem value="Special Training for Employment Program (STEP)">
+                Special Training for Employment Program (STEP)
+              </MenuItem>
               <MenuItem value="Others">Others</MenuItem>
             </Select>
           </FormControl>

@@ -35,6 +35,8 @@ import {
   regions,
   provinces,
   locationData,
+  Zambales,
+  zambalesZipcodes,
 } from "../../components/utils/enums/registrant.enums";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useAuth } from "../../context/AuthContext";
@@ -69,6 +71,7 @@ const RegisterUser = () => {
       age: "",
       nationality: "",
       birthplace: {
+        barangay: "",
         city: "",
         province: "",
         region: "",
@@ -117,6 +120,26 @@ const RegisterUser = () => {
 
   // Watch the birthdate field to calculate age dynamically
   const birthdate = useWatch({ control, name: "birthdate" });
+
+  const currentCity = useWatch({
+    control,
+    name: "completeMailingAddress.city",
+  });
+
+  const currentProvince = useWatch({
+    control,
+    name: "completeMailingAddress.province",
+  });
+
+  useEffect(() => {
+    if (
+      currentProvince === "Zambales" &&
+      currentCity &&
+      zambalesZipcodes[currentCity]
+    ) {
+      setValue("completeMailingAddress.zipCode", zambalesZipcodes[currentCity]);
+    }
+  }, [currentCity, currentProvince, setValue]);
 
   React.useEffect(() => {
     if (birthdate) {
@@ -431,7 +454,7 @@ const RegisterUser = () => {
               </Typography>
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <Controller
                 name="birthplace.region"
                 control={control}
@@ -444,6 +467,7 @@ const RegisterUser = () => {
                     fieldProps.onChange(value === "custom" ? "" : value);
 
                     // Clear dependent fields
+                    control.setValue("birthplace.barangay", "");
                     control.setValue("birthplace.province", "");
                     control.setValue("birthplace.city", "");
                   };
@@ -451,6 +475,7 @@ const RegisterUser = () => {
                   const handleReset = () => {
                     setIsCustom(false);
                     fieldProps.onChange("");
+                    control.setValue("birthplace.barangay", "");
                     control.setValue("birthplace.province", "");
                     control.setValue("birthplace.city", "");
                   };
@@ -500,7 +525,7 @@ const RegisterUser = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <Controller
                 name="birthplace.province"
                 control={control}
@@ -591,7 +616,7 @@ const RegisterUser = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <Controller
                 name="birthplace.city"
                 control={control}
@@ -668,6 +693,103 @@ const RegisterUser = () => {
                           : []),
                         "Custom",
                       ].map((option) => (
+                        <MenuItem
+                          key={option}
+                          value={option === "Custom" ? "custom" : option}
+                        >
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  );
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Controller
+                name="birthplace.barangay"
+                control={control}
+                render={({ field: { ref, ...fieldProps } }) => {
+                  const [isCustom, setIsCustom] = useState(false);
+                  const currentRegion = control._formValues.birthplace?.region;
+                  const currentProvince =
+                    control._formValues.birthplace?.province;
+                  const currentCity = control._formValues.birthplace?.city;
+
+                  const handleChange = (event) => {
+                    const value = event.target.value;
+                    setIsCustom(value === "custom");
+                    fieldProps.onChange(value === "custom" ? "" : value);
+                  };
+
+                  const handleReset = () => {
+                    setIsCustom(false);
+                    fieldProps.onChange("");
+                  };
+
+                  const isDisabled =
+                    !currentRegion || !currentProvince || !currentCity;
+
+                  const getHelperText = () => {
+                    if (errors.birthplace?.barangay?.message) {
+                      return errors.birthplace.barangay.message;
+                    }
+                    if (isDisabled) {
+                      return "Please select a region, province, and city first";
+                    }
+                    if (currentRegion !== "Central Luzon (Region III)") {
+                      return "Barangay selection is only available for Region III";
+                    }
+                    return "";
+                  };
+
+                  // Get barangay options based on selected city
+                  const getBarangayOptions = () => {
+                    if (
+                      currentRegion === "Central Luzon (Region III)" &&
+                      currentProvince === "Zambales" &&
+                      currentCity &&
+                      Zambales.Zambales[currentCity]
+                    ) {
+                      return Zambales.Zambales[currentCity];
+                    }
+                    return [];
+                  };
+
+                  return isCustom ? (
+                    <TextField
+                      {...fieldProps}
+                      inputRef={ref}
+                      fullWidth
+                      disabled={isDisabled}
+                      label="Custom Barangay"
+                      placeholder="Type your barangay"
+                      onChange={(e) => fieldProps.onChange(e.target.value)}
+                      error={!!errors.birthplace?.barangay}
+                      helperText={getHelperText()}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton onClick={handleReset} edge="end">
+                              <ArrowBackIcon />
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  ) : (
+                    <TextField
+                      {...fieldProps}
+                      inputRef={ref}
+                      select
+                      fullWidth
+                      disabled={isDisabled}
+                      label="Barangay"
+                      onChange={handleChange}
+                      error={!!errors.birthplace?.barangay}
+                      helperText={getHelperText()}
+                    >
+                      {[...getBarangayOptions(), "Custom"].map((option) => (
                         <MenuItem
                           key={option}
                           value={option === "Custom" ? "custom" : option}
@@ -782,17 +904,38 @@ const RegisterUser = () => {
                     render={({ field: { ref, ...fieldProps } }) => {
                       const [isCustom, setIsCustom] = useState(false);
 
-                      // Get currently selected region and province from form values
+                      // Get currently selected values from form
                       const currentRegion =
                         control._formValues.completeMailingAddress?.region;
                       const currentProvince =
                         control._formValues.completeMailingAddress?.province;
+                      const currentCity =
+                        control._formValues.completeMailingAddress?.city;
+
+                      // Updated Zambales zipcode mapping based on the municipalities enum
+                      const zambalesZipcodes = {
+                        Botolan: "2202",
+                        Cabangan: "2203",
+                        Candelaria: "2212",
+                        Castillejos: "2208",
+                        Iba: "2201",
+                        Masinloc: "2211",
+                        Olongapo: "2200",
+                        Palauig: "2210",
+                        "San Antonio": "2206",
+                        "San Felipe": "2204",
+                        "San Marcelino": "2207",
+                        "San Narciso": "2205",
+                        "Santa Cruz": "2113",
+                        Subic: "2209",
+                      };
 
                       // Determine if this field should have custom option
                       const hasCustomOption = [
                         "province",
                         "region",
                         "city",
+                        "barangay",
                       ].includes(field);
 
                       // Get the appropriate options list for select fields
@@ -801,7 +944,6 @@ const RegisterUser = () => {
                           case "region":
                             return regions;
                           case "province":
-                            // Only show provinces if Region 3 is selected
                             return currentRegion ===
                               "Central Luzon (Region III)"
                               ? Object.keys(
@@ -809,13 +951,30 @@ const RegisterUser = () => {
                                 )
                               : [];
                           case "city":
-                            // Only show municipalities if province is selected and region is Region 3
+                            if (
+                              currentRegion === "Central Luzon (Region III)" &&
+                              currentProvince === "Zambales"
+                            ) {
+                              return municipalities;
+                            }
                             return currentRegion ===
                               "Central Luzon (Region III)" && currentProvince
                               ? locationData["Central Luzon (Region III)"][
                                   currentProvince
                                 ] || []
                               : [];
+                          case "barangay":
+                            if (
+                              currentRegion === "Central Luzon (Region III)" &&
+                              currentProvince === "Zambales" &&
+                              currentCity &&
+                              Zambales.Zambales[currentCity]
+                            ) {
+                              return Zambales.Zambales[currentCity];
+                            }
+                            return [];
+                          case "district":
+                            return ["1", "2"];
                           default:
                             return [];
                         }
@@ -835,8 +994,47 @@ const RegisterUser = () => {
                               ""
                             );
                             control.setValue("completeMailingAddress.city", "");
+                            control.setValue(
+                              "completeMailingAddress.barangay",
+                              ""
+                            );
+                            control.setValue(
+                              "completeMailingAddress.zipCode",
+                              ""
+                            );
                           } else if (field === "province") {
                             control.setValue("completeMailingAddress.city", "");
+                            control.setValue(
+                              "completeMailingAddress.barangay",
+                              ""
+                            );
+                            control.setValue(
+                              "completeMailingAddress.zipCode",
+                              ""
+                            );
+                          } else if (field === "city") {
+                            control.setValue(
+                              "completeMailingAddress.barangay",
+                              ""
+                            );
+                            // Set zipcode if it's a Zambales municipality
+                            if (
+                              currentProvince === "Zambales" &&
+                              value !== "custom"
+                            ) {
+                              const zipcode = zambalesZipcodes[value];
+                              if (zipcode) {
+                                control.setValue(
+                                  "completeMailingAddress.zipCode",
+                                  zipcode
+                                );
+                              } else {
+                                control.setValue(
+                                  "completeMailingAddress.zipCode",
+                                  ""
+                                );
+                              }
+                            }
                           }
                         } else {
                           fieldProps.onChange(value);
@@ -855,8 +1053,33 @@ const RegisterUser = () => {
                             ""
                           );
                           control.setValue("completeMailingAddress.city", "");
+                          control.setValue(
+                            "completeMailingAddress.barangay",
+                            ""
+                          );
+                          control.setValue(
+                            "completeMailingAddress.zipCode",
+                            ""
+                          );
                         } else if (field === "province") {
                           control.setValue("completeMailingAddress.city", "");
+                          control.setValue(
+                            "completeMailingAddress.barangay",
+                            ""
+                          );
+                          control.setValue(
+                            "completeMailingAddress.zipCode",
+                            ""
+                          );
+                        } else if (field === "city") {
+                          control.setValue(
+                            "completeMailingAddress.barangay",
+                            ""
+                          );
+                          control.setValue(
+                            "completeMailingAddress.zipCode",
+                            ""
+                          );
                         }
                       };
 
@@ -869,32 +1092,75 @@ const RegisterUser = () => {
                       const isDisabled =
                         (field === "province" && !currentRegion) ||
                         (field === "city" &&
-                          (!currentRegion || !currentProvince));
+                          (!currentRegion || !currentProvince)) ||
+                        (field === "barangay" &&
+                          (!currentRegion || !currentProvince || !currentCity));
 
                       const getHelperText = () => {
                         if (errors.completeMailingAddress?.[field]?.message) {
                           return errors.completeMailingAddress[field].message;
                         }
                         if (isDisabled) {
-                          return `Please select a ${
-                            field === "city" ? "province" : "region"
-                          } first`;
+                          if (field === "city")
+                            return "Please select a province first";
+                          if (field === "province")
+                            return "Please select a region first";
+                          if (field === "barangay")
+                            return "Please select a city first";
+                          return "";
                         }
                         if (
-                          field === "province" &&
+                          ["province", "city", "barangay"].includes(field) &&
                           currentRegion !== "Central Luzon (Region III)"
                         ) {
-                          return "Province selection is only available for Region III";
-                        }
-                        if (
-                          field === "city" &&
-                          currentRegion !== "Central Luzon (Region III)"
-                        ) {
-                          return "City selection is only available for Region III";
+                          return `${formattedLabel} selection is only available for Region III`;
                         }
                         return "";
                       };
 
+                      // If it's the district field
+                      if (field === "district") {
+                        return (
+                          <TextField
+                            {...fieldProps}
+                            inputRef={ref}
+                            select
+                            fullWidth
+                            label={formattedLabel}
+                            error={!!errors.completeMailingAddress?.[field]}
+                            helperText={
+                              errors.completeMailingAddress?.[field]?.message
+                            }
+                          >
+                            {getOptions().map((option) => (
+                              <MenuItem key={option} value={option}>
+                                {option}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        );
+                      }
+
+                      // If it's the zipcode field
+                      if (field === "zipCode") {
+                        return (
+                          <TextField
+                            {...fieldProps}
+                            inputRef={ref}
+                            fullWidth
+                            label={formattedLabel}
+                            error={!!errors.completeMailingAddress?.[field]}
+                            helperText={
+                              errors.completeMailingAddress?.[field]?.message
+                            }
+                            InputProps={{
+                              readOnly:
+                                currentProvince === "Zambales" &&
+                                zambalesZipcodes[currentCity],
+                            }}
+                          />
+                        );
+                      }
                       // If it's a custom-enabled field and in custom mode
                       if (hasCustomOption && isCustom) {
                         return (

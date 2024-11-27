@@ -53,6 +53,7 @@ export const registrationSchema = z
     age: z.string().optional().or(z.number()),
     nationality: z.string().min(1, "Nationality is required"),
     birthplace: z.object({
+      barangay: z.string().min(1, "Barangay of birth is required"),
       city: z.string().min(1, "City of birth is required"),
       province: z.string().min(1, "Province of birth is required"),
       region: z.string().min(1, "Region of birth is required"),

@@ -169,6 +169,10 @@ const userSchema = new mongoose.Schema(
       },
     },
     birthplace: {
+      barangay: {
+        type: String,
+        required: true,
+      },
       city: {
         type: String,
         required: true,
