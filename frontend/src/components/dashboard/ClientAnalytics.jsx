@@ -29,6 +29,33 @@ import {
   Bar,
 } from "recharts";
 
+// Client Classifications List
+export const clientClassifications = [
+  "4Ps Beneficiary",
+  "Displaced Worker",
+  "Family Members of AFP and PNP Wounded in Action",
+  "Industry Workers",
+  "Out-Of-School Youth",
+  "Rebel Returnees/Decommissioned Combatants",
+  "TESDA Alumni",
+  "Victim of Natural Disasters and Calamities",
+  "Agrarian Reform Beneficiaries",
+  "Drug Dependents Surenederers",
+  "Farmers and Fishermen",
+  "Inmates and Detainees",
+  "Overseas Filipino Workers (OFW) Dependent",
+  "Returning/Repatriated OFWs",
+  "TVET Trainers",
+  "Wounded-In-Action AFT and PNP Personnel",
+  "Balik Probinsya",
+  "Family Members of AFP and PNP Killed-in-Action",
+  "MILF Beneficiary",
+  "RCEF-RESP",
+  "Student",
+  "Uninformed Personnel",
+  "Others",
+];
+
 const ClientAnalytics = () => {
   const theme = useTheme();
   const isXSmallScreen = useMediaQuery(theme.breakpoints.down("xs"));
@@ -71,21 +98,26 @@ const ClientAnalytics = () => {
 
     // Process registrants data
     const registrantsByDate = {};
-    const clientClassifications = {};
+    const clientClassificationCounts = {};
+    const assessmentTypes = {};
 
+    // Initialize all classifications to 0
+    clientClassifications.forEach((classification) => {
+      clientClassificationCounts[classification] = 0;
+    });
+
+    // Process registrants
     registrantsData.forEach((registrant) => {
       const date = new Date(registrant.createdAt).toLocaleDateString();
       registrantsByDate[date] = (registrantsByDate[date] || 0) + 1;
 
       const classification = registrant.clientClassification;
-      clientClassifications[classification] =
-        (clientClassifications[classification] || 0) + 1;
+      clientClassificationCounts[classification] =
+        (clientClassificationCounts[classification] || 0) + 1;
     });
 
     // Process applicants data
     const applicantsByDate = {};
-    const assessmentTypes = {};
-
     applicantsData.forEach((applicant) => {
       const date = new Date(applicant.createdAt).toLocaleDateString();
       applicantsByDate[date] = (applicantsByDate[date] || 0) + 1;
@@ -114,12 +146,13 @@ const ClientAnalytics = () => {
       });
 
     // Transform classification data for chart
-    const classificationData = Object.entries(clientClassifications).map(
-      ([type, count]) => ({
+    const classificationData = Object.entries(clientClassificationCounts)
+      .map(([type, count]) => ({
         type,
         count,
-      })
-    );
+      }))
+      .filter((item) => item.count > 0) // Only show classifications with registrants
+      .sort((a, b) => b.count - a.count); // Sort from highest to lowest
 
     // Transform assessment type data for chart
     const assessmentData = Object.entries(assessmentTypes).map(
@@ -294,19 +327,27 @@ const ClientAnalytics = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12}>
           <Paper elevation={3} sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
               Client Classifications
             </Typography>
-            <Box sx={{ height: 400 }}>
+            <Box sx={{ height: 600, overflowX: "auto" }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.classificationData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="type" />
-                  <YAxis />
+                <BarChart
+                  data={analytics.classificationData}
+                  layout="vertical"
+                  margin={{ left: 20, right: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal />
+                  <XAxis type="number" />
+                  <YAxis
+                    dataKey="type"
+                    type="category"
+                    width={250}
+                    interval={0}
+                  />
                   <Tooltip />
-                  <Legend />
                   <Bar
                     dataKey="count"
                     fill={theme.palette.primary.main}
