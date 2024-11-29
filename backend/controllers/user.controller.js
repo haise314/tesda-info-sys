@@ -194,17 +194,50 @@ export const getUserByUli = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");
-    const formattedUsers = users.map((user) => ({
-      id: user._id.toString(), // Use _id as the id field
-      uli: user.uli,
-      role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    }));
+    const formattedUsers = users
+      .map((user) => {
+        // Add comprehensive null checks
+        if (!user || !user.name) {
+          console.error("Invalid user object:", user);
+          return null;
+        }
+        try {
+          return {
+            id: user._id?.toString() || "",
+            uli: user.uli || "",
+            role: user.role || "",
+            // Safely access nested properties
+            firstName: user.name?.firstName || "",
+            lastName: user.name?.lastName || "",
+            // Contact details with safety checks
+            email: user.contact?.email || "",
+            mobileNumber: user.contact?.mobileNumber || "",
+            // Additional details with default values
+            employmentStatus: user.employmentStatus || "",
+            education: user.education || "",
+            sex: user.sex || "",
+            civilStatus: user.civilStatus || "",
+            birthdate: user.birthdate || null,
+            age: user.age || 0,
+            nationality: user.nationality || "",
+            clientClassification: user.clientClassification || "",
+            // Timestamp fields
+            createdAt: user.createdAt || null,
+            updatedAt: user.updatedAt || null,
+          };
+        } catch (mapError) {
+          console.error("Error mapping user:", user, mapError);
+          return null;
+        }
+      })
+      .filter((user) => user !== null); // Remove any null entries
     res.json(formattedUsers);
   } catch (error) {
-    console.error("Error fetching users for table:", error);
-    res.status(500).json({ message: "Server error while fetching users" });
+    console.error("Comprehensive error fetching users for table:", error);
+    res.status(500).json({
+      message: "Server error while fetching users",
+      errorDetails: error.message,
+    });
   }
 };
 
@@ -254,7 +287,76 @@ export const updateUserById = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    const user = await User.findByIdAndUpdate(id, updateData, {
+    // Destructure and restructure the nested objects to ensure proper update
+    const {
+      name,
+      contact,
+      completeMailingAddress,
+      birthplace,
+      motherName,
+      fatherName,
+      ...otherData
+    } = updateData;
+
+    // Prepare the update object with nested schemas
+    const updateObject = {
+      ...otherData,
+      name: name
+        ? {
+            firstName: name.firstName || "",
+            lastName: name.lastName || "",
+            middleName: name.middleName || "",
+            extension: name.extension || "",
+          }
+        : undefined,
+      contact: contact
+        ? {
+            email: contact.email || "",
+            mobileNumber: contact.mobileNumber || "",
+            telephoneNumber: contact.telephoneNumber || "",
+            fax: contact.fax || "",
+            others: contact.others || "",
+          }
+        : undefined,
+      completeMailingAddress: completeMailingAddress
+        ? {
+            street: completeMailingAddress.street || "",
+            barangay: completeMailingAddress.barangay || "",
+            district: completeMailingAddress.district || "",
+            city: completeMailingAddress.city || "",
+            province: completeMailingAddress.province || "",
+            region: completeMailingAddress.region || "",
+            zipCode: completeMailingAddress.zipCode || "",
+          }
+        : undefined,
+      birthplace: birthplace
+        ? {
+            barangay: birthplace.barangay || "",
+            city: birthplace.city || "",
+            province: birthplace.province || "",
+            region: birthplace.region || "",
+          }
+        : undefined,
+      motherName: motherName
+        ? {
+            firstName: motherName.firstName || "",
+            middleName: motherName.middleName || "",
+            lastName: motherName.lastName || "",
+            extension: motherName.extension || "",
+          }
+        : undefined,
+      fatherName: fatherName
+        ? {
+            firstName: fatherName.firstName || "",
+            middleName: fatherName.middleName || "",
+            lastName: fatherName.lastName || "",
+            extension: fatherName.extension || "",
+          }
+        : undefined,
+    };
+
+    // Find and update the user
+    const user = await User.findByIdAndUpdate(id, updateObject, {
       new: true,
       runValidators: true,
     }).select("-password");
@@ -265,7 +367,72 @@ export const updateUserById = async (req, res) => {
 
     res.json(user);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    // Handle specific validation errors
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        message: "Validation Error",
+        errors: Object.values(error.errors).map((err) => err.message),
+      });
+    }
+
+    // Handle other errors
+    res.status(500).json({
+      message: "Error updating user",
+      error: error.message,
+    });
+  }
+};
+
+export const updateUserByUli = async (req, res) => {
+  try {
+    const { uli } = req.params;
+    const updateData = req.body;
+
+    // Find the user by ULI
+    const user = await User.findOne({ uli });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Perform a deep merge of the update data
+    // This ensures nested objects like name, contact, etc. are updated correctly
+    const updateUser = (target, source) => {
+      for (const key in source) {
+        if (source.hasOwnProperty(key)) {
+          if (source[key] instanceof Object && !Array.isArray(source[key])) {
+            // If the property is an object, recursively update
+            target[key] = target[key] || {};
+            updateUser(target[key], source[key]);
+          } else {
+            // For primitive values or arrays, directly assign
+            target[key] = source[key];
+          }
+        }
+      }
+      return target;
+    };
+
+    // Apply the updates
+    updateUser(user, updateData);
+
+    // Validate the updated user
+    await user.validate();
+
+    // Save the updated user
+    const updatedUser = await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    // Handle validation errors or other update failures
+    return handleErrorResponse(res, error, "Error updating user");
   }
 };
 

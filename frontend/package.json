@@ -23,12 +23,15 @@
     "capstone": "file:..",
     "chart.js": "^4.4.4",
     "dayjs": "^1.11.13",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4",
     "react": "^17.0.0 || ^18.0.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^17.0.0 || ^18.0.0",
     "react-hook-form": "^7.53.0",
     "react-router-dom": "^6.26.2",
     "recharts": "^2.13.0",
+    "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {

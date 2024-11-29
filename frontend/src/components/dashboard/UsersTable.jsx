@@ -1,6 +1,10 @@
+// UsersTable.jsx
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import {
   DataGrid,
   GridActionsCellItem,
@@ -12,112 +16,19 @@ import {
   Button,
   CircularProgress,
   Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
   Typography,
-  useMediaQuery,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Alert,
+  Stack,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import AddIcon from "@mui/icons-material/Add";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { userColumns } from "../utils/column/users.column.js";
-
-// Form Fields Component
-const UserFormFields = ({ formData, setFormData, isEdit }) => {
-  return (
-    <Stack spacing={2}>
-      {!isEdit && (
-        <>
-          <TextField
-            fullWidth
-            label="First Name"
-            value={formData.name?.firstName || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                name: { ...prev.name, firstName: e.target.value },
-              }))
-            }
-            required
-          />
-          <TextField
-            fullWidth
-            label="Last Name"
-            value={formData.name?.lastName || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                name: { ...prev.name, lastName: e.target.value },
-              }))
-            }
-            required
-          />
-          <TextField
-            fullWidth
-            label="Email"
-            type="email"
-            value={formData.contact?.email || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                contact: { ...prev.contact, email: e.target.value },
-              }))
-            }
-            required
-          />
-          <TextField
-            fullWidth
-            label="Password"
-            type="password"
-            value={formData.password || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                password: e.target.value,
-              }))
-            }
-            required
-          />
-        </>
-      )}
-      <FormControl fullWidth>
-        <InputLabel>Role</InputLabel>
-        <Select
-          value={formData.role || ""}
-          label="Role"
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, role: e.target.value }))
-          }
-        >
-          <MenuItem value="client">Client</MenuItem>
-          <MenuItem value="admin">Admin</MenuItem>
-          <MenuItem value="superadmin">Super Admin</MenuItem>
-        </Select>
-      </FormControl>
-    </Stack>
-  );
-};
+import UserEditModal from "./subcomponent/UserEditModal.jsx"; // Import the new modal
 
 const UsersTable = () => {
   const [rows, setRows] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [formData, setFormData] = useState({
-    name: { firstName: "", lastName: "" },
-    contact: { email: "" },
-    password: "",
-    role: "client",
-  });
-  const [editMode, setEditMode] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUli, setSelectedUli] = useState(null);
   const [error, setError] = useState("");
 
   const queryClient = useQueryClient();
@@ -128,6 +39,7 @@ const UsersTable = () => {
     queryKey: ["users"],
     queryFn: async () => {
       const response = await axios.post("/api/auth/users");
+      console.log("Response Data: ", response.data);
       return response.data;
     },
   });
@@ -138,39 +50,22 @@ const UsersTable = () => {
     }
   }, [users]);
 
-  // Create User Mutation
-  const createUserMutation = useMutation({
-    mutationFn: async (userData) => {
-      const response = await axios.post("/api/auth/register", userData);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["users"]);
-      setOpenDialog(false);
-      setFormData({
-        name: { firstName: "", lastName: "" },
-        contact: { email: "" },
-        password: "",
-        role: "client",
-      });
-    },
-    onError: (error) => {
-      setError(error.response?.data?.message || "Failed to create user");
-    },
-  });
-
   // Update User Mutation
   const updateUserMutation = useMutation({
-    mutationFn: async ({ id, ...updateData }) => {
-      const response = await axios.put(
-        `/api/auth/users/update/${id}`,
-        updateData
-      );
+    mutationFn: async ({ uli, ...updateData }) => {
+      const userResponse = await axios.get(`/api/auth/${uli}`);
+      const fullUserData = userResponse.data;
+
+      const response = await axios.put(`/api/auth/users/update/${uli}`, {
+        ...fullUserData,
+        ...updateData,
+      });
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["users"]);
       setOpenDialog(false);
+      setSelectedUli(null);
     },
     onError: (error) => {
       setError(error.response?.data?.message || "Failed to update user");
@@ -179,57 +74,71 @@ const UsersTable = () => {
 
   // Delete User Mutation
   const deleteUserMutation = useMutation({
-    mutationFn: (id) => axios.delete(`/api/auth/users/delete/${id}`),
+    mutationFn: (uli) => axios.delete(`/api/auth/users/delete/${uli}`),
     onSuccess: () => {
       queryClient.invalidateQueries(["users"]);
     },
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (editMode && selectedUser) {
-      updateUserMutation.mutate({
-        id: selectedUser.id,
-        ...formData,
-      });
-    } else {
-      createUserMutation.mutate(formData);
-    }
-  };
-
-  const handleEditClick = (user) => {
-    setSelectedUser(user);
-    setFormData({
-      ...user,
-      password: "", // Don't populate password in edit mode
-    });
-    setEditMode(true);
+  const handleEditClick = (uli) => {
+    setSelectedUli(uli);
     setOpenDialog(true);
   };
 
-  const handleDeleteClick = (id) => {
+  const handleDeleteClick = (uli) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
-      deleteUserMutation.mutate(id);
+      deleteUserMutation.mutate(uli);
     }
   };
 
-  const handleAddClick = () => {
-    setEditMode(false);
-    setSelectedUser(null);
-    setFormData({
-      name: { firstName: "", lastName: "" },
-      contact: { email: "" },
-      password: "",
-      role: "client",
+  const handleUpdateUser = (updatedUser) => {
+    updateUserMutation.mutate({
+      uli: selectedUli,
+      ...updatedUser,
     });
-    setOpenDialog(true);
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setError("");
+  // Export to Excel
+  const handleExportExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
+    XLSX.writeFile(workbook, "users_export.xlsx");
+  };
+
+  // Export to PDF
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const relevantColumns = [
+      "uli",
+      "firstName",
+      "lastName",
+      "email",
+      "mobileNumber",
+    ];
+    const tableColumn = [
+      "ULI",
+      "First Name",
+      "Last Name",
+      "Email",
+      "Mobile Number",
+    ];
+    const tableRows = rows.map((row) =>
+      relevantColumns.map((key) =>
+        key.includes(".")
+          ? key.split(".").reduce((acc, part) => acc?.[part], row)
+          : row[key] || ""
+      )
+    );
+
+    doc.text("Users List", 14, 15);
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 25,
+      styles: { fontSize: 8 },
+    });
+    doc.save("users_export.pdf");
   };
 
   const columns = [
@@ -243,12 +152,12 @@ const UsersTable = () => {
         <GridActionsCellItem
           icon={<EditIcon />}
           label="Edit"
-          onClick={() => handleEditClick(row)}
+          onClick={() => handleEditClick(row.uli)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
           label="Delete"
-          onClick={() => handleDeleteClick(row.id)}
+          onClick={() => handleDeleteClick(row.uli)}
         />,
       ],
     },
@@ -269,13 +178,22 @@ const UsersTable = () => {
 
   return (
     <div className="p-4">
-      <Stack direction="row" spacing={2} className="mb-4">
+      <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
         <Button
           variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAddClick}
+          color="success"
+          startIcon={<FileDownloadIcon />}
+          onClick={handleExportExcel}
         >
-          Add User
+          Export to Excel
+        </Button>
+        <Button
+          variant="contained"
+          color="error"
+          startIcon={<FileDownloadIcon />}
+          onClick={handleExportPDF}
+        >
+          Export to PDF
         </Button>
       </Stack>
 
@@ -301,36 +219,17 @@ const UsersTable = () => {
         className="h-[600px]"
       />
 
-      <Dialog
+      <UserEditModal
         open={openDialog}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <form onSubmit={handleSubmit}>
-          <DialogTitle>{editMode ? "Edit User" : "Add New User"}</DialogTitle>
-          <DialogContent>
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                {error}
-              </Alert>
-            )}
-            <Box className="mt-4">
-              <UserFormFields
-                formData={formData}
-                setFormData={setFormData}
-                isEdit={editMode}
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancel</Button>
-            <Button type="submit" variant="contained">
-              {editMode ? "Update" : "Create"}
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+        onClose={() => {
+          setOpenDialog(false);
+          setSelectedUli(null);
+          setError("");
+        }}
+        uli={selectedUli}
+        onSubmit={handleUpdateUser}
+        error={error}
+      />
     </div>
   );
 };
