@@ -930,6 +930,73 @@ const RegisterUser = () => {
                         Subic: "2209",
                       };
 
+                      // Automatic district mapping for Zambales
+                      const zambalesDistrictMapping = {
+                        District1: [
+                          "Castillejos",
+                          "San Marcelino",
+                          "Olongapo",
+                          "Subic",
+                        ],
+                        District2: [
+                          "Botolan",
+                          "Cabangan",
+                          "Candelaria",
+                          "Iba",
+                          "Masinloc",
+                          "Palauig",
+                          "San Antonio",
+                          "San Felipe",
+                          "San Narciso",
+                          "Santa Cruz",
+                        ],
+                      };
+
+                      // Determine the automatic district based on city
+                      const getAutomaticDistrict = (city) => {
+                        for (const [district, cities] of Object.entries(
+                          zambalesDistrictMapping
+                        )) {
+                          if (cities.includes(city)) {
+                            return district.replace("District", "");
+                          }
+                        }
+                        return "";
+                      };
+
+                      // Use useEffect to automatically set zipcode and district for Zambales
+                      useEffect(() => {
+                        if (
+                          currentProvince === "Zambales" &&
+                          currentCity &&
+                          zambalesZipcodes[currentCity]
+                        ) {
+                          // Set zipcode
+                          setValue(
+                            "completeMailingAddress.zipCode",
+                            zambalesZipcodes[currentCity]
+                          );
+
+                          // Set district
+                          const autoDistrict =
+                            getAutomaticDistrict(currentCity);
+                          if (autoDistrict) {
+                            setValue(
+                              "completeMailingAddress.district",
+                              autoDistrict
+                            );
+                          }
+                        }
+                      }, [currentCity, currentProvince, setValue]);
+
+                      // Use useEffect to automatically set zipcode for other provinces
+                      useEffect(() => {
+                        // For non-Zambales provinces, clear the zipcode
+                        if (currentProvince !== "Zambales") {
+                          setValue("completeMailingAddress.zipCode", "");
+                        }
+                      }, [currentProvince, setValue]);
+
                       // Determine if this field should have custom option
                       const hasCustomOption = [
                         "province",
@@ -1002,6 +1069,10 @@ const RegisterUser = () => {
                               "completeMailingAddress.zipCode",
                               ""
                             );
+                            control.setValue(
+                              "completeMailingAddress.district",
+                              ""
+                            );
                           } else if (field === "province") {
                             control.setValue("completeMailingAddress.city", "");
                             control.setValue(
@@ -1012,16 +1083,30 @@ const RegisterUser = () => {
                               "completeMailingAddress.zipCode",
                               ""
                             );
+                            control.setValue(
+                              "completeMailingAddress.district",
+                              ""
+                            );
                           } else if (field === "city") {
                             control.setValue(
                               "completeMailingAddress.barangay",
                               ""
                             );
-                            // Set zipcode if it's a Zambales municipality
+
+                            // Automatically set district for Zambales
                             if (
                               currentProvince === "Zambales" &&
                               value !== "custom"
                             ) {
+                              const autoDistrict = getAutomaticDistrict(value);
+                              if (autoDistrict) {
+                                control.setValue(
+                                  "completeMailingAddress.district",
+                                  autoDistrict
+                                );
+                              }
+
+                              // Set zipcode if it's a Zambales municipality
                               const zipcode = zambalesZipcodes[value];
                               if (zipcode) {
                                 control.setValue(
@@ -1118,31 +1203,8 @@ const RegisterUser = () => {
                         return "";
                       };
 
-                      // If it's the district field
-                      if (field === "district") {
-                        return (
-                          <TextField
-                            {...fieldProps}
-                            inputRef={ref}
-                            select
-                            fullWidth
-                            label={formattedLabel}
-                            error={!!errors.completeMailingAddress?.[field]}
-                            helperText={
-                              errors.completeMailingAddress?.[field]?.message
-                            }
-                          >
-                            {getOptions().map((option) => (
-                              <MenuItem key={option} value={option}>
-                                {option}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                        );
-                      }
-
-                      // If it's the zipcode field
-                      if (field === "zipCode") {
+                      // If it's the zipcode or district field
+                      if (field === "zipCode" || field === "district") {
                         return (
                           <TextField
                             {...fieldProps}
@@ -1153,14 +1215,21 @@ const RegisterUser = () => {
                             helperText={
                               errors.completeMailingAddress?.[field]?.message
                             }
-                            InputProps={{
-                              readOnly:
-                                currentProvince === "Zambales" &&
-                                zambalesZipcodes[currentCity],
-                            }}
+                            InputProps={
+                              field === "zipCode" || field === "district"
+                                ? {
+                                    readOnly:
+                                      field === "zipCode"
+                                        ? currentProvince === "Zambales" &&
+                                          zambalesZipcodes[currentCity]
+                                        : false,
+                                  }
+                                : {}
+                            }
                           />
                         );
                       }
+
                       // If it's a custom-enabled field and in custom mode
                       if (hasCustomOption && isCustom) {
                         return (

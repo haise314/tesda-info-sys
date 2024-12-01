@@ -5,8 +5,6 @@ import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Typography, Paper, CircularProgress } from "@mui/material";
-// ../../context/AuthContext
-// Set up the localizer for react-big-calendar
 const localizer = momentLocalizer(moment);
 
 const fetchEvents = async () => {

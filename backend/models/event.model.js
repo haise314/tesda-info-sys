@@ -11,7 +11,7 @@ const eventSchema = new mongoose.Schema({
   },
   clientType: {
     type: String,
-    enum: ["Student", "Faculty", "Staff", "Guest"],
+    enum: ["Student", "Staff", "Guest"],
     required: false,
   },
   eventName: {
