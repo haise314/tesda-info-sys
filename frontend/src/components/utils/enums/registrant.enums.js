@@ -571,3 +571,5 @@ export const zambalesZipcodes = {
   "Santa Cruz": "2113",
   Subic: "2209",
 };
+
+export const roles = ["client", "admin", "superadmin"];

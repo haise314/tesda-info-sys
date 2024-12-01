@@ -190,7 +190,12 @@ const userSchema = new mongoose.Schema(
     // Parent Information
     motherName: nameSchema,
     fatherName: nameSchema,
+    updatedBy: {
+      type: String, // Changed to String to store just the ULI
+      required: false,
+    },
   },
+
   {
     timestamps: true,
   }

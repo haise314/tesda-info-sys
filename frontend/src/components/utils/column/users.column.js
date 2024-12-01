@@ -73,4 +73,10 @@ export const userColumns = [
     editable: false,
     renderCell: (params) => formatDate(params.value),
   },
+  {
+    field: "updatedBy",
+    headerName: "Updated By",
+    width: 150,
+    editable: false,
+  },
 ];

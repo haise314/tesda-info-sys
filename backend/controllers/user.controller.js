@@ -224,6 +224,7 @@ export const getAllUsers = async (req, res) => {
             // Timestamp fields
             createdAt: user.createdAt || null,
             updatedAt: user.updatedAt || null,
+            updatedBy: user.updatedBy || "",
           };
         } catch (mapError) {
           console.error("Error mapping user:", user, mapError);
@@ -390,7 +391,6 @@ export const updateUserByUli = async (req, res) => {
 
     // Find the user by ULI
     const user = await User.findOne({ uli });
-
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -398,8 +398,12 @@ export const updateUserByUli = async (req, res) => {
       });
     }
 
+    // Remove password from update if it's empty
+    if (updateData.password === "") {
+      delete updateData.password;
+    }
+
     // Perform a deep merge of the update data
-    // This ensures nested objects like name, contact, etc. are updated correctly
     const updateUser = (target, source) => {
       for (const key in source) {
         if (source.hasOwnProperty(key)) {
@@ -419,11 +423,8 @@ export const updateUserByUli = async (req, res) => {
     // Apply the updates
     updateUser(user, updateData);
 
-    // Validate the updated user
-    await user.validate();
-
-    // Save the updated user
-    const updatedUser = await user.save();
+    // Save the updated user, skipping password validation if no password is provided
+    const updatedUser = await user.save({ validateModifiedOnly: true });
 
     return res.status(200).json({
       success: true,
@@ -431,8 +432,11 @@ export const updateUserByUli = async (req, res) => {
       data: updatedUser,
     });
   } catch (error) {
-    // Handle validation errors or other update failures
-    return handleErrorResponse(res, error, "Error updating user");
+    return res.status(400).json({
+      success: false,
+      message: "Error updating user",
+      error: error.message,
+    });
   }
 };
 
