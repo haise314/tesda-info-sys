@@ -10,6 +10,12 @@ import {
 } from "@mui/material";
 import { Controller } from "react-hook-form";
 
+const RequiredLabel = ({ children }) => (
+  <span>
+    {children} <span style={{ color: "red" }}>*</span>
+  </span>
+);
+
 const TrainingCenterSelectField = ({
   control,
   errors,
@@ -61,7 +67,7 @@ const TrainingCenterSelectField = ({
       render={({ field }) => (
         <FormControl fullWidth error={hasError()}>
           <InputLabel id={`training-center-select-label-${index || 0}`}>
-            Training Center
+            <RequiredLabel>Training Center Information</RequiredLabel>
           </InputLabel>
           <Select
             {...field}

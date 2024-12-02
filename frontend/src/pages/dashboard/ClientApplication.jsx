@@ -22,9 +22,12 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import ClientApplicationForm from "../../components/dashboard/ClientApplicationForm.jsx";
 import AssessmentSelectField from "../../components/dashboard/subcomponent/AssessmentSelectField.jsx";
 import { useForm, Controller } from "react-hook-form";
+import NotCompetentGuidance from "./NotCompetentGuidance.jsx";
 
 const Assessments = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedNotCompetentAssessment, setSelectedNotCompetentAssessment] =
+    useState(null);
   const [error, setError] = useState("");
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -92,6 +95,14 @@ const Assessments = () => {
     setError("");
   };
 
+  const handleOpenNotCompetentModal = (assessment) => {
+    setSelectedNotCompetentAssessment(assessment);
+  };
+
+  const handleCloseNotCompetentModal = () => {
+    setSelectedNotCompetentAssessment(null);
+  };
+
   const onSubmit = (data) => {
     addAssessmentMutation.mutate({
       ...data,
@@ -116,24 +127,36 @@ const Assessments = () => {
         Assessments
       </Typography>
       {assessments.map((assessment, index) => (
-        <Paper key={index} sx={{ p: 2, mb: 2 }}>
-          <Typography variant="subtitle1">
-            {assessment.assessmentTitle}
-          </Typography>
-          <Typography>Type: {assessment.assessmentType}</Typography>
-          <Typography
-            sx={{
-              color:
-                assessment.applicationStatus === "Approved"
-                  ? "success.main"
-                  : assessment.applicationStatus === "Rejected"
-                  ? "error.main"
-                  : "text.secondary",
-            }}
-          >
-            Status: {assessment.applicationStatus}
-          </Typography>
-        </Paper>
+        <React.Fragment key={index}>
+          <Paper sx={{ p: 2, mb: 2 }}>
+            <Typography variant="subtitle1">
+              {assessment.assessmentTitle}
+            </Typography>
+            <Typography>Type: {assessment.assessmentType}</Typography>
+            <Typography
+              sx={{
+                color:
+                  assessment.applicationStatus === "Approved"
+                    ? "success.main"
+                    : assessment.applicationStatus === "Rejected"
+                    ? "error.main"
+                    : "text.secondary",
+              }}
+            >
+              Status: {assessment.applicationStatus}
+            </Typography>
+            {assessment.applicationStatus === "Not Competent" && (
+              <Button
+                variant="outlined"
+                color="warning"
+                onClick={() => handleOpenNotCompetentModal(assessment)}
+                sx={{ mt: 1 }}
+              >
+                View Guidance
+              </Button>
+            )}
+          </Paper>
+        </React.Fragment>
       ))}
       <Button
         startIcon={<AddIcon />}
@@ -145,6 +168,7 @@ const Assessments = () => {
         Add Assessment
       </Button>
 
+      {/* Add Assessment Dialog */}
       <Dialog
         open={isDialogOpen}
         onClose={handleCloseDialog}
@@ -203,6 +227,42 @@ const Assessments = () => {
             </Button>
           </DialogActions>
         </form>
+      </Dialog>
+
+      {/* Not Competent Guidance Modal */}
+      <Dialog
+        open={!!selectedNotCompetentAssessment}
+        onClose={handleCloseNotCompetentModal}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Not Competent Guidance</DialogTitle>
+        <DialogContent>
+          {selectedNotCompetentAssessment && (
+            <NotCompetentGuidance
+              assessment={selectedNotCompetentAssessment}
+              onRequestFeedback={() => {
+                console.log(
+                  "Requesting feedback for",
+                  selectedNotCompetentAssessment
+                );
+                handleCloseNotCompetentModal();
+              }}
+              onRequestReassessment={() => {
+                console.log(
+                  "Scheduling reassessment for",
+                  selectedNotCompetentAssessment
+                );
+                handleCloseNotCompetentModal();
+              }}
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseNotCompetentModal} color="primary">
+            Close
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

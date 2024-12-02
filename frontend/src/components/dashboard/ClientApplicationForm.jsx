@@ -1,4 +1,3 @@
-// src/components/forms/ClientApplicationForm.jsx
 import React, { useMemo } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -37,6 +36,12 @@ import dayjs from "dayjs";
 import AssessmentSelectField from "./subcomponent/AssessmentSelectField";
 import TrainingCenterSelectField from "./subcomponent/TrainingCenterSelectionField";
 
+const RequiredLabel = ({ children }) => (
+  <span>
+    {children} <span style={{ color: "red" }}>*</span>
+  </span>
+);
+
 const ClientApplicationForm = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -45,6 +50,7 @@ const ClientApplicationForm = () => {
     handleSubmit,
     formState: { errors },
     watch,
+    reset,
   } = useForm({
     defaultValues: {
       trainingCenterName: "",
@@ -72,7 +78,6 @@ const ClientApplicationForm = () => {
         lastName: "",
         extension: "",
       },
-      // Optional arrays - only include if you want to add them during application
       workExperience: [],
       trainingSeminarAttended: [],
       licensureExaminationPassed: [],
@@ -95,6 +100,8 @@ const ClientApplicationForm = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applicant"] });
+      // Optional: reset form after successful submission
+      reset();
     },
   });
 
@@ -120,6 +127,11 @@ const ClientApplicationForm = () => {
     control,
     name: "competencyAssessment",
   });
+
+  const handleNumberChange = (field, e) => {
+    const value = e.target.value === "" ? null : Number(e.target.value);
+    field.onChange(value);
+  };
 
   const renderDynamicFields = (fields, append, remove, name) => (
     <Accordion sx={{ width: "100%", padding: 3 }} defaultExpanded>
@@ -149,7 +161,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Company Name"
+                          label={<RequiredLabel>Company Name</RequiredLabel>}
                           fullWidth
                           error={!!errors.workExperience?.[index]?.companyName}
                           helperText={
@@ -166,7 +178,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Position"
+                          label={<RequiredLabel>Position</RequiredLabel>}
                           fullWidth
                           error={!!errors.workExperience?.[index]?.position}
                           helperText={
@@ -183,7 +195,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <DatePicker
                           {...field}
-                          label="From Date"
+                          label={<RequiredLabel>From Date</RequiredLabel>}
                           value={field.value ? dayjs(field.value) : null}
                           slotProps={{
                             textField: {
@@ -210,7 +222,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <DatePicker
                           {...field}
-                          label="To Date"
+                          label={<RequiredLabel>To Date</RequiredLabel>}
                           value={field.value ? dayjs(field.value) : null}
                           slotProps={{
                             textField: {
@@ -237,7 +249,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Monthly Salary"
+                          label={<RequiredLabel>Monthly Salary</RequiredLabel>}
                           type="number"
                           fullWidth
                           error={
@@ -247,9 +259,8 @@ const ClientApplicationForm = () => {
                             errors.workExperience?.[index]?.monthlySalary
                               ?.message
                           }
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
+                          onChange={(e) => handleNumberChange(field, e)}
+                          value={field.value || ""}
                         />
                       )}
                     />
@@ -261,7 +272,9 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Appointment Status"
+                          label={
+                            <RequiredLabel>Appointment Status</RequiredLabel>
+                          }
                           fullWidth
                           error={
                             !!errors.workExperience?.[index]?.appointmentStatus
@@ -281,7 +294,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Years in Work"
+                          label={<RequiredLabel>Years in Work</RequiredLabel>}
                           type="number"
                           fullWidth
                           error={
@@ -291,9 +304,8 @@ const ClientApplicationForm = () => {
                             errors.workExperience?.[index]?.noOfYearsInWork
                               ?.message
                           }
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
+                          onChange={(e) => handleNumberChange(field, e)}
+                          value={field.value || ""}
                         />
                       )}
                     />
@@ -310,7 +322,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Title"
+                          label={<RequiredLabel>Title</RequiredLabel>}
                           fullWidth
                           error={
                             !!errors.trainingSeminarAttended?.[index]?.title
@@ -330,7 +342,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Venue"
+                          label={<RequiredLabel>Venue</RequiredLabel>}
                           fullWidth
                           error={
                             !!errors.trainingSeminarAttended?.[index]?.venue
@@ -350,7 +362,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <DatePicker
                           {...field}
-                          label="From Date"
+                          label={<RequiredLabel>From Date</RequiredLabel>}
                           value={field.value ? dayjs(field.value) : null}
                           slotProps={{
                             textField: {
@@ -377,7 +389,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <DatePicker
                           {...field}
-                          label="To Date"
+                          label={<RequiredLabel>To Date</RequiredLabel>}
                           value={field.value ? dayjs(field.value) : null}
                           slotProps={{
                             textField: {
@@ -404,7 +416,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Number of Hours"
+                          label={<RequiredLabel>Number of Hours</RequiredLabel>}
                           type="number"
                           fullWidth
                           error={
@@ -415,9 +427,8 @@ const ClientApplicationForm = () => {
                             errors.trainingSeminarAttended?.[index]
                               ?.numberOfHours?.message
                           }
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
+                          onChange={(e) => handleNumberChange(field, e)}
+                          value={field.value || ""}
                         />
                       )}
                     />
@@ -430,7 +441,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Conducted By"
+                          label={<RequiredLabel>Conducted By</RequiredLabel>}
                           fullWidth
                           error={
                             !!errors.trainingSeminarAttended?.[index]
@@ -456,7 +467,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Title"
+                          label={<RequiredLabel>Title</RequiredLabel>}
                           fullWidth
                           error={
                             !!errors.licensureExaminationPassed?.[index]?.title
@@ -476,7 +487,9 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <DatePicker
                           {...field}
-                          label="Date of Examination"
+                          label={
+                            <RequiredLabel>Date of Examination</RequiredLabel>
+                          }
                           value={field.value ? dayjs(field.value) : null}
                           slotProps={{
                             textField: {
@@ -503,7 +516,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <DatePicker
                           {...field}
-                          label="Expiry Date"
+                          label={<RequiredLabel>Expiry Date</RequiredLabel>}
                           value={field.value ? dayjs(field.value) : null}
                           slotProps={{
                             textField: {
@@ -530,7 +543,9 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Examination Venue"
+                          label={
+                            <RequiredLabel>Examination Venue</RequiredLabel>
+                          }
                           fullWidth
                           error={
                             !!errors.licensureExaminationPassed?.[index]
@@ -551,7 +566,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Rating"
+                          label={<RequiredLabel>Rating</RequiredLabel>}
                           type="number"
                           fullWidth
                           error={
@@ -561,9 +576,8 @@ const ClientApplicationForm = () => {
                             errors.licensureExaminationPassed?.[index]?.rating
                               ?.message
                           }
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
+                          onChange={(e) => handleNumberChange(field, e)}
+                          value={field.value || ""}
                         />
                       )}
                     />
@@ -576,7 +590,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Remarks"
+                          label={<RequiredLabel>Remarks</RequiredLabel>}
                           fullWidth
                           error={
                             !!errors.licensureExaminationPassed?.[index]
@@ -602,7 +616,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Title"
+                          label={<RequiredLabel>Title</RequiredLabel>}
                           fullWidth
                           error={!!errors.competencyAssessment?.[index]?.title}
                           helperText={
@@ -619,7 +633,9 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Qualification Level"
+                          label={
+                            <RequiredLabel>Qualification Level</RequiredLabel>
+                          }
                           fullWidth
                           error={
                             !!errors.competencyAssessment?.[index]
@@ -640,7 +656,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Industry Sector"
+                          label={<RequiredLabel>Industry Sector</RequiredLabel>}
                           fullWidth
                           error={
                             !!errors.competencyAssessment?.[index]
@@ -661,7 +677,9 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Certificate Number"
+                          label={
+                            <RequiredLabel>Certificate Number</RequiredLabel>
+                          }
                           fullWidth
                           error={
                             !!errors.competencyAssessment?.[index]
@@ -682,7 +700,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <DatePicker
                           {...field}
-                          label="Date Issued"
+                          label={<RequiredLabel>Date Issued</RequiredLabel>}
                           value={field.value ? dayjs(field.value) : null}
                           slotProps={{
                             textField: {
@@ -708,7 +726,7 @@ const ClientApplicationForm = () => {
                       render={({ field }) => (
                         <DatePicker
                           {...field}
-                          label="Expiration Date"
+                          label={<RequiredLabel>Expiration Date</RequiredLabel>}
                           value={field.value ? dayjs(field.value) : null}
                           slotProps={{
                             textField: {
@@ -769,6 +787,26 @@ const ClientApplicationForm = () => {
       </Typography>
       <Divider sx={{ mb: 4 }} />
 
+      <Box
+        sx={{
+          backgroundColor: "#f5f5f5",
+          p: 2,
+          mb: 3,
+          borderRadius: 2,
+          border: "1px solid #e0e0e0",
+        }}
+      >
+        <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
+          Form Guidelines
+        </Typography>
+        <Typography variant="body2">
+          <span style={{ color: "red" }}>*</span> Indicates a required field.
+          Please fill out all required fields accurately. You can add multiple
+          entries for work experience, training, licensure examinations, and
+          competency assessments by using the "Add" buttons in each section.
+        </Typography>
+      </Box>
+
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container spacing={3}>
           {/* Training Center Information */}
@@ -783,6 +821,8 @@ const ClientApplicationForm = () => {
               control={control}
               errors={errors}
               name="trainingCenterName"
+              rules={{ required: "Training Center is required" }}
+              label={<RequiredLabel>Training Center</RequiredLabel>}
             />
           </Grid>
 
@@ -794,7 +834,7 @@ const ClientApplicationForm = () => {
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Address Location"
+                  label={<RequiredLabel>Address Location</RequiredLabel>}
                   fullWidth
                   error={!!errors.addressLocation}
                   helperText={errors.addressLocation?.message}
@@ -815,9 +855,6 @@ const ClientApplicationForm = () => {
               control={control}
               index={0} // or whatever index you're using
               errors={errors}
-              // Optionally override the default name if needed:
-              // name="customAssessmentField"
-              // required={false} // if you want to make it optional
             />
           </Grid>
 
@@ -831,7 +868,9 @@ const ClientApplicationForm = () => {
                   fullWidth
                   error={!!errors.assessments?.[0]?.assessmentType}
                 >
-                  <InputLabel>Assessment Type</InputLabel>
+                  <InputLabel>
+                    <RequiredLabel>Assessment Type</RequiredLabel>
+                  </InputLabel>
                   <Select {...field} label="Assessment Type">
                     {assessmentTypes.map((type) => (
                       <MenuItem key={type} value={type}>
