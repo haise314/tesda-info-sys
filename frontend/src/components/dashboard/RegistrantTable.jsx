@@ -7,6 +7,10 @@ import {
   GridToolbar,
   useGridApiRef,
 } from "@mui/x-data-grid";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import {
   Box,
   Button,
@@ -358,32 +362,107 @@ const RegistrantsTable = () => {
     );
   }
 
+  const handleExportExcel = () => {
+    // Prepare data for export by flattening course information
+    const exportData = rows.map((row) => ({
+      "Disability Type": row.disabilityType || "",
+      "Disability Cause": row.disabilityCause || "",
+      Courses: row.course?.map((c) => c.courseName).join(", ") || "",
+      "Registration Status":
+        row.course?.map((c) => c.registrationStatus).join(", ") || "",
+      "Has Scholarship":
+        row.course?.map((c) => (c.hasScholarType ? "Yes" : "No")).join(", ") ||
+        "",
+      "Scholarship Types":
+        row.course
+          ?.map((c) => {
+            if (c.hasScholarType) {
+              return c.scholarType === "Others"
+                ? c.otherScholarType
+                : c.scholarType;
+            }
+            return "";
+          })
+          .filter(Boolean)
+          .join(", ") || "",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Registrants");
+    XLSX.writeFile(workbook, "registrants_export.xlsx");
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+
+    const tableColumn = [
+      "Disability Type",
+      "Disability Cause",
+      "Courses",
+      "Registration Status",
+      "Has Scholarship",
+      "Scholarship Types",
+    ];
+
+    const tableRows = rows.map((row) => [
+      row.disabilityType || "",
+      row.disabilityCause || "",
+      row.course?.map((c) => c.courseName).join(", ") || "",
+      row.course?.map((c) => c.registrationStatus).join(", ") || "",
+      row.course?.map((c) => (c.hasScholarType ? "Yes" : "No")).join(", ") ||
+        "",
+      row.course
+        ?.map((c) => {
+          if (c.hasScholarType) {
+            return c.scholarType === "Others"
+              ? c.otherScholarType
+              : c.scholarType;
+          }
+          return "";
+        })
+        .filter(Boolean)
+        .join(", ") || "",
+    ]);
+
+    doc.text("Registrants List", 14, 15);
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 25,
+      styles: { fontSize: 8 },
+      margin: { top: 30 },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 40 },
+      },
+    });
+
+    doc.save("registrants_export.pdf");
+  };
+
   return (
     <div className="p-4">
-      <Stack direction="row" spacing={2} className="mb-4">
+      <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
         <Button
           variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
-            setEditMode(false);
-            setSelectedRegistrant(null);
-            setFormData({
-              disabilityType: "",
-              disabilityCause: "",
-              course: [
-                {
-                  courseName: "",
-                  registrationStatus: "Pending",
-                  hasScholarType: false,
-                  scholarType: "",
-                  otherScholarType: "",
-                },
-              ],
-            });
-            setOpenDialog(true);
-          }}
+          color="success"
+          startIcon={<FileDownloadIcon />}
+          onClick={handleExportExcel}
         >
-          Add Registrant
+          Export to Excel
+        </Button>
+        <Button
+          variant="contained"
+          color="error"
+          startIcon={<FileDownloadIcon />}
+          onClick={handleExportPDF}
+        >
+          Export to PDF
         </Button>
       </Stack>
 

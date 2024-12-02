@@ -6,19 +6,17 @@ import {
   GridToolbar,
   useGridApiRef,
 } from "@mui/x-data-grid";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import {
   Box,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  useMediaQuery,
-  Stack,
   Container,
   CircularProgress,
   Typography,
+  useMediaQuery,
+  Stack,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -32,6 +30,8 @@ import {
 import { useTheme } from "@emotion/react";
 import { TableContainer } from "../../layouts/TableContainer";
 import AssessmentEditDialog from "./AssessmentEdit.jsx";
+import ApplicantEditModal from "./subcomponent/ApplicantEditModal.jsx"; // Import the new modal
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 
 const fetchApplicants = async () => {
   const response = await axios.get("/api/applicants");
@@ -56,6 +56,7 @@ const ApplicantTable = () => {
   const [rows, setRows] = useState([]);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [isAssessmentDialogOpen, setIsAssessmentDialogOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const {
     data: applicants,
@@ -102,50 +103,40 @@ const ApplicantTable = () => {
         queryClient.invalidateQueries(["applicants"]);
       } catch (error) {
         console.error("Failed to update assessments:", error);
-        // Handle error (e.g., show an error message to the user)
       }
     }
     handleAssessmentDialogClose();
   };
 
-  // Modify the existing columns to add the onCellDoubleClick functionality for assessments
-  const modifiedColumns = applicantColumns.map((column) => {
-    if (column.field === "assessments") {
-      return {
-        ...column,
-        editable: false, // Disable inline editing
-      };
-    }
-    return column;
-  });
-
   const updateApplicantMutation = useMutation({
     mutationFn: async (params) => {
-      console.log("Update applicant params:", params);
       const { id, field, value } = params;
-
       const currentRow = apiRef.current?.getRow(id);
       if (!currentRow) {
         throw new Error("Could not find row data");
       }
-      console.log("Applicant currentRow:", currentRow);
 
-      let updatedRow;
-      if (field === "assessments") {
-        // For assessments, we want to replace the entire array
-        updatedRow = { ...currentRow, assessments: value };
-      } else {
-        updatedRow = { ...currentRow, [field]: value };
-      }
-      console.log("Applicant updatedRow:", updatedRow);
+      // Create a new object with the updated field
+      const updatedRow = {
+        ...currentRow,
+        [field]: value,
+      };
 
-      const unflattenedData = unflattenApplicantData(updatedRow);
-      console.log("Applicant unflattenedData:", unflattenedData);
+      // Remove unnecessary fields that might cause validation issues
+      const cleanedData = {
+        uli: updatedRow.uli,
+        trainingCenterName: updatedRow.trainingCenterName,
+        addressLocation: updatedRow.addressLocation,
+        assessments: updatedRow.assessments || [],
+        workExperience: updatedRow.workExperience || [],
+        trainingSeminarAttended: updatedRow.trainingSeminarAttended || [],
+        licensureExaminationPassed: updatedRow.licensureExaminationPassed || [],
+        competencyAssessment: updatedRow.competencyAssessment || [],
+      };
 
-      const response = await axios.put(
-        `/api/applicants/${id}`,
-        unflattenedData
-      );
+      console.log("Update data:", cleanedData);
+      const response = await axios.put(`/api/applicants/${id}`, cleanedData);
+      console.log("Update response:", response.data);
       return response.data;
     },
     onSuccess: () => {
@@ -154,6 +145,22 @@ const ApplicantTable = () => {
     onError: (error) => {
       console.error("Update error:", error);
       alert("Failed to update applicant. Please try again.");
+    },
+  });
+
+  const createApplicantMutation = useMutation({
+    mutationFn: async (applicantData) => {
+      const unflattenedData = unflattenApplicantData(applicantData);
+      const response = await axios.post("/api/applicants", unflattenedData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["applicants"]);
+      setIsEditModalOpen(false);
+    },
+    onError: (error) => {
+      console.error("Create error:", error);
+      alert("Failed to create applicant. Please try again.");
     },
   });
 
@@ -170,36 +177,30 @@ const ApplicantTable = () => {
     }
   };
 
-  const processRowUpdate = React.useCallback(
-    async (newRow, oldRow) => {
-      const changedField = Object.keys(newRow).find(
-        (key) => JSON.stringify(newRow[key]) !== JSON.stringify(oldRow[key])
-      );
-
-      if (!changedField) return oldRow; // No changes
-
-      try {
-        await updateApplicantMutation.mutateAsync({
-          id: newRow._id,
-          field: changedField,
-          value: newRow[changedField],
-        });
-        return newRow;
-      } catch (error) {
-        return oldRow;
-      }
-    },
-    [updateApplicantMutation]
-  );
-
+  // Add edit action to columns
   const columns = [
-    ...modifiedColumns,
+    ...applicantColumns,
     {
       field: "actions",
       type: "actions",
       headerName: "Actions",
-      width: 100,
-      getActions: ({ id }) => [
+      width: 120,
+      getActions: ({ id, row }) => [
+        <GridActionsCellItem
+          icon={<EditIcon />}
+          label="Add Assessment"
+          onClick={() => handleAssessmentEdit({ id })}
+          color="inherit"
+        />,
+        // <GridActionsCellItem
+        //   icon={<EditIcon />}
+        //   label="Edit"
+        //   onClick={() => {
+        //     setSelectedApplicant(row);
+        //     setIsEditModalOpen(true);
+        //   }}
+        //   color="inherit"
+        // />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
           label="Delete"
@@ -210,8 +211,89 @@ const ApplicantTable = () => {
     },
   ];
 
-  const handleAddClick = () => {
-    console.log("Add new applicant");
+  const handleExportExcel = () => {
+    // Filter out unnecessary fields and prepare data for export
+    const exportData = rows.map((row) => ({
+      ULI: row.uli || "",
+      "Training Center": row.trainingCenterName || "",
+      "Address Location": row.addressLocation || "",
+      "Number of Assessments": Array.isArray(row.assessments)
+        ? row.assessments.length
+        : 0,
+      "Created At": row.createdAt || "",
+      "Updated By": row.updatedBy || "",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Applicants");
+    XLSX.writeFile(workbook, "applicants_export.xlsx");
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+
+    const relevantColumns = [
+      "uli",
+      "trainingCenterName",
+      "addressLocation",
+      "assessments",
+      "createdAt",
+      "updatedBy",
+    ];
+
+    const tableColumn = [
+      "ULI",
+      "Training Center",
+      "Address Location",
+      "Assessments",
+      "Created At",
+      "Updated By",
+    ];
+
+    const tableRows = rows.map((row) =>
+      relevantColumns.map((key) => {
+        if (key === "assessments") {
+          return Array.isArray(row[key]) ? row[key].length.toString() : "0";
+        }
+        return row[key]?.toString() || "";
+      })
+    );
+
+    doc.text("Applicants List", 14, 15);
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 25,
+      styles: { fontSize: 8 },
+      margin: { top: 30 },
+    });
+
+    doc.save("applicants_export.pdf");
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setSelectedApplicant(null);
+  };
+
+  const handleEditModalSubmit = async (applicantData) => {
+    try {
+      if (selectedApplicant) {
+        // Update existing applicant
+        await updateApplicantMutation.mutateAsync({
+          id: selectedApplicant._id,
+          field: "all",
+          value: applicantData,
+        });
+      } else {
+        // Create new applicant
+        await createApplicantMutation.mutateAsync(applicantData);
+      }
+      handleEditModalClose();
+    } catch (error) {
+      console.error("Error in edit/create:", error);
+    }
   };
 
   if (isLoading) {
@@ -233,6 +315,7 @@ const ApplicantTable = () => {
       </Container>
     );
   }
+
   if (error) {
     return (
       <Container>
@@ -245,19 +328,22 @@ const ApplicantTable = () => {
 
   return (
     <TableContainer>
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        spacing={2}
-        sx={{ mb: 2 }}
-        alignItems={{ xs: "stretch", sm: "center" }}
-      >
+      <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
         <Button
-          fullWidth={isMobile}
           variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAddClick}
+          color="success"
+          startIcon={<FileDownloadIcon />}
+          onClick={handleExportExcel}
         >
-          Add Applicant
+          Export to Excel
+        </Button>
+        <Button
+          variant="contained"
+          color="error"
+          startIcon={<FileDownloadIcon />}
+          onClick={handleExportPDF}
+        >
+          Export to PDF
         </Button>
       </Stack>
       <DataGrid
@@ -274,12 +360,7 @@ const ApplicantTable = () => {
           },
         }}
         getRowId={(row) => row._id}
-        processRowUpdate={processRowUpdate}
-        onProcessRowUpdateError={(error) => {
-          console.error("Error while saving:", error);
-        }}
         onCellDoubleClick={(params) => {
-          console.log("Cell double click:", params);
           if (params.field === "assessments") {
             handleAssessmentEdit(params);
           }
@@ -292,6 +373,7 @@ const ApplicantTable = () => {
               fullName: true,
               assessments: true,
               createdAt: !isMobile,
+              updatedBy: !isMobile,
               actions: true,
             },
           },
@@ -302,12 +384,23 @@ const ApplicantTable = () => {
         pageSizeOptions={isMobile ? [5, 10] : [10, 25, 50]}
         density={isMobile ? "compact" : "standard"}
       />
+
+      {/* Assessment Edit Dialog */}
       {selectedApplicant && (
         <AssessmentEditDialog
           open={isAssessmentDialogOpen}
           onClose={handleAssessmentDialogClose}
           assessments={selectedApplicant.assessments}
           onSave={handleAssessmentSave}
+        />
+      )}
+      {selectedApplicant && (
+        <ApplicantEditModal
+          open={isEditModalOpen}
+          onClose={handleEditModalClose}
+          uli={selectedApplicant?._id}
+          initialData={selectedApplicant}
+          onSubmit={handleEditModalSubmit}
         />
       )}
     </TableContainer>

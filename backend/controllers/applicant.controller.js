@@ -8,6 +8,10 @@ import ImageUpload from "../models/image.model.js";
 import { upload } from "../config/multer.config.js";
 import mongoose from "mongoose";
 import Registrant from "../models/registrant.model.js";
+import {
+  applicationStatuses,
+  assessmentTypes,
+} from "../utils/applicant.enums.js";
 
 export const civilStatuesMap = {
   Single: "Single",
@@ -162,37 +166,59 @@ export const updateApplicant = async (req, res) => {
     console.log("Updating applicant with id:", id);
     console.log("Update data received:", req.body);
 
-    // Validate assessments if they are provided
-    if (req.body.assessments) {
-      if (!Array.isArray(req.body.assessments)) {
+    // Validate specific fields
+    const {
+      assessments,
+      workExperience,
+      trainingSeminarAttended,
+      licensureExaminationPassed,
+      competencyAssessment,
+    } = req.body;
+
+    // Validate assessments
+    if (assessments) {
+      const invalidAssessment = assessments.find(
+        (assessment) =>
+          !assessmentTypes.includes(assessment.assessmentType) ||
+          !applicationStatuses.includes(assessment.applicationStatus)
+      );
+      if (invalidAssessment) {
         return res.status(400).json({
           success: false,
-          message: "Assessments must be an array",
+          message: "Invalid assessment type or status",
         });
       }
-      // Additional validation for each assessment item can be added here if needed
     }
 
-    // Use findOneAndUpdate to get the old document before update
-    const oldApplicant = await Applicant.findOne({ _id: id });
-
-    if (!oldApplicant) {
+    const existingApplicant = await Applicant.findById(id);
+    if (!existingApplicant) {
       return res
         .status(404)
         .json({ success: false, message: "Applicant not found" });
     }
 
-    // Merge the old document with the new data
-    const updatedData = { ...oldApplicant.toObject(), ...req.body };
+    // Update fields
+    existingApplicant.uli = req.body.uli || existingApplicant.uli;
+    existingApplicant.trainingCenterName =
+      req.body.trainingCenterName || existingApplicant.trainingCenterName;
+    existingApplicant.addressLocation =
+      req.body.addressLocation || existingApplicant.addressLocation;
 
-    // Update the document
-    const updatedApplicant = await Applicant.findOneAndUpdate(
-      { _id: id },
-      updatedData,
-      { new: true, runValidators: true }
-    );
+    // Replace entire arrays for complex nested documents
+    if (assessments) existingApplicant.assessments = assessments;
+    if (workExperience) existingApplicant.workExperience = workExperience;
+    if (trainingSeminarAttended)
+      existingApplicant.trainingSeminarAttended = trainingSeminarAttended;
+    if (licensureExaminationPassed)
+      existingApplicant.licensureExaminationPassed = licensureExaminationPassed;
+    if (competencyAssessment)
+      existingApplicant.competencyAssessment = competencyAssessment;
 
+    existingApplicant.updatedBy = req.user?.id || "unknown";
+
+    const updatedApplicant = await existingApplicant.save();
     console.log("Updated applicant in database:", updatedApplicant);
+
     res.status(200).json({ success: true, data: updatedApplicant });
   } catch (error) {
     console.error("Update error:", error);
@@ -202,7 +228,6 @@ export const updateApplicant = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 // Get all applicants
 export const getApplicants = async (req, res) => {
   try {

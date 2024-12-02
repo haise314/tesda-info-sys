@@ -265,4 +265,9 @@ export const applicantColumns = [
     width: 90,
     renderCell: (params) => formatDate(params.row.updatedAt),
   },
+  {
+    field: "updatedBy",
+    headerName: "Updated By",
+    width: 150,
+  },
 ];

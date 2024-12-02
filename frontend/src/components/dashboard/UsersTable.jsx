@@ -18,16 +18,28 @@ import {
   Container,
   Typography,
   Stack,
+  useMediaQuery,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { userColumns } from "../utils/column/users.column.js";
 import UserEditModal from "./subcomponent/UserEditModal.jsx"; // Import the new modal
+import { useTheme } from "@emotion/react";
+
+const getDefaultColumnVisibility = (columns) => {
+  const visibility = {};
+  columns.forEach((col) => {
+    visibility[col.field] = false;
+  });
+  return visibility;
+};
 
 const UsersTable = () => {
   const [rows, setRows] = useState([]);
+  const theme = useTheme();
   const [openDialog, setOpenDialog] = useState(false);
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [selectedUli, setSelectedUli] = useState(null);
   const [error, setError] = useState("");
 
@@ -210,13 +222,32 @@ const UsersTable = () => {
             quickFilterProps: { debounceMs: 500 },
           },
         }}
-        initialState={{
-          pagination: {
-            paginationModel: { pageSize: 10 },
-          },
-        }}
+        // initialState={{
+        //   pagination: {
+        //     paginationModel: { pageSize: 10 },
+        //   },
+        // }}
         pageSizeOptions={[5, 10, 25, 50]}
         className="h-[600px]"
+        initialState={{
+          columns: {
+            columnVisibilityModel: {
+              ...getDefaultColumnVisibility(userColumns),
+              uli: true,
+              role: true,
+              firstName: true,
+              lastName: true,
+              clientClassification: true,
+              createdAt: !isMobile,
+              updatedAt: !isMobile,
+              updatedBy: !isMobile,
+              actions: true,
+            },
+          },
+          pagination: {
+            paginationModel: { pageSize: isMobile ? 5 : 10 },
+          },
+        }}
       />
 
       <UserEditModal

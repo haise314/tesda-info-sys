@@ -182,6 +182,10 @@ const applicantSchema = new mongoose.Schema(
       type: [competencyAssessmentSchema],
       required: false,
     },
+    updatedBy: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,
