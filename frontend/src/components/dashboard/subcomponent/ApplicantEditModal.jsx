@@ -1,32 +1,42 @@
 import React, { useState, useEffect, useCallback } from "react";
+import axios from "axios";
+import { useAuth } from "../../../context/AuthContext.jsx"; // Adjust path as needed
 import {
-  Modal,
-  Box,
-  Typography,
-  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Button,
-  Grid,
-  Tabs,
-  Tab,
-  Paper,
-  IconButton,
-  FormControl,
-  InputLabel,
+  TextField,
   Select,
   MenuItem,
+  FormControl,
+  InputLabel,
+  Box,
+  IconButton,
+  Stack,
+  Typography,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Divider,
+  Alert,
 } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
-import axios from "axios";
-import { useAuth } from "../../../context/AuthContext";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
-  applicationStatuses,
   assessmentTypes,
-} from "../../utils/enums/applicant.enums";
+  applicationStatuses,
+} from "../../utils/enums/applicant.enums.js";
+import dayjs from "dayjs";
 
 const ApplicantEditModal = ({ open, onClose, uli, onSubmit, error }) => {
   const { user: loggedInUser } = useAuth();
-  const [activeTab, setActiveTab] = useState(0);
-  const [applicantData, setApplicantData] = useState({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [editedData, setEditedData] = useState({
     uli: "",
     trainingCenterName: "",
     addressLocation: "",
@@ -38,14 +48,14 @@ const ApplicantEditModal = ({ open, onClose, uli, onSubmit, error }) => {
     competencyAssessment: [],
   });
 
-  // Improved fetch applicant data
+  // Fetch applicant data
   const fetchApplicantData = useCallback(async () => {
     if (open && uli) {
       try {
         const response = await axios.get(`/api/applicants/${uli}`);
         const data = response.data.data;
-
-        setApplicantData({
+        console.log("Applicant data uli:", data.uli);
+        setEditedData({
           uli: data.uli || "",
           trainingCenterName: data.trainingCenterName || "",
           addressLocation: data.addressLocation || "",
@@ -58,6 +68,7 @@ const ApplicantEditModal = ({ open, onClose, uli, onSubmit, error }) => {
         });
       } catch (err) {
         console.error("Error fetching applicant data:", err);
+        setFormError("Error loading applicant data");
       }
     }
   }, [open, uli, loggedInUser]);
@@ -66,160 +77,152 @@ const ApplicantEditModal = ({ open, onClose, uli, onSubmit, error }) => {
     fetchApplicantData();
   }, [fetchApplicantData]);
 
-  // Simplified direct field update
-  const handleBasicChange = (e) => {
-    const { name, value } = e.target;
-    setApplicantData((prev) => ({
+  // Generic handlers for array fields
+  const handleAddItem = (field, defaultItem) => {
+    setEditedData((prev) => ({
       ...prev,
-      [name]: value,
+      [field]: [...prev[field], defaultItem],
     }));
   };
 
-  // Generic method for updating array items
-  const updateArrayItem = (fieldName, index, updates) => {
-    setApplicantData((prev) => {
-      const newArray = [...prev[fieldName]];
-      newArray[index] = { ...newArray[index], ...updates };
-      return { ...prev, [fieldName]: newArray };
-    });
-  };
-
-  // Generic method for handling nested field changes
-  const handleNestedChange = (e) => {
-    const { name, value } = e.target;
-    const [field, indexStr, nestedField] = name.split(".");
-    const index = parseInt(indexStr, 10);
-
-    setApplicantData((prev) => {
-      const newArray = [...prev[field]];
-      newArray[index] = {
-        ...newArray[index],
-        [nestedField]: value,
-      };
-      return { ...prev, [field]: newArray };
-    });
-  };
-
-  // Add item to any array
-  const addArrayItem = (fieldName, newItem) => {
-    setApplicantData((prev) => ({
+  const handleDeleteItem = (field, index) => {
+    setEditedData((prev) => ({
       ...prev,
-      [fieldName]: [...prev[fieldName], newItem],
+      [field]: prev[field].filter((_, i) => i !== index),
     }));
   };
 
-  // Remove item from any array
-  const removeArrayItem = (fieldName, index) => {
-    setApplicantData((prev) => ({
+  const handleItemChange = (field, index, subfield, value) => {
+    setEditedData((prev) => ({
       ...prev,
-      [fieldName]: prev[fieldName].filter((_, i) => i !== index),
+      [field]: prev[field].map((item, i) =>
+        i === index ? { ...item, [subfield]: value } : item
+      ),
     }));
   };
 
-  // Comprehensive submit handler with validation
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  // Basic field handlers
+  const handleBasicFieldChange = (field, value) => {
+    setEditedData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
-    // Basic validation
-    const requiredFields = ["uli", "trainingCenterName", "addressLocation"];
-    const missingFields = requiredFields.filter(
-      (field) => !applicantData[field]
-    );
-
-    if (missingFields.length > 0) {
-      console.error("Missing required fields:", missingFields);
-      return;
-    }
-
-    console.log("Submitting applicant data:", applicantData);
+  // Submit handler
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setFormError("");
 
     try {
-      // Final validation and cleanup before submission
-      const sanitizedData = { ...applicantData };
+      // Validate required fields
+      if (!editedData.trainingCenterName || !editedData.addressLocation) {
+        throw new Error(
+          "Training center name and address location are required"
+        );
+      }
 
-      // Remove empty arrays or null values if needed
-      Object.keys(sanitizedData).forEach((key) => {
-        if (
-          Array.isArray(sanitizedData[key]) &&
-          sanitizedData[key].length === 0
-        ) {
-          delete sanitizedData[key];
-        }
+      // Validate assessments
+      if (!editedData.assessments?.length) {
+        throw new Error("At least one assessment is required");
+      }
+      console.log("Submitting edited data:", editedData);
+      // Send update request
+      const response = await axios.put(`/api/applicants/${uli}`, {
+        ...editedData,
+        updatedBy: loggedInUser?.uli,
       });
 
-      onSubmit(sanitizedData);
-    } catch (submitError) {
-      console.error("Submission failed:", submitError);
-      // Potentially set an error state to show to the user
+      if (response.data.success) {
+        onSubmit?.(response.data.data);
+        onClose();
+      } else {
+        throw new Error(response.data.message);
+      }
+    } catch (err) {
+      console.error("Error updating applicant:", err);
+      setFormError(err.message || "Error updating applicant");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Render method for Assessments
   const renderAssessments = () => (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
+    <Accordion defaultExpanded>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Typography variant="h6">Assessments</Typography>
-      </Grid>
-      {applicantData.assessments.map((assessment, index) => (
-        <Grid container item xs={12} spacing={2} key={index}>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Assessment Title"
-              name={`assessments.${index}.assessmentTitle`}
-              value={assessment.assessmentTitle || ""}
-              onChange={handleNestedChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <FormControl fullWidth>
-              <InputLabel>Assessment Type</InputLabel>
-              <Select
-                name={`assessments.${index}.assessmentType`}
-                value={assessment.assessmentType || ""}
-                label="Assessment Type"
-                onChange={handleNestedChange}
+      </AccordionSummary>
+      <AccordionDetails>
+        {editedData.assessments.map((assessment, index) => (
+          <Stack key={index} spacing={2} sx={{ mb: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <TextField
+                label="Assessment Title"
+                value={assessment.assessmentTitle}
+                onChange={(e) =>
+                  handleItemChange(
+                    "assessments",
+                    index,
+                    "assessmentTitle",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <FormControl fullWidth>
+                <InputLabel>Assessment Type</InputLabel>
+                <Select
+                  value={assessment.assessmentType}
+                  onChange={(e) =>
+                    handleItemChange(
+                      "assessments",
+                      index,
+                      "assessmentType",
+                      e.target.value
+                    )
+                  }
+                  label="Assessment Type"
+                >
+                  {assessmentTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={assessment.applicationStatus}
+                  onChange={(e) =>
+                    handleItemChange(
+                      "assessments",
+                      index,
+                      "applicationStatus",
+                      e.target.value
+                    )
+                  }
+                  label="Status"
+                >
+                  {applicationStatuses.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <IconButton
+                onClick={() => handleDeleteItem("assessments", index)}
               >
-                {assessmentTypes.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <FormControl fullWidth>
-              <InputLabel>Application Status</InputLabel>
-              <Select
-                name={`assessments.${index}.applicationStatus`}
-                value={assessment.applicationStatus || "For Approval"}
-                label="Application Status"
-                onChange={handleNestedChange}
-              >
-                {applicationStatuses.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {status}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <IconButton
-              color="error"
-              onClick={() => removeArrayItem("assessments", index)}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Grid>
-        </Grid>
-      ))}
-      <Grid item xs={12}>
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+          </Stack>
+        ))}
         <Button
           startIcon={<AddIcon />}
           onClick={() =>
-            addArrayItem("assessments", {
+            handleAddItem("assessments", {
               assessmentTitle: "",
               assessmentType: "",
               applicationStatus: "For Approval",
@@ -228,336 +231,560 @@ const ApplicantEditModal = ({ open, onClose, uli, onSubmit, error }) => {
         >
           Add Assessment
         </Button>
-      </Grid>
-    </Grid>
+      </AccordionDetails>
+    </Accordion>
   );
 
-  // Render method for Work Experience
   const renderWorkExperience = () => (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
+    <Accordion>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Typography variant="h6">Work Experience</Typography>
-      </Grid>
-      {applicantData.workExperience.map((experience, index) => (
-        <Grid container item xs={12} spacing={2} key={index}>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Company Name"
-              name={`workExperience.${index}.companyName`}
-              value={experience.companyName || ""}
-              onChange={handleNestedChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Position"
-              name={`workExperience.${index}.position`}
-              value={experience.position || ""}
-              onChange={handleNestedChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Duration"
-              name={`workExperience.${index}.duration`}
-              value={experience.duration || ""}
-              onChange={handleNestedChange}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <IconButton
-              color="error"
-              onClick={() => removeArrayItem("workExperience", index)}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Grid>
-        </Grid>
-      ))}
-      <Grid item xs={12}>
+      </AccordionSummary>
+      <AccordionDetails>
+        {editedData.workExperience.map((exp, index) => (
+          <Stack key={index} spacing={2} sx={{ mb: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+              <TextField
+                label="Company Name"
+                value={exp.companyName}
+                onChange={(e) =>
+                  handleItemChange(
+                    "workExperience",
+                    index,
+                    "companyName",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <TextField
+                label="Position"
+                value={exp.position}
+                onChange={(e) =>
+                  handleItemChange(
+                    "workExperience",
+                    index,
+                    "position",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <TextField
+                label="Monthly Salary"
+                type="number"
+                value={exp.monthlySalary}
+                onChange={(e) =>
+                  handleItemChange(
+                    "workExperience",
+                    index,
+                    "monthlySalary",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <IconButton
+                onClick={() => handleDeleteItem("workExperience", index)}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <DatePicker
+                label="From Date"
+                value={
+                  exp.inclusiveDates?.from
+                    ? dayjs(exp.inclusiveDates?.from)
+                    : null
+                }
+                onChange={(date) =>
+                  handleItemChange("workExperience", index, "inclusiveDates", {
+                    ...exp.inclusiveDates,
+                    from: date ? date.toISOString() : null,
+                  })
+                }
+              />
+              <DatePicker
+                label="To Date"
+                value={
+                  exp.inclusiveDates?.to ? dayjs(exp.inclusiveDates?.to) : null
+                }
+                onChange={(date) =>
+                  handleItemChange("workExperience", index, "inclusiveDates", {
+                    ...exp.inclusiveDates,
+                    to: date ? date.toISOString() : null,
+                  })
+                }
+              />
+
+              <TextField
+                label="Appointment Status"
+                value={exp.appointmentStatus}
+                onChange={(e) =>
+                  handleItemChange(
+                    "workExperience",
+                    index,
+                    "appointmentStatus",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <TextField
+                label="Years in Work"
+                type="number"
+                value={exp.noOfYearsInWork}
+                onChange={(e) =>
+                  handleItemChange(
+                    "workExperience",
+                    index,
+                    "noOfYearsInWork",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+            </Box>
+          </Stack>
+        ))}
         <Button
           startIcon={<AddIcon />}
           onClick={() =>
-            addArrayItem("workExperience", {
+            handleAddItem("workExperience", {
               companyName: "",
               position: "",
-              duration: "",
+              inclusiveDates: { from: null, to: null },
+              monthlySalary: "",
+              appointmentStatus: "",
+              noOfYearsInWork: "",
             })
           }
         >
           Add Work Experience
         </Button>
-      </Grid>
-    </Grid>
+      </AccordionDetails>
+    </Accordion>
   );
 
-  // Render method for Training Seminars
   const renderTrainingSeminars = () => (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Typography variant="h6">Training Seminars</Typography>
-      </Grid>
-      {applicantData.trainingSeminarAttended.map((seminar, index) => (
-        <Grid container item xs={12} spacing={2} key={index}>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Seminar Name"
-              name={`trainingSeminarAttended.${index}.seminarName`}
-              value={seminar.seminarName || ""}
-              onChange={handleNestedChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Date Attended"
-              name={`trainingSeminarAttended.${index}.dateAttended`}
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              value={seminar.dateAttended || ""}
-              onChange={handleNestedChange}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <IconButton
-              color="error"
-              onClick={() => removeArrayItem("trainingSeminarAttended", index)}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Grid>
-        </Grid>
-      ))}
-      <Grid item xs={12}>
+    <Accordion>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Typography variant="h6">Training & Seminars</Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        {editedData.trainingSeminarAttended.map((training, index) => (
+          <Stack key={index} spacing={2} sx={{ mb: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <TextField
+                label="Title"
+                value={training.title}
+                onChange={(e) =>
+                  handleItemChange(
+                    "trainingSeminarAttended",
+                    index,
+                    "title",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <TextField
+                label="Venue"
+                value={training.venue}
+                onChange={(e) =>
+                  handleItemChange(
+                    "trainingSeminarAttended",
+                    index,
+                    "venue",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <TextField
+                label="Hours"
+                type="number"
+                value={training.numberOfHours}
+                onChange={(e) =>
+                  handleItemChange(
+                    "trainingSeminarAttended",
+                    index,
+                    "numberOfHours",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <IconButton
+                onClick={() =>
+                  handleDeleteItem("trainingSeminarAttended", index)
+                }
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <DatePicker
+                label="From Date"
+                value={
+                  training.inclusiveDates?.from
+                    ? dayjs(training.inclusiveDates?.from)
+                    : null
+                }
+                onChange={(date) =>
+                  handleItemChange(
+                    "trainingSeminarAttended",
+                    index,
+                    "inclusiveDates",
+                    {
+                      ...training.inclusiveDates,
+                      from: date ? date.toISOString() : null,
+                    }
+                  )
+                }
+              />
+              <DatePicker
+                label="To Date"
+                value={
+                  training.inclusiveDates?.to
+                    ? dayjs(training.inclusiveDates?.to)
+                    : null
+                }
+                onChange={(date) =>
+                  handleItemChange(
+                    "trainingSeminarAttended",
+                    index,
+                    "inclusiveDates",
+                    {
+                      ...training.inclusiveDates,
+                      to: date ? date.toISOString() : null,
+                    }
+                  )
+                }
+              />
+              <TextField
+                label="Conducted By"
+                value={training.conductedBy}
+                onChange={(e) =>
+                  handleItemChange(
+                    "trainingSeminarAttended",
+                    index,
+                    "conductedBy",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+            </Box>
+          </Stack>
+        ))}
         <Button
           startIcon={<AddIcon />}
           onClick={() =>
-            addArrayItem("trainingSeminarAttended", {
-              seminarName: "",
-              dateAttended: "",
+            handleAddItem("trainingSeminarAttended", {
+              title: "",
+              venue: "",
+              inclusiveDates: { from: null, to: null },
+              numberOfHours: "",
+              conductedBy: "",
             })
           }
         >
-          Add Training Seminar
+          Add Training/Seminar
         </Button>
-      </Grid>
-    </Grid>
+      </AccordionDetails>
+    </Accordion>
   );
 
-  // Render method for Licensure Examinations
   const renderLicensureExams = () => (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
+    <Accordion>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Typography variant="h6">Licensure Examinations</Typography>
-      </Grid>
-      {applicantData.licensureExaminationPassed.map((exam, index) => (
-        <Grid container item xs={12} spacing={2} key={index}>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Exam Name"
-              name={`licensureExaminationPassed.${index}.examName`}
-              value={exam.examName || ""}
-              onChange={handleNestedChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="License Number"
-              name={`licensureExaminationPassed.${index}.licenseNumber`}
-              value={exam.licenseNumber || ""}
-              onChange={handleNestedChange}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <IconButton
-              color="error"
-              onClick={() =>
-                removeArrayItem("licensureExaminationPassed", index)
-              }
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Grid>
-        </Grid>
-      ))}
-      <Grid item xs={12}>
+      </AccordionSummary>
+      <AccordionDetails>
+        {editedData.licensureExaminationPassed.map((exam, index) => (
+          <Stack key={index} spacing={2} sx={{ mb: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <TextField
+                label="Title"
+                value={exam.title}
+                onChange={(e) =>
+                  handleItemChange(
+                    "licensureExaminationPassed",
+                    index,
+                    "title",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <TextField
+                label="Venue"
+                value={exam.examinationVenue}
+                onChange={(e) =>
+                  handleItemChange(
+                    "licensureExaminationPassed",
+                    index,
+                    "examinationVenue",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <TextField
+                label="Rating"
+                type="number"
+                value={exam.rating}
+                onChange={(e) =>
+                  handleItemChange(
+                    "licensureExaminationPassed",
+                    index,
+                    "rating",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <IconButton
+                onClick={() =>
+                  handleDeleteItem("licensureExaminationPassed", index)
+                }
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <DatePicker
+                label="Date of Examination"
+                value={
+                  exam.dateOfExamination ? dayjs(exam.dateOfExamination) : null
+                }
+                onChange={(date) =>
+                  handleItemChange(
+                    "licensureExaminationPassed",
+                    index,
+                    "dateOfExamination",
+                    date ? date.toISOString() : null
+                  )
+                }
+              />
+              <DatePicker
+                label="Expiry Date"
+                value={exam.expiryDate ? dayjs(exam.expiryDate) : null}
+                onChange={(date) =>
+                  handleItemChange(
+                    "licensureExaminationPassed",
+                    index,
+                    "expiryDate",
+                    date ? date.toISOString() : null
+                  )
+                }
+              />
+              <TextField
+                label="Remarks"
+                value={exam.remarks}
+                onChange={(e) =>
+                  handleItemChange(
+                    "licensureExaminationPassed",
+                    index,
+                    "remarks",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+            </Box>
+          </Stack>
+        ))}
         <Button
           startIcon={<AddIcon />}
           onClick={() =>
-            addArrayItem("licensureExaminationPassed", {
-              examName: "",
-              licenseNumber: "",
+            handleAddItem("licensureExaminationPassed", {
+              title: "",
+              dateOfExamination: null,
+              examinationVenue: "",
+              rating: "",
+              remarks: "",
+              expiryDate: null,
             })
           }
         >
-          Add Licensure Exam
+          Add Licensure Examination
         </Button>
-      </Grid>
-    </Grid>
+      </AccordionDetails>
+    </Accordion>
   );
 
-  // Render method for Competency Assessment
   const renderCompetencyAssessment = () => (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
+    <Accordion>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Typography variant="h6">Competency Assessment</Typography>
-      </Grid>
-      {applicantData.competencyAssessment.map((assessment, index) => (
-        <Grid container item xs={12} spacing={2} key={index}>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Competency Name"
-              name={`competencyAssessment.${index}.competencyName`}
-              value={assessment.competencyName || ""}
-              onChange={handleNestedChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Assessment Date"
-              name={`competencyAssessment.${index}.assessmentDate`}
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              value={assessment.assessmentDate || ""}
-              onChange={handleNestedChange}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <IconButton
-              color="error"
-              onClick={() => removeArrayItem("competencyAssessment", index)}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Grid>
-        </Grid>
-      ))}
-      <Grid item xs={12}>
+      </AccordionSummary>
+      <AccordionDetails>
+        {editedData.competencyAssessment.map((assessment, index) => (
+          <Stack key={index} spacing={2} sx={{ mb: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <TextField
+                label="Title"
+                value={assessment.title}
+                onChange={(e) =>
+                  handleItemChange(
+                    "competencyAssessment",
+                    index,
+                    "title",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <TextField
+                label="Qualification Level"
+                value={assessment.qualificationLevel}
+                onChange={(e) =>
+                  handleItemChange(
+                    "competencyAssessment",
+                    index,
+                    "qualificationLevel",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <TextField
+                label="Industry Sector"
+                value={assessment.industrySector}
+                onChange={(e) =>
+                  handleItemChange(
+                    "competencyAssessment",
+                    index,
+                    "industrySector",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <IconButton
+                onClick={() => handleDeleteItem("competencyAssessment", index)}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <TextField
+                label="Certificate Number"
+                value={assessment.certificateNumber}
+                onChange={(e) =>
+                  handleItemChange(
+                    "competencyAssessment",
+                    index,
+                    "certificateNumber",
+                    e.target.value
+                  )
+                }
+                fullWidth
+              />
+              <DatePicker
+                label="Date Issued"
+                value={
+                  assessment.dateIssued ? dayjs(assessment.dateIssued) : null
+                }
+                onChange={(date) =>
+                  handleItemChange(
+                    "competencyAssessment",
+                    index,
+                    "dateIssued",
+                    date ? date.toISOString() : null
+                  )
+                }
+              />
+              <DatePicker
+                label="Expiration Date"
+                value={
+                  assessment.expirationDate
+                    ? dayjs(assessment.expirationDate)
+                    : null
+                }
+                onChange={(date) =>
+                  handleItemChange(
+                    "competencyAssessment",
+                    index,
+                    "expirationDate",
+                    date ? date.toISOString() : null
+                  )
+                }
+              />
+            </Box>
+          </Stack>
+        ))}
         <Button
           startIcon={<AddIcon />}
           onClick={() =>
-            addArrayItem("competencyAssessment", {
-              competencyName: "",
-              assessmentDate: "",
+            handleAddItem("competencyAssessment", {
+              title: "",
+              qualificationLevel: "",
+              industrySector: "",
+              certificateNumber: "",
+              dateIssued: null,
+              expirationDate: null,
             })
           }
         >
           Add Competency Assessment
         </Button>
-      </Grid>
-    </Grid>
+      </AccordionDetails>
+    </Accordion>
   );
 
-  const style = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "95%",
-    maxWidth: 1200,
-    maxHeight: "95vh",
-    overflowY: "auto",
-    bgcolor: "background.paper",
-    boxShadow: 24,
-    p: 4,
-  };
-
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      aria-labelledby="applicant-edit-modal-title"
-    >
-      <Box sx={style} component="form" onSubmit={handleSubmit}>
-        <Typography
-          id="applicant-edit-modal-title"
-          variant="h6"
-          component="h2"
-          sx={{ mb: 3 }}
-        >
-          Edit Applicant: {uli}
-        </Typography>
-
-        {error && (
-          <Typography color="error" sx={{ mb: 2 }}>
-            {error}
-          </Typography>
-        )}
-
-        <Paper sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs
-            value={activeTab}
-            onChange={(e, newValue) => setActiveTab(newValue)}
-            aria-label="applicant edit tabs"
-            variant="scrollable"
-            scrollButtons="auto"
-          >
-            <Tab label="Basic Info" />
-            <Tab label="Assessments" />
-            <Tab label="Work Experience" />
-            <Tab label="Training Seminars" />
-            <Tab label="Licensure Exams" />
-            <Tab label="Competency Assessment" />
-          </Tabs>
-        </Paper>
-
-        <Box sx={{ p: 3 }}>
-          {activeTab === 0 && (
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
-                  label="ULI"
-                  name="uli"
-                  value={applicantData.uli}
-                  onChange={handleBasicChange}
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
-                  label="Training Center Name"
-                  name="trainingCenterName"
-                  value={applicantData.trainingCenterName}
-                  onChange={handleBasicChange}
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
-                  label="Address Location"
-                  name="addressLocation"
-                  value={applicantData.addressLocation}
-                  onChange={handleBasicChange}
-                  required
-                />
-              </Grid>
-            </Grid>
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+      <DialogTitle>Edit Applicant Details</DialogTitle>
+      <DialogContent>
+        <Stack spacing={3} sx={{ mt: 2 }}>
+          {(formError || error) && (
+            <Alert severity="error">{formError || error}</Alert>
           )}
-          {activeTab === 1 && renderAssessments()}
-          {activeTab === 2 && renderWorkExperience()}
-          {activeTab === 3 && renderTrainingSeminars()}
-          {activeTab === 4 && renderLicensureExams()}
-          {activeTab === 5 && renderCompetencyAssessment()}
-        </Box>
 
-        <Grid item xs={12} sx={{ mt: 2 }}>
-          <Button type="submit" variant="contained" color="primary" fullWidth>
-            Update Applicant
-          </Button>
-        </Grid>
-      </Box>
-    </Modal>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <TextField
+              label="Training Center Name"
+              value={editedData.trainingCenterName}
+              onChange={(e) =>
+                handleBasicFieldChange("trainingCenterName", e.target.value)
+              }
+              fullWidth
+              required
+            />
+            <TextField
+              label="Address Location"
+              value={editedData.addressLocation}
+              onChange={(e) =>
+                handleBasicFieldChange("addressLocation", e.target.value)
+              }
+              fullWidth
+              required
+            />
+          </Box>
+
+          <Divider />
+          {renderAssessments()}
+          {renderWorkExperience()}
+          {renderTrainingSeminars()}
+          {renderLicensureExams()}
+          {renderCompetencyAssessment()}
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          disabled={isSubmitting}
+        >
+          Save Changes
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

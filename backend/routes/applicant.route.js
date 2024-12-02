@@ -2,7 +2,7 @@ import express from "express";
 import {
   createApplicant,
   getApplicants,
-  getApplicantById,
+  getApplicantByULI,
   updateApplicant,
   deleteApplicant,
   addWorkExperience,
@@ -20,8 +20,8 @@ const router = express.Router();
 // Base routes
 router.post("/", createApplicant);
 router.get("/", getApplicants);
-router.get("/:id", getApplicantById);
-router.put("/:id", updateApplicant);
+router.get("/:uli", getApplicantByULI);
+router.put("/:uli", updateApplicant);
 router.delete("/:id", deleteApplicant);
 router.get("/uli/:uli", getApplicantByUli);
 router.delete("/:applicantId/assessments/:assessmentId", deleteAssessment);

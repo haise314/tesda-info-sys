@@ -102,6 +102,7 @@ export const flattenApplicantData = (applicant) => {
     // Created and updated timestamps
     createdAt: applicant.createdAt?.$date || applicant.createdAt,
     updatedAt: applicant.updatedAt?.$date || applicant.updatedAt,
+    updatedBy: applicant.updatedBy,
   };
 };
 

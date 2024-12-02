@@ -155,103 +155,127 @@ export const createApplicant = async (req, res) => {
 
 // @desc    Update an applicant
 export const updateApplicant = async (req, res) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid Applicant ID" });
-  }
-
   try {
-    console.log("Updating applicant with id:", id);
-    console.log("Update data received:", req.body);
+    const { uli } = req.params;
+    const updateData = req.body;
 
-    // Validate specific fields
-    const {
-      assessments,
-      workExperience,
-      trainingSeminarAttended,
-      licensureExaminationPassed,
-      competencyAssessment,
-    } = req.body;
+    // Debug logging
+    console.log("Received update data:", {
+      trainingCenterName: updateData.trainingCenterName,
+      addressLocation: updateData.addressLocation,
+    });
 
-    // Validate assessments
-    if (assessments) {
-      const invalidAssessment = assessments.find(
-        (assessment) =>
-          !assessmentTypes.includes(assessment.assessmentType) ||
-          !applicationStatuses.includes(assessment.applicationStatus)
-      );
-      if (invalidAssessment) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid assessment type or status",
-        });
-      }
+    // Check if the values are empty strings or undefined
+    if (
+      !updateData.trainingCenterName?.trim() ||
+      !updateData.addressLocation?.trim()
+    ) {
+      console.log("Validation failed:", {
+        trainingCenterName: updateData.trainingCenterName,
+        addressLocation: updateData.addressLocation,
+      });
+      return res.status(400).json({
+        success: false,
+        message: "Training center name and address location are required",
+      });
     }
 
-    const existingApplicant = await Applicant.findById(id);
-    if (!existingApplicant) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Applicant not found" });
+    // Find and update the applicant
+    const applicant = await Applicant.findOne({ uli });
+
+    if (!applicant) {
+      return res.status(404).json({
+        success: false,
+        message: "Applicant not found",
+      });
     }
 
-    // Update fields
-    existingApplicant.uli = req.body.uli || existingApplicant.uli;
-    existingApplicant.trainingCenterName =
-      req.body.trainingCenterName || existingApplicant.trainingCenterName;
-    existingApplicant.addressLocation =
-      req.body.addressLocation || existingApplicant.addressLocation;
+    // Update the applicant with the validated data
+    const updatedApplicant = await Applicant.findOneAndUpdate(
+      { uli },
+      {
+        $set: {
+          trainingCenterName: updateData.trainingCenterName,
+          addressLocation: updateData.addressLocation,
+          assessments: updateData.assessments,
+          workExperience: updateData.workExperience || [],
+          trainingSeminarAttended: updateData.trainingSeminarAttended || [],
+          licensureExaminationPassed:
+            updateData.licensureExaminationPassed || [],
+          competencyAssessment: updateData.competencyAssessment || [],
+          updatedBy: updateData.updatedBy,
+        },
+      },
+      { new: true, runValidators: true }
+    );
 
-    // Replace entire arrays for complex nested documents
-    if (assessments) existingApplicant.assessments = assessments;
-    if (workExperience) existingApplicant.workExperience = workExperience;
-    if (trainingSeminarAttended)
-      existingApplicant.trainingSeminarAttended = trainingSeminarAttended;
-    if (licensureExaminationPassed)
-      existingApplicant.licensureExaminationPassed = licensureExaminationPassed;
-    if (competencyAssessment)
-      existingApplicant.competencyAssessment = competencyAssessment;
-
-    existingApplicant.updatedBy = req.user?.id || "unknown";
-
-    const updatedApplicant = await existingApplicant.save();
-    console.log("Updated applicant in database:", updatedApplicant);
-
-    res.status(200).json({ success: true, data: updatedApplicant });
+    return res.status(200).json({
+      success: true,
+      message: "Applicant updated successfully",
+      data: updatedApplicant,
+    });
   } catch (error) {
-    console.error("Update error:", error);
-    if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(400).json({ success: false, message: error.message });
-    }
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Error updating applicant:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Error updating applicant",
+      debug: {
+        // Add debug information
+        receivedData: {
+          trainingCenterName: req.body.trainingCenterName,
+          addressLocation: req.body.addressLocation,
+        },
+      },
+    });
   }
 };
+
 // Get all applicants
 export const getApplicants = async (req, res) => {
   try {
     const applicants = await Applicant.find();
+
+    // Log details to verify
+    applicants.forEach((applicant) => {
+      console.log({
+        id: applicant._id,
+        updatedBy: applicant.updatedBy,
+        hasUpdatedBy: !!applicant.updatedBy,
+      });
+    });
+
     res.status(200).json({
       success: true,
       message: "Applicants retrieved successfully",
-      data: applicants,
+      data: applicants.map((applicant) => ({
+        ...applicant.toObject(), // Convert to plain object
+        hasUpdatedBy: !!applicant.updatedBy, // Add a flag to check
+      })),
     });
   } catch (error) {
-    res.status(500).json({ success: true, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
 // Get a single applicant by ID
-export const getApplicantById = async (req, res) => {
+export const getApplicantByULI = async (req, res) => {
   try {
-    const applicant = await Applicant.findById(req.params.id);
-    if (!applicant)
+    const { uli } = req.params;
+
+    // Find the applicant by the `uli` field
+    const applicant = await Applicant.findOne({ uli });
+    if (!applicant) {
       return res
         .status(404)
         .json({ success: false, message: "Applicant not found" });
+    }
+
     res.status(200).json({ success: true, data: applicant });
   } catch (error) {
+    console.error("Error fetching applicant by ULI:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

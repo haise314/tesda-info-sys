@@ -69,6 +69,7 @@ const ApplicantTable = () => {
 
   useEffect(() => {
     if (applicants) {
+      console.log("Applicants data:", applicants);
       setRows(applicants);
     }
   }, [applicants]);
@@ -92,77 +93,21 @@ const ApplicantTable = () => {
     setSelectedApplicant(null);
   };
 
-  const handleAssessmentSave = async (updatedAssessments) => {
-    if (selectedApplicant) {
-      try {
-        await updateApplicantMutation.mutateAsync({
-          id: selectedApplicant._id,
-          field: "assessments",
-          value: updatedAssessments,
-        });
-        queryClient.invalidateQueries(["applicants"]);
-      } catch (error) {
-        console.error("Failed to update assessments:", error);
-      }
-    }
-    handleAssessmentDialogClose();
-  };
-
-  const updateApplicantMutation = useMutation({
-    mutationFn: async (params) => {
-      const { id, field, value } = params;
-      const currentRow = apiRef.current?.getRow(id);
-      if (!currentRow) {
-        throw new Error("Could not find row data");
-      }
-
-      // Create a new object with the updated field
-      const updatedRow = {
-        ...currentRow,
-        [field]: value,
-      };
-
-      // Remove unnecessary fields that might cause validation issues
-      const cleanedData = {
-        uli: updatedRow.uli,
-        trainingCenterName: updatedRow.trainingCenterName,
-        addressLocation: updatedRow.addressLocation,
-        assessments: updatedRow.assessments || [],
-        workExperience: updatedRow.workExperience || [],
-        trainingSeminarAttended: updatedRow.trainingSeminarAttended || [],
-        licensureExaminationPassed: updatedRow.licensureExaminationPassed || [],
-        competencyAssessment: updatedRow.competencyAssessment || [],
-      };
-
-      console.log("Update data:", cleanedData);
-      const response = await axios.put(`/api/applicants/${id}`, cleanedData);
-      console.log("Update response:", response.data);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["applicants"]);
-    },
-    onError: (error) => {
-      console.error("Update error:", error);
-      alert("Failed to update applicant. Please try again.");
-    },
-  });
-
-  const createApplicantMutation = useMutation({
-    mutationFn: async (applicantData) => {
-      const unflattenedData = unflattenApplicantData(applicantData);
-      const response = await axios.post("/api/applicants", unflattenedData);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["applicants"]);
-      setIsEditModalOpen(false);
-    },
-    onError: (error) => {
-      console.error("Create error:", error);
-      alert("Failed to create applicant. Please try again.");
-    },
-  });
+  // const handleAssessmentSave = async (updatedAssessments) => {
+  //   if (selectedApplicant) {
+  //     try {
+  //       await updateApplicantMutation.mutateAsync({
+  //         id: selectedApplicant._id,
+  //         field: "assessments",
+  //         value: updatedAssessments,
+  //       });
+  //       queryClient.invalidateQueries(["applicants"]);
+  //     } catch (error) {
+  //       console.error("Failed to update assessments:", error);
+  //     }
+  //   }
+  //   handleAssessmentDialogClose();
+  // };
 
   const deleteApplicantMutation = useMutation({
     mutationFn: (id) => axios.delete(`/api/applicants/${id}`),
@@ -188,19 +133,13 @@ const ApplicantTable = () => {
       getActions: ({ id, row }) => [
         <GridActionsCellItem
           icon={<EditIcon />}
-          label="Add Assessment"
-          onClick={() => handleAssessmentEdit({ id })}
+          label="Edit"
+          onClick={() => {
+            setSelectedApplicant(row);
+            setIsEditModalOpen(true);
+          }}
           color="inherit"
         />,
-        // <GridActionsCellItem
-        //   icon={<EditIcon />}
-        //   label="Edit"
-        //   onClick={() => {
-        //     setSelectedApplicant(row);
-        //     setIsEditModalOpen(true);
-        //   }}
-        //   color="inherit"
-        // />,
         <GridActionsCellItem
           icon={<DeleteIcon />}
           label="Delete"
@@ -386,22 +325,26 @@ const ApplicantTable = () => {
       />
 
       {/* Assessment Edit Dialog */}
-      {selectedApplicant && (
+      {/* {selectedApplicant && (
         <AssessmentEditDialog
           open={isAssessmentDialogOpen}
           onClose={handleAssessmentDialogClose}
           assessments={selectedApplicant.assessments}
           onSave={handleAssessmentSave}
         />
-      )}
+      )} */}
+
       {selectedApplicant && (
-        <ApplicantEditModal
-          open={isEditModalOpen}
-          onClose={handleEditModalClose}
-          uli={selectedApplicant?._id}
-          initialData={selectedApplicant}
-          onSubmit={handleEditModalSubmit}
-        />
+        <>
+          {console.log("Selected Applicant:", selectedApplicant.uli)}
+          <ApplicantEditModal
+            open={isEditModalOpen}
+            onClose={handleEditModalClose}
+            uli={selectedApplicant?.uli}
+            initialData={selectedApplicant}
+            onSubmit={handleEditModalSubmit}
+          />
+        </>
       )}
     </TableContainer>
   );
