@@ -64,4 +64,10 @@ export const registrantColumns = [
     editable: false,
     renderCell: (params) => formatDate(params.value),
   },
+  {
+    field: "updatedBy",
+    headerName: "Updated By",
+    width: 180,
+    editable: false,
+  },
 ];

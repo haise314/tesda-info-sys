@@ -64,6 +64,10 @@ const registrantSchema = new mongoose.Schema(
         message: "At least one course is required",
       },
     },
+    updatedBy: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,
