@@ -283,19 +283,32 @@ export const getApplicantByULI = async (req, res) => {
 export const deleteApplicant = async (req, res) => {
   try {
     const { id } = req.params;
+    const { deletedBy } = req.body; // Extract deletedBy from request body
+
+    // Validate that deletedBy is provided
+    if (!deletedBy) {
+      return res.status(400).json({
+        success: false,
+        message: "deletedBy is required",
+      });
+    }
+
     const applicant = await Applicant.findById(id);
     if (!applicant) {
       return res
         .status(404)
         .json({ success: false, message: "Applicant not found" });
     }
-    // Create deleted record
+
+    // Create deleted record with dynamically provided deletedBy
     const deletedApplicant = new DeletedApplicant({
       ...applicant.toObject(),
+      deletedBy, // Use the dynamically passed ULI
       deletedAt: new Date(),
     });
     await deletedApplicant.save();
     await Applicant.findByIdAndDelete(id);
+
     res
       .status(200)
       .json({ success: true, message: "Applicant soft-deleted successfully" });
@@ -308,7 +321,6 @@ export const deleteApplicant = async (req, res) => {
     });
   }
 };
-
 // Add a new work experience to an applicant
 export const addWorkExperience = async (req, res) => {
   try {

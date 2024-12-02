@@ -332,51 +332,45 @@ export const updateRegistrant = async (req, res) => {
   }
 };
 
+// In your delete route handler (probably in a controller)
 export const deleteRegistrant = async (req, res) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res
-      .status(404)
-      .json({ success: false, message: "Invalid Registrant ID" });
-  }
   try {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-      // Find the registrant
-      const registrant = await Registrant.findById(id).session(session);
-      if (!registrant) {
-        await session.abortTransaction();
-        session.endSession();
-        return res
-          .status(404)
-          .json({ success: false, message: "Registrant not found" });
-      }
-      // Create a new DeletedRegistrant document
-      const deletedRegistrant = new DeletedRegistrant({
-        ...registrant.toObject(),
-        deletedAt: new Date(),
-      });
-      await deletedRegistrant.save({ session });
-      // Remove the registrant from the main collection
-      await Registrant.findByIdAndDelete(id).session(session);
-      await session.commitTransaction();
-      session.endSession();
-      res.status(200).json({
-        success: true,
-        message: "Registrant soft deleted successfully",
-        data: deletedRegistrant,
-      });
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      throw error;
+    const registrantId = req.params.id;
+    // Get deletedBy from request headers instead of middleware
+    const deletedBy = req.headers["x-deleted-by"];
+
+    if (!deletedBy) {
+      return res
+        .status(400)
+        .json({ message: "Deleted by information is required" });
     }
+
+    // Find the registrant
+    const registrant = await Registrant.findById(registrantId);
+
+    if (!registrant) {
+      return res.status(404).json({ message: "Registrant not found" });
+    }
+
+    // Create a new DeletedRegistrant document
+    const deletedRegistrant = new DeletedRegistrant({
+      ...registrant.toObject(), // Spread all original registrant fields
+      deletedBy: deletedBy,
+      deletedAt: new Date(),
+      isDeleted: true,
+    });
+
+    // Save the deleted registrant
+    await deletedRegistrant.save();
+
+    // Remove the original registrant
+    await Registrant.findByIdAndDelete(registrantId);
+
+    res.status(200).json({ message: "Registrant successfully deleted" });
   } catch (error) {
-    console.error(error);
     res
       .status(500)
-      .json({ success: false, message: "Server error", error: error.message });
+      .json({ message: "Error deleting registrant", error: error.message });
   }
 };
 

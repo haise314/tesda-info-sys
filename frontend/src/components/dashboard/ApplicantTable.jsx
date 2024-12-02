@@ -32,6 +32,7 @@ import { TableContainer } from "../../layouts/TableContainer";
 import AssessmentEditDialog from "./AssessmentEdit.jsx";
 import ApplicantEditModal from "./subcomponent/ApplicantEditModal.jsx"; // Import the new modal
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const fetchApplicants = async () => {
   const response = await axios.get("/api/applicants");
@@ -57,6 +58,8 @@ const ApplicantTable = () => {
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [isAssessmentDialogOpen, setIsAssessmentDialogOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { user: loggedInUser } = useAuth();
+  console.log("Logged in user:", loggedInUser);
 
   const {
     data: applicants,
@@ -93,24 +96,11 @@ const ApplicantTable = () => {
     setSelectedApplicant(null);
   };
 
-  // const handleAssessmentSave = async (updatedAssessments) => {
-  //   if (selectedApplicant) {
-  //     try {
-  //       await updateApplicantMutation.mutateAsync({
-  //         id: selectedApplicant._id,
-  //         field: "assessments",
-  //         value: updatedAssessments,
-  //       });
-  //       queryClient.invalidateQueries(["applicants"]);
-  //     } catch (error) {
-  //       console.error("Failed to update assessments:", error);
-  //     }
-  //   }
-  //   handleAssessmentDialogClose();
-  // };
-
   const deleteApplicantMutation = useMutation({
-    mutationFn: (id) => axios.delete(`/api/applicants/${id}`),
+    mutationFn: (id) =>
+      axios.delete(`/api/applicants/${id}`, {
+        data: { deletedBy: loggedInUser.uli }, // Pass the ULI dynamically
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries(["applicants"]);
     },
@@ -119,6 +109,7 @@ const ApplicantTable = () => {
   const handleDeleteClick = (id) => () => {
     if (window.confirm("Are you sure you want to delete this applicant?")) {
       deleteApplicantMutation.mutate(id);
+      console.log("Deleting applicant with ID:", id);
     }
   };
 
@@ -323,16 +314,6 @@ const ApplicantTable = () => {
         pageSizeOptions={isMobile ? [5, 10] : [10, 25, 50]}
         density={isMobile ? "compact" : "standard"}
       />
-
-      {/* Assessment Edit Dialog */}
-      {/* {selectedApplicant && (
-        <AssessmentEditDialog
-          open={isAssessmentDialogOpen}
-          onClose={handleAssessmentDialogClose}
-          assessments={selectedApplicant.assessments}
-          onSave={handleAssessmentSave}
-        />
-      )} */}
 
       {selectedApplicant && (
         <>

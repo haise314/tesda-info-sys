@@ -12,6 +12,7 @@ import {
 import { useTheme } from "@emotion/react";
 import { TableContainer } from "../../layouts/TableContainer";
 import { deletedRegistrantColumns } from "../utils/column/deletedRegistrant.column";
+import { useAuth } from "../../context/AuthContext"; // Assuming you have an AuthContext
 
 const fetchDeletedRegistrants = async () => {
   const response = await axios.get("/api/deleted-registrants");
@@ -27,6 +28,7 @@ const getDefaultColumnVisibility = (columns) => {
 };
 
 const DeletedRegistrantTable = () => {
+  const { user: loggedInUser } = useAuth(); // Get logged-in user from context
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const apiRef = useGridApiRef();
@@ -39,6 +41,9 @@ const DeletedRegistrantTable = () => {
   } = useQuery({
     queryKey: ["deletedRegistrants"],
     queryFn: fetchDeletedRegistrants,
+    // Optional: Add retry and error handling
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
@@ -103,6 +108,7 @@ const DeletedRegistrantTable = () => {
               mobileNumber: !isMobile,
               registrationStatus: true,
               deletedAt: true,
+              deletedBy: true, // Add new column
             },
           },
           pagination: {

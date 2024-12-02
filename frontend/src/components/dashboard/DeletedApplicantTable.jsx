@@ -98,11 +98,10 @@ const DeletedApplicantTable = () => {
             columnVisibilityModel: {
               ...getDefaultColumnVisibility(deletedApplicantColumns),
               uli: true,
-              name: true,
               trainingCenterName: !isMobile,
-              assessmentTitle: !isMobile,
               deletedAt: true,
               deletedBy: true,
+              isDeleted: true, // Added visibility for new column
             },
           },
           pagination: {

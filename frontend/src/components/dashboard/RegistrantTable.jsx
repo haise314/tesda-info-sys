@@ -56,9 +56,22 @@ const useRegistrantQueries = () => {
   });
 
   const deleteRegistrantMutation = useMutation({
-    mutationFn: (id) => axios.delete(`/api/register/${id}`),
+    mutationFn: (id) => {
+      if (!user || !user.uli) {
+        throw new Error("User information is missing");
+      }
+      return axios.delete(`/api/register/${id}`, {
+        headers: {
+          "X-Deleted-By": user.uli,
+        },
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(["registrants"]);
+      queryClient.invalidateQueries(["deletedRegistrants"]);
+    },
+    onError: (error) => {
+      console.error("Deletion failed:", error);
     },
   });
 
@@ -154,6 +167,8 @@ const RegistrantsTable = () => {
   const [editMode, setEditMode] = useState(false);
   const [selectedRegistrant, setSelectedRegistrant] = useState(null);
   const [mutationError, setMutationError] = useState(null);
+  const { user: loggedInUser } = useAuth();
+  console.log("Logged in user:", loggedInUser);
 
   const {
     registrants = [],
@@ -171,9 +186,14 @@ const RegistrantsTable = () => {
 
   const handleDeleteClick = useCallback(
     (id) => {
+      console.log("Delete registrant with ID:", id);
       if (window.confirm("Are you sure you want to delete this registrant?")) {
         deleteRegistrantMutation.mutate(id, {
           onError: (error) => {
+            console.error(
+              "Delete error:",
+              error.response?.data || error.message
+            );
             setMutationError(error.response?.data?.message || "Delete failed");
           },
         });
