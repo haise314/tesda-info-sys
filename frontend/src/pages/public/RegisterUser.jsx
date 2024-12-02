@@ -41,6 +41,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useAuth } from "../../context/AuthContext";
 import ReCAPTCHAWrapper from "./RecaptchaWrapper";
+import { DatePicker } from "@mui/x-date-pickers";
 
 const RegisterUser = () => {
   const { login } = useAuth();
@@ -385,32 +386,44 @@ const RegisterUser = () => {
                 rules={{
                   required: "Birthdate is required",
                   validate: (value) => {
-                    if (dayjs(value).isAfter(dayjs())) {
+                    if (!value) return "Birthdate is required";
+
+                    const birthdateDay = dayjs(value);
+
+                    if (birthdateDay.isAfter(dayjs())) {
                       return "Birthdate cannot be in the future";
                     }
-                    const age = dayjs().diff(dayjs(value), "year");
-                    if (age < 16) {
-                      return "You must be at least 18 years old to register.";
+
+                    const age = dayjs().diff(birthdateDay, "year");
+                    if (age < 18) {
+                      return "You must be at least 18 years old to register";
                     }
+
                     return true;
                   },
                 }}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    type="date"
+                render={({ field: { onChange, value, ...restField } }) => (
+                  <DatePicker
                     label="Birthdate"
-                    InputLabelProps={{ shrink: true }}
-                    error={!!errors.birthdate}
-                    helperText={errors.birthdate?.message}
-                    inputProps={{
-                      max: dayjs().format("YYYY-MM-DD"),
+                    value={value ? dayjs(value) : null}
+                    onChange={(date) =>
+                      onChange(date ? date.format("YYYY-MM-DD") : null)
+                    }
+                    maxDate={dayjs()}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        error: !!errors.birthdate,
+                        helperText: errors.birthdate?.message,
+                        InputLabelProps: { shrink: true },
+                      },
                     }}
+                    {...restField}
                   />
                 )}
               />
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <Controller
                 name="age"
