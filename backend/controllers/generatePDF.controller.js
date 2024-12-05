@@ -1,14 +1,24 @@
 import User from "../models/user.model.js";
-import Applicant from "../models/applicant.model.js";
+import Registrant from "../models/registrant.model.js";
 import asyncHandler from "express-async-handler";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument } from "pdf-lib";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
-import Registrant from "../models/registrant.model.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Utility function for safe nested object access
+const safeGet = (obj, path, defaultValue = "") => {
+  return path
+    .split(".")
+    .reduce(
+      (acc, part) =>
+        acc && acc[part] !== undefined ? acc[part] : defaultValue,
+      obj
+    );
+};
 
 export const generateApplicantPDF = asyncHandler(async (req, res) => {
   try {
@@ -343,53 +353,107 @@ export const generateApplicantPDF = asyncHandler(async (req, res) => {
 });
 
 export const generateRegistrantPDF = asyncHandler(async (req, res) => {
+  // Configuration - move this before the try block
+  const MAX_PDF_FILE_SIZE = process.env.MAX_PDF_FILE_SIZE
+    ? parseInt(process.env.MAX_PDF_FILE_SIZE)
+    : 10 * 1024 * 1024; // 10MB default
+
+  // Define USE_DETAILED_ERRORS directly here
+  const USE_DETAILED_ERRORS = process.env.NODE_ENV === "development";
+
   try {
     const { uli } = req.body.data;
 
+    // Extensive logging for debugging
+    console.log(`[PDF Generation] Starting for ULI: ${uli}`);
+    console.log(`[Environment] Current environment: ${process.env.NODE_ENV}`);
+
+    // Determine template path with multiple fallback options
+    const possiblePaths = [
+      process.env.PDF_TEMPLATE_PATH, // Custom environment variable
+      path.join(process.cwd(), "templates", "registrant-template.pdf"),
+      path.join(__dirname, "../templates/registrant-template.pdf"),
+      path.join(__dirname, "templates", "registrant-template.pdf"),
+      path.join(process.cwd(), "registrant-template.pdf"),
+      path.join(__dirname, "registrant-template.pdf"),
+    ].filter(Boolean); // Remove any undefined paths
+
+    let templatePath;
+    let templateBytes;
+
+    // Try each path until we find a valid template
+    for (const potentialPath of possiblePaths) {
+      try {
+        console.log(`Attempting to read template from: ${potentialPath}`);
+
+        // Normalize the path to handle different path separators
+        const normalizedPath = path.normalize(potentialPath);
+
+        // Check if file exists before reading
+        await fs.access(normalizedPath);
+
+        templateBytes = await fs.readFile(normalizedPath);
+
+        if (templateBytes && templateBytes.length > 0) {
+          templatePath = normalizedPath;
+          break;
+        }
+      } catch (fileError) {
+        console.warn(
+          `Failed to read template from ${potentialPath}: ${fileError.message}`
+        );
+      }
+    }
+
+    // If no template found
+    if (!templatePath) {
+      console.error(
+        "Could not find PDF template in any of the attempted paths",
+        {
+          attemptedPaths: possiblePaths,
+        }
+      );
+      return res.status(500).json({
+        message: "PDF template not found",
+        attemptedPaths: possiblePaths,
+      });
+    }
+
+    console.log(`Successfully found template at: ${templatePath}`);
+
+    // Rest of the existing code remains the same...
     const user = await User.findOne({ uli: uli });
     const registrant = await Registrant.findOne({ uli: uli });
 
-    if (!user || !registrant) {
-      res.status(404);
-      throw new Error("User or Registrant data not found");
-    }
-
-    // Merge the data
+    // Merge the data with safe access
     const mergedData = {
       uli: user.uli,
       name: {
-        firstName: user.name.firstName,
-        middleName: user.name.middleName || "",
-        lastName: user.name.lastName,
+        firstName: safeGet(user, "name.firstName", ""),
+        middleName: safeGet(user, "name.middleName", ""),
+        lastName: safeGet(user, "name.lastName", ""),
       },
       contact: {
-        email: user.contact.email,
-        mobileNumber: user.contact.mobileNumber,
+        email: safeGet(user, "contact.email", ""),
+        mobileNumber: safeGet(user, "contact.mobileNumber", ""),
       },
-      completeMailingAddress: user.completeMailingAddress,
-      sex: user.sex,
-      civilStatus: user.civilStatus,
-      employmentStatus: user.employmentStatus,
-      employmentType: user.employmentType || "none",
-      nationality: user.nationality,
+      completeMailingAddress: user.completeMailingAddress || {},
+      sex: safeGet(user, "sex", ""),
+      civilStatus: safeGet(user, "civilStatus", ""),
+      employmentStatus: safeGet(user, "employmentStatus", ""),
+      employmentType: safeGet(user, "employmentType", "none"),
+      nationality: safeGet(user, "nationality", ""),
       birthdate: user.birthdate,
-      age: user.age,
-      birthplace: user.birthplace,
-      clientClassification: user.clientClassification,
-      // Parent information
-      fatherName: user.fatherName,
-      // Registrant specific data
-      disabilityType: registrant.disabilityType || "",
-      disabilityCause: registrant.disabilityCause || "",
+      age: safeGet(user, "age", ""),
+      birthplace: user.birthplace || {},
+      clientClassification: safeGet(user, "clientClassification", ""),
+      fatherName: user.fatherName || {},
+      disabilityType: safeGet(registrant, "disabilityType", ""),
+      disabilityCause: safeGet(registrant, "disabilityCause", ""),
       course: registrant.course || [],
     };
 
-    // Read the PDF template
-    const templatePath = path.join(
-      __dirname,
-      "../templates/registrant-template.pdf"
-    );
-    const templateBytes = await fs.readFile(templatePath);
+    // Load PDF template
     const pdfDoc = await PDFDocument.load(templateBytes);
     const form = pdfDoc.getForm();
 
@@ -397,7 +461,7 @@ export const generateRegistrantPDF = asyncHandler(async (req, res) => {
     const safelySetTextField = (fieldName, value = "") => {
       try {
         const field = form.getTextField(fieldName);
-        field.setText(value.toString());
+        field.setText(value.toString().trim());
       } catch (error) {
         console.warn(
           `Warning: Failed to set text field ${fieldName}: ${error.message}`
@@ -575,15 +639,29 @@ export const generateRegistrantPDF = asyncHandler(async (req, res) => {
       safelySetTextField("scholarship", "None");
     }
 
-    // Save and send the PDF
+    // Save PDF with size check
     const pdfBytes = await pdfDoc.save();
+
+    if (pdfBytes.length > MAX_PDF_FILE_SIZE) {
+      throw new Error("Generated PDF exceeds maximum file size");
+    }
+
+    // Send PDF response
     res.contentType("application/pdf");
     res.send(Buffer.from(pdfBytes));
   } catch (error) {
-    console.error("PDF Generation Error:", error);
+    // Comprehensive error logging
+    console.error("PDF Generation Error:", {
+      message: error.message,
+      name: error.name,
+      stack: USE_DETAILED_ERRORS ? error.stack : undefined,
+    });
+
+    // Conditional error response based on environment
     res.status(500).json({
       message: "Error generating PDF",
       error: error.message,
+      ...(USE_DETAILED_ERRORS && { stack: error.stack }),
     });
   }
 });
