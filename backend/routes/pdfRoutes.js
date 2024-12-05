@@ -6,7 +6,7 @@ import {
 
 const router = express.Router();
 
-router.post("/generate-pdf", generateRegistrantPDF);
-router.post("/generate-pdf-applicant", generateApplicantPDF);
+// router.post("/generate-pdf", generateRegistrantPDF);
+// router.post("/generate-pdf-applicant", generateApplicantPDF);
 
 export default router;

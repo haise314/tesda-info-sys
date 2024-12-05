@@ -85,12 +85,6 @@ const TopBar = ({ onDrawerToggle }) => {
         </Typography>
 
         <Stack direction="row" spacing={1} alignItems="center">
-          <IconButton color="inherit">
-            <Badge badgeContent={4} color="error">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
-
           <IconButton
             onClick={handleMenu}
             color="inherit"

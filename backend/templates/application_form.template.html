@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TESDA Application Form</title>
+    <style>
+      @page {
+        margin: 20px;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1024px;
+        margin: 0 auto;
+        padding: 20px;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .form-header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 15px;
+      }
+      .form-header .document-code {
+        font-size: 10px;
+        margin-bottom: 15px;
+      }
+      .form-header h1 {
+        margin: 10px 0;
+        font-size: 16px;
+        font-weight: bold;
+      }
+      .form-header h2 {
+        font-size: 14px;
+        margin: 8px 0;
+        font-style: italic;
+      }
+      .identifier-section {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        border: 2px solid #000;
+        padding: 10px;
+        background-color: #f8f8f8;
+      }
+      .section-header {
+        font-weight: bold;
+        background-color: #e0e0e0;
+        padding: 8px;
+        margin: 20px 0 10px 0;
+        border-radius: 4px;
+      }
+      .form-row {
+        display: flex;
+        margin-bottom: 15px;
+        gap: 15px;
+      }
+      .form-field {
+        flex: 1;
+        margin-bottom: 10px;
+      }
+      .form-field-label {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      .form-field-value {
+        min-height: 20px;
+        border-bottom: 1px solid #999;
+        padding: 3px 0;
+      }
+      .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin: 10px 0;
+      }
+      .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .picture-box {
+        width: 150px;
+        height: 180px;
+        border: 2px solid #000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        background-color: #f8f8f8;
+        margin-left: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+      }
+      th,
+      td {
+        border: 1px solid #000;
+        padding: 8px;
+        text-align: left;
+        font-size: 11px;
+      }
+      th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+      }
+      .note {
+        font-size: 10px;
+        font-style: italic;
+        margin: 5px 0 20px 0;
+        color: #666;
+      }
+      .section-divider {
+        border-top: 2px solid #ccc;
+        margin: 30px 0;
+      }
+      .signature-section {
+        margin-top: 30px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .signature-line {
+        border-top: 1px solid #000;
+        width: 200px;
+        text-align: center;
+        padding-top: 5px;
+        margin-top: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-header">
+      <div class="document-code">
+        TESDA-OP-CO-05-F26<br />Rev. 00 – 03/01/17
+      </div>
+      <h1>TECHNICAL EDUCATION AND SKILLS DEVELOPMENT AUTHORITY</h1>
+      <h2>Pangasiwaan sa Edukasyong Teknikal at Pagpapaunlad ng Kasanayan</h2>
+      <h1>APPLICATION FORM</h1>
+    </div>
+
+    <div class="identifier-section">
+      <div>
+        <strong>UNIQUE LEARNERS IDENTIFIER (ULI):</strong>
+        <div id="uli" class="form-field-value"></div>
+      </div>
+      <div>
+        <strong>REFERENCE NUMBER:</strong>
+        <div id="referenceNumber" class="form-field-value"></div>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <div class="form-field-label">
+        Name of School/Training Center/Company:
+      </div>
+      <div id="trainingCenterName" class="form-field-value"></div>
+    </div>
+
+    <div class="form-field">
+      <div class="form-field-label">Address:</div>
+      <div id="addressLocation" class="form-field-value"></div>
+    </div>
+
+    <div class="form-field">
+      <div class="form-field-label">Title of Assessment applied for:</div>
+      <div class="form-row">
+        <div class="checkbox-item">
+          <input type="checkbox" id="assessmentFull" />
+          <label>Full Qualification</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="assessmentCOC" />
+          <label>COC</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="assessmentRenewal" />
+          <label>Renewal</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">1. Client Type</div>
+    <div class="checkbox-group">
+      <div class="checkbox-item">
+        <input type="checkbox" id="clientClassTVETGrad" />
+        <label>TVET Graduating Student</label>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" id="clientClassTVETGraduate" />
+        <label>TVET graduate</label>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" id="clientClassIndustry" />
+        <label>Industry worker</label>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" id="clientClassK12" />
+        <label>K-12</label>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" id="clientClassOWF" />
+        <label>OWF</label>
+      </div>
+    </div>
+
+    <div class="section-header">2. Profile</div>
+
+    <div class="form-row">
+      <div class="form-field" style="flex: 3">
+        <div class="form-field-label">2.1 Name:</div>
+        <div class="form-row">
+          <div class="form-field">
+            <div class="form-field-label">Last Name:</div>
+            <div id="lastName" class="form-field-value"></div>
+          </div>
+          <div class="form-field">
+            <div class="form-field-label">First Name:</div>
+            <div id="firstName" class="form-field-value"></div>
+          </div>
+          <div class="form-field">
+            <div class="form-field-label">Middle Name:</div>
+            <div id="middleName" class="form-field-value"></div>
+          </div>
+          <div class="form-field">
+            <div class="form-field-label">Extension:</div>
+            <div id="extension" class="form-field-value"></div>
+          </div>
+        </div>
+      </div>
+      <div class="picture-box">
+        PICTURE<br />Passport size<br />(White Background<br />with Collar)
+      </div>
+    </div>
+
+    <div class="form-field">
+      <div class="form-field-label">2.2 Mailing Address:</div>
+      <div class="form-row">
+        <div class="form-field">
+          <div class="form-field-label">Street:</div>
+          <div id="street" class="form-field-value"></div>
+        </div>
+        <div class="form-field">
+          <div class="form-field-label">Barangay:</div>
+          <div id="barangay" class="form-field-value"></div>
+        </div>
+        <div class="form-field">
+          <div class="form-field-label">District:</div>
+          <div id="district" class="form-field-value"></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <div class="form-field-label">City/Municipality:</div>
+          <div id="city" class="form-field-value"></div>
+        </div>
+        <div class="form-field">
+          <div class="form-field-label">Province:</div>
+          <div id="province" class="form-field-value"></div>
+        </div>
+        <div class="form-field">
+          <div class="form-field-label">Region:</div>
+          <div id="region" class="form-field-value"></div>
+        </div>
+        <div class="form-field">
+          <div class="form-field-label">Zip Code:</div>
+          <div id="zipCode" class="form-field-value"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">2.3 Mother's Name:</div>
+        <div class="form-row">
+          <div class="form-field">
+            <div class="form-field-label">Last Name:</div>
+            <div id="motherLastName" class="form-field-value"></div>
+          </div>
+          <div class="form-field">
+            <div class="form-field-label">First Name:</div>
+            <div id="motherFirstName" class="form-field-value"></div>
+          </div>
+          <div class="form-field">
+            <div class="form-field-label">Middle Name:</div>
+            <div id="motherMiddleName" class="form-field-value"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">2.4 Father's Name:</div>
+        <div class="form-row">
+          <div class="form-field">
+            <div class="form-field-label">Last Name:</div>
+            <div id="fatherLastName" class="form-field-value"></div>
+          </div>
+          <div class="form-field">
+            <div class="form-field-label">First Name:</div>
+            <div id="fatherFirstName" class="form-field-value"></div>
+          </div>
+          <div class="form-field">
+            <div class="form-field-label">Middle Name:</div>
+            <div id="fatherMiddleName" class="form-field-value"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">2.5 Sex:</div>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="sexMale" />
+            <label>Male</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="sexFemale" />
+            <label>Female</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-field">
+        <div class="form-field-label">2.6 Civil Status:</div>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="civilStatusSingle" />
+            <label>Single</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="civilStatusMarried" />
+            <label>Married</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="civilStatusWidowed" />
+            <label>Widow/er</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="civilStatusSeparated" />
+            <label>Separated</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">2.7 Contact Numbers:</div>
+        <div class="form-row">
+          <div class="form-field">
+            <div class="form-field-label">Telephone:</div>
+            <div id="telephoneNumber" class="form-field-value"></div>
+          </div>
+          <div class="form-field">
+            <div class="form-field-label">Mobile:</div>
+            <div id="mobileNumber" class="form-field-value"></div>
+          </div>
+          <div class="form-field">
+            <div class="form-field-label">Email:</div>
+            <div id="email" class="form-field-value"></div>
+          </div>
+          <div class="form-field">
+            <div class="form-field-label">Fax:</div>
+            <div id="fax" class="form-field-value"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">2.8 Highest Educational Attainment:</div>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="educElementary" />
+            <label>Elementary Graduate</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="educHighSchool" />
+            <label>High School Graduate</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="educTVET" />
+            <label>TVET Graduate</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="educCollege" />
+            <label>College Level</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="educCollegeGrad" />
+            <label>College Graduate</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="educOthers" />
+            <label>Others:</label>
+            <div
+              id="educOthersSpecify"
+              class="form-field-value"
+              style="width: 100px"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">2.9 Employment Status:</div>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="employmentCasual" />
+            <label>Casual</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="employmentJobOrder" />
+            <label>Job Order</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="employmentProbationary" />
+            <label>Probationary</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="employmentPermanent" />
+            <label>Permanent</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="employmentSelfEmployed" />
+            <label>Self - Employed</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="employmentOFW" />
+            <label>OFW</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">2.10 Birth date (mm/dd/yy):</div>
+        <div class="form-row">
+          <div class="form-field">
+            <div
+              id="birthMonth"
+              class="form-field-value"
+              style="width: 30px; text-align: center"
+            ></div>
+          </div>
+          <div class="form-field">
+            <div
+              id="birthDay"
+              class="form-field-value"
+              style="width: 30px; text-align: center"
+            ></div>
+          </div>
+          <div class="form-field">
+            <div
+              id="birthYear"
+              class="form-field-value"
+              style="width: 30px; text-align: center"
+            ></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-field">
+        <div class="form-field-label">2.11 Birth place:</div>
+        <div id="birthPlace" class="form-field-value"></div>
+      </div>
+      <div class="form-field">
+        <div class="form-field-label">2.12 Age:</div>
+        <div id="age" class="form-field-value"></div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      3. Work Experience (National Qualification-related)
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>3.1. Name of Company</th>
+          <th>3.2. Position</th>
+          <th>3.3. Inclusive Dates</th>
+          <th>3.4. Monthly Salary</th>
+          <th>3.5. Status of Appointment</th>
+          <th>3.6. No. of Yrs. Working Exp.</th>
+        </tr>
+      </thead>
+      <tbody id="workExperienceTable">
+        <tr>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">(For more information, please use separate sheet)</div>
+
+    <div class="section-header">
+      4. Other Training/Seminars Attended (National Qualification-related)
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>4.1. Title</th>
+          <th>4.2. Venue</th>
+          <th>4.3. Inclusive Dates</th>
+          <th>4.4. No. of Hours</th>
+          <th>4.5. Conducted By</th>
+        </tr>
+      </thead>
+      <tbody id="trainingsTable">
+        <tr>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">(For more information, please use separate sheet)</div>
+
+    <div class="section-header">5. Licensure Examination(s) Passed</div>
+    <table>
+      <thead>
+        <tr>
+          <th>5.1. Title</th>
+          <th>5.2. Year Taken</th>
+          <th>5.3. Examination Venue</th>
+          <th>5.4. Rating</th>
+          <th>5.5. Remarks</th>
+          <th>5.6. Expiry Date</th>
+        </tr>
+      </thead>
+      <tbody id="licensureTable">
+        <tr>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">(For more information, please use separate sheet)</div>
+
+    <div class="section-header">6. Competency Assessment(s) Passed</div>
+    <table>
+      <thead>
+        <tr>
+          <th>6.1. Title</th>
+          <th>6.2. Qualification Level</th>
+          <th>6.3. Industry Sector</th>
+          <th>6.4. Certificate Number</th>
+          <th>6.5. Date of Issuance</th>
+          <th>6.6. Expiration Date</th>
+        </tr>
+      </thead>
+      <tbody id="competencyTable">
+        <tr>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">(For more information, please use separate sheet)</div>
+
+    <div class="section-divider"></div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">Date of Application:</div>
+        <div id="applicationDate" class="form-field-value"></div>
+      </div>
+      <div class="form-field">
+        <div class="signature-line">Applicant's Signature</div>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <h2 style="text-align: center; margin: 20px 0">ADMISSION SLIP</h2>
+
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">Name of Applicant:</div>
+        <div id="admissionSlipName" class="form-field-value"></div>
+      </div>
+      <div class="form-field">
+        <div class="form-field-label">Tel. Number:</div>
+        <div id="admissionSlipTel" class="form-field-value"></div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">Assessment Applied for:</div>
+        <div id="admissionSlipAssessment" class="form-field-value"></div>
+      </div>
+      <div class="form-field">
+        <div class="form-field-label">Official Receipt Number:</div>
+        <div id="admissionSlipReceipt" class="form-field-value"></div>
+      </div>
+    </div>
+
+    <div style="border: 1px solid #000; padding: 15px; margin: 20px 0">
+      <div style="font-weight: bold; margin-bottom: 10px">
+        Check submitted requirements:
+      </div>
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="checkbox" id="reqSelfAssessment" />
+          <label>Accomplished Self-Assessment Guide</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="reqPPE" />
+          <label>Bring own Personal Protective Equipment</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="reqPictures" />
+          <label>Three (3) pieces colored passport size pictures</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="reqOthers" />
+          <label>Others. Pls. specify:</label>
+          <div
+            id="reqOthersSpecify"
+            class="form-field-value"
+            style="width: 200px"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">Assessment Date:</div>
+        <div id="assessmentDate" class="form-field-value"></div>
+      </div>
+      <div class="form-field">
+        <div class="form-field-label">Assessment Time:</div>
+        <div id="assessmentTime" class="form-field-value">8:00AM – 5:00PM</div>
+      </div>
+    </div>
+
+    <div class="signature-section">
+      <div>
+        <div class="signature-line">
+          Printed Name & Signature of Processing Officer
+        </div>
+        <div style="margin-top: 10px">
+          Date:
+          <span
+            id="processingOfficerDate"
+            class="form-field-value"
+            style="width: 100px; display: inline-block"
+          ></span>
+        </div>
+      </div>
+      <div>
+        <div class="signature-line">Printed Name & Signature of Applicant</div>
+        <div style="margin-top: 10px">
+          Date:
+          <span
+            id="applicantDate"
+            class="form-field-value"
+            style="width: 100px; display: inline-block"
+          ></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="note" style="text-align: center; margin-top: 20px">
+      Note: Please bring this Admission Slip on your assessment date.
+    </div>
+  </body>
+</html>

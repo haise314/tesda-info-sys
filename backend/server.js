@@ -43,7 +43,7 @@ app.use("/uploads", express.static(path.join(__dirname, "backend/uploads")));
 
 app.use("/api/training-centers", trainingCenterRoutes);
 app.use("/api/assessments", assessmentsRoutes);
-app.use("/api", pdfRoutes);
+// app.use("/api", pdfRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/register", registrantRoutes);
 app.use("/api/applicants", applicantRoutes);

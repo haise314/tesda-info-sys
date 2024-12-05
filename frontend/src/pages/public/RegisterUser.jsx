@@ -43,6 +43,12 @@ import { useAuth } from "../../context/AuthContext";
 import ReCAPTCHAWrapper from "./RecaptchaWrapper";
 import { DatePicker } from "@mui/x-date-pickers";
 
+const RequiredLabel = ({ children }) => (
+  <span>
+    {children} <span style={{ color: "red" }}>*</span>
+  </span>
+);
+
 const RegisterUser = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -190,7 +196,7 @@ const RegisterUser = () => {
             <TextField
               {...field}
               fullWidth
-              label="First Name"
+              label={<RequiredLabel>First Name</RequiredLabel>}
               error={!!errors[prefix]?.firstName}
               helperText={errors[prefix]?.firstName?.message}
             />
@@ -220,7 +226,7 @@ const RegisterUser = () => {
             <TextField
               {...field}
               fullWidth
-              label="Last Name"
+              label={<RequiredLabel>Last Name</RequiredLabel>}
               error={!!errors[prefix]?.lastName}
               helperText={errors[prefix]?.lastName?.message}
             />
@@ -343,7 +349,7 @@ const RegisterUser = () => {
                     {...field}
                     select
                     fullWidth
-                    label="Sex"
+                    label={<RequiredLabel>Sex</RequiredLabel>}
                     error={!!errors.sex}
                     helperText={errors.sex?.message}
                   >
@@ -365,7 +371,7 @@ const RegisterUser = () => {
                     {...field}
                     select
                     fullWidth
-                    label="Civil Status"
+                    label={<RequiredLabel>Civil Status</RequiredLabel>}
                     error={!!errors.civilStatus}
                     helperText={errors.civilStatus?.message}
                   >
@@ -387,24 +393,20 @@ const RegisterUser = () => {
                   required: "Birthdate is required",
                   validate: (value) => {
                     if (!value) return "Birthdate is required";
-
                     const birthdateDay = dayjs(value);
-
                     if (birthdateDay.isAfter(dayjs())) {
                       return "Birthdate cannot be in the future";
                     }
-
                     const age = dayjs().diff(birthdateDay, "year");
                     if (age < 18) {
                       return "You must be at least 18 years old to register";
                     }
-
                     return true;
                   },
                 }}
                 render={({ field: { onChange, value, ...restField } }) => (
                   <DatePicker
-                    label="Birthdate"
+                    label={<RequiredLabel>Birthdate</RequiredLabel>}
                     value={value ? dayjs(value) : null}
                     onChange={(date) =>
                       onChange(date ? date.format("YYYY-MM-DD") : null)
@@ -413,9 +415,12 @@ const RegisterUser = () => {
                     slotProps={{
                       textField: {
                         fullWidth: true,
+                        variant: "outlined",
                         error: !!errors.birthdate,
                         helperText: errors.birthdate?.message,
-                        InputLabelProps: { shrink: true },
+                        InputLabelProps: {
+                          shrink: value ? true : undefined,
+                        },
                       },
                     }}
                     {...restField}
@@ -433,7 +438,7 @@ const RegisterUser = () => {
                     {...field}
                     fullWidth
                     type="number"
-                    label="Age"
+                    label={<RequiredLabel>Age</RequiredLabel>}
                     error={!!errors.age}
                     helperText={errors.age?.message}
                     InputProps={{
@@ -453,7 +458,7 @@ const RegisterUser = () => {
                     {...field}
                     fullWidth
                     type="text"
-                    label="Nationality"
+                    label={<RequiredLabel>Nationality</RequiredLabel>}
                     error={!!errors.nationality}
                     helperText={errors.nationality?.message}
                   />
@@ -498,7 +503,7 @@ const RegisterUser = () => {
                       {...fieldProps}
                       inputRef={ref}
                       fullWidth
-                      label="Custom Region"
+                      label={<RequiredLabel>Custom Region</RequiredLabel>}
                       placeholder="Type your region"
                       onChange={(e) => fieldProps.onChange(e.target.value)}
                       error={!!errors.birthplace?.region}
@@ -519,7 +524,7 @@ const RegisterUser = () => {
                       inputRef={ref}
                       select
                       fullWidth
-                      label="Region"
+                      label={<RequiredLabel>Region</RequiredLabel>}
                       onChange={handleChange}
                       error={!!errors.birthplace?.region}
                       helperText={errors.birthplace?.region?.message}
@@ -581,7 +586,7 @@ const RegisterUser = () => {
                       inputRef={ref}
                       fullWidth
                       disabled={isDisabled}
-                      label="Custom Province"
+                      label={<RequiredLabel>Custom Province</RequiredLabel>}
                       placeholder="Type your province"
                       onChange={(e) => fieldProps.onChange(e.target.value)}
                       error={!!errors.birthplace?.province}
@@ -603,7 +608,7 @@ const RegisterUser = () => {
                       select
                       fullWidth
                       disabled={isDisabled}
-                      label="Province"
+                      label={<RequiredLabel>Province</RequiredLabel>}
                       onChange={handleChange}
                       error={!!errors.birthplace?.province}
                       helperText={getHelperText()}
@@ -670,7 +675,9 @@ const RegisterUser = () => {
                       inputRef={ref}
                       fullWidth
                       disabled={isDisabled}
-                      label="Custom Municipality/City"
+                      label={
+                        <RequiredLabel>Custom Municipality/City</RequiredLabel>
+                      }
                       placeholder="Type your municipality/city"
                       onChange={(e) => fieldProps.onChange(e.target.value)}
                       error={!!errors.birthplace?.city}
@@ -692,7 +699,7 @@ const RegisterUser = () => {
                       select
                       fullWidth
                       disabled={isDisabled}
-                      label="Municipality/City"
+                      label={<RequiredLabel>Municipality/City</RequiredLabel>}
                       onChange={handleChange}
                       error={!!errors.birthplace?.city}
                       helperText={getHelperText()}
@@ -775,7 +782,7 @@ const RegisterUser = () => {
                       inputRef={ref}
                       fullWidth
                       disabled={isDisabled}
-                      label="Custom Barangay"
+                      label={<RequiredLabel>Custom Barangay</RequiredLabel>}
                       placeholder="Type your barangay"
                       onChange={(e) => fieldProps.onChange(e.target.value)}
                       error={!!errors.birthplace?.barangay}
@@ -797,7 +804,7 @@ const RegisterUser = () => {
                       select
                       fullWidth
                       disabled={isDisabled}
-                      label="Barangay"
+                      label={<RequiredLabel>Barangay</RequiredLabel>}
                       onChange={handleChange}
                       error={!!errors.birthplace?.barangay}
                       helperText={getHelperText()}
@@ -830,7 +837,7 @@ const RegisterUser = () => {
                     {...field}
                     inputRef={ref}
                     fullWidth
-                    label="Telephone Number"
+                    label={<RequiredLabel>Telephone Number</RequiredLabel>}
                     error={!!errors.contact?.telephoneNumber}
                     helperText={errors.contact?.telephoneNumber?.message}
                   />
@@ -846,7 +853,7 @@ const RegisterUser = () => {
                     {...field}
                     inputRef={ref}
                     fullWidth
-                    label="Mobile Number"
+                    label={<RequiredLabel>Mobile Number</RequiredLabel>}
                     error={!!errors.contact?.mobileNumber}
                     helperText={errors.contact?.mobileNumber?.message}
                   />
@@ -862,7 +869,7 @@ const RegisterUser = () => {
                     {...field}
                     inputRef={ref}
                     fullWidth
-                    label="Email"
+                    label={<RequiredLabel>Email</RequiredLabel>}
                     type="email"
                     error={!!errors.contact?.email}
                     helperText={errors.contact?.email?.message}
@@ -1223,7 +1230,9 @@ const RegisterUser = () => {
                             {...fieldProps}
                             inputRef={ref}
                             fullWidth
-                            label={formattedLabel}
+                            label={
+                              <RequiredLabel>{formattedLabel}</RequiredLabel>
+                            }
                             error={!!errors.completeMailingAddress?.[field]}
                             helperText={
                               errors.completeMailingAddress?.[field]?.message
@@ -1251,7 +1260,9 @@ const RegisterUser = () => {
                             inputRef={ref}
                             fullWidth
                             disabled={isDisabled}
-                            label={`Custom ${formattedLabel}`}
+                            label={
+                              <RequiredLabel>{`Custom ${formattedLabel}`}</RequiredLabel>
+                            }
                             placeholder={`Type your ${field}`}
                             onChange={(e) =>
                               fieldProps.onChange(e.target.value)
@@ -1281,7 +1292,9 @@ const RegisterUser = () => {
                             select
                             fullWidth
                             disabled={isDisabled}
-                            label={formattedLabel}
+                            label={
+                              <RequiredLabel>{formattedLabel}</RequiredLabel>
+                            }
                             onChange={handleChange}
                             error={!!errors.completeMailingAddress?.[field]}
                             helperText={getHelperText()}
@@ -1304,7 +1317,9 @@ const RegisterUser = () => {
                           {...fieldProps}
                           inputRef={ref}
                           fullWidth
-                          label={formattedLabel}
+                          label={
+                            <RequiredLabel>{formattedLabel}</RequiredLabel>
+                          }
                           error={!!errors.completeMailingAddress?.[field]}
                           helperText={
                             errors.completeMailingAddress?.[field]?.message
@@ -1331,7 +1346,7 @@ const RegisterUser = () => {
                     {...field}
                     select
                     fullWidth
-                    label="Employment Status"
+                    label={<RequiredLabel>Employment Status</RequiredLabel>}
                     error={!!errors.employmentStatus}
                     helperText={errors.employmentStatus?.message}
                   >
@@ -1380,7 +1395,9 @@ const RegisterUser = () => {
                     {...field}
                     select
                     fullWidth
-                    label="Educational Attainment"
+                    label={
+                      <RequiredLabel>Educational Attainment</RequiredLabel>
+                    }
                     error={!!errors.education}
                     helperText={errors.education?.message}
                   >
@@ -1419,7 +1436,9 @@ const RegisterUser = () => {
                 rules={{ required: "Client classification is required" }}
                 render={({ field }) => (
                   <FormControl fullWidth error={!!errors.clientClassification}>
-                    <InputLabel>Client Classification</InputLabel>
+                    <InputLabel>
+                      <RequiredLabel>Client Classification</RequiredLabel>
+                    </InputLabel>
                     <Select {...field} label="Client Classification">
                       {clientClassifications.map((classification) => (
                         <MenuItem key={classification} value={classification}>
@@ -1471,7 +1490,7 @@ const RegisterUser = () => {
                     inputRef={ref}
                     fullWidth
                     type={showPassword ? "text" : "password"}
-                    label="Password"
+                    label={<RequiredLabel>Password</RequiredLabel>}
                     error={!!errors.password}
                     helperText={errors.password?.message}
                     InputProps={{
@@ -1505,7 +1524,7 @@ const RegisterUser = () => {
                     inputRef={ref}
                     fullWidth
                     type={showConfirmPassword ? "text" : "password"}
-                    label="Confirm Password"
+                    label={<RequiredLabel>Confirm Password</RequiredLabel>}
                     error={!!errors.confirmPassword}
                     helperText={errors.confirmPassword?.message}
                     InputProps={{
@@ -1531,7 +1550,7 @@ const RegisterUser = () => {
                 )}
               />
             </Grid>
-            {/* Add ReCAPTCHA before the submit button */}
+
             <Grid
               item
               xs={12}
@@ -1541,10 +1560,6 @@ const RegisterUser = () => {
                 siteKey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                 onVerify={handleCaptchaChange}
               />
-              {/* <ReCAPTCHA
-                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                onChange={handleCaptchaChange}
-              /> */}
             </Grid>
 
             {/* Submit Button */}
@@ -1566,11 +1581,6 @@ const RegisterUser = () => {
             </Grid>
           </Grid>
         </form>
-
-        {/* <Typography variant="h6" sx={{ mt: 4 }}>
-          Form State:
-        </Typography>
-        <pre>{JSON.stringify(watchedFields, null, 2)}</pre> */}
 
         {errors.root && (
           <Typography color="error" sx={{ mt: 2 }}>

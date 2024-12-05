@@ -1,0 +1,503 @@
+{{#if uli}}
+<div class="identifier-section">
+  <div>**UNIQUE LEARNERS IDENTIFIER (ULI):** {{uli}}</div>
+</div>
+{{/if}}
+
+<div class="form-header">
+  <div class="document-code">TESDA-OP-CO-05-F26\ Rev. 00 -- 03/01/17</div>
+
+  <h1>TECHNICAL EDUCATION AND SKILLS DEVELOPMENT AUTHORITY</h1>
+  <h2>Pangasiwaan sa Edukasyong Teknikal at Pagpapaunlad ng Kasanayan</h2>
+
+  <h1>APPLICANT INFORMATION SHEET</h1>
+</div>
+
+<div class="section">
+  <div class="section-header">1. Training Center Information</div>
+
+  {{#if trainingCenterName}}
+  <div class="form-field">
+    <div class="form-field-label">Name of School/Training Center/Company:</div>
+    <div class="form-field-value">{{trainingCenterName}}</div>
+  </div>
+  {{/if}} {{#if addressLocation}}
+  <div class="form-field">
+    <div class="form-field-label">Address:</div>
+    <div class="form-field-value">{{addressLocation}}</div>
+  </div>
+  {{/if}}
+
+  <div class="form-field">
+    <div class="form-field-label">Title of Assessment Applied For:</div>
+    <div class="checkbox-group">
+      <div
+        class="checkbox-item {{#if assessmentType.fullQualification}}selected{{/if}}"
+      >
+        Full Qualification
+      </div>
+      <div class="checkbox-item {{#if assessmentType.coc}}selected{{/if}}">
+        COC
+      </div>
+      <div class="checkbox-item {{#if assessmentType.renewal}}selected{{/if}}">
+        Renewal
+      </div>
+    </div>
+  </div>
+
+  <div class="form-field">
+    <div class="form-field-label">Client Type:</div>
+    <div class="checkbox-group">
+      <div
+        class="checkbox-item {{#if clientType.tvetGraduatingStudent}}selected{{/if}}"
+      >
+        TVET Graduating Student
+      </div>
+      <div class="checkbox-item {{#if clientType.tvetGraduate}}selected{{/if}}">
+        TVET Graduate
+      </div>
+      <div
+        class="checkbox-item {{#if clientType.industryWorker}}selected{{/if}}"
+      >
+        Industry Worker
+      </div>
+      <div class="checkbox-item {{#if clientType.k12}}selected{{/if}}">
+        K-12
+      </div>
+      <div class="checkbox-item {{#if clientType.ofw}}selected{{/if}}">OFW</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">2. Contact Information</div>
+
+  {{#if contact.email}}
+  <div class="form-field">
+    <div class="form-field-label">Email:</div>
+    <div class="form-field-value">{{contact.email}}</div>
+  </div>
+  {{/if}} {{#if contact.mobileNumber}}
+  <div class="form-field">
+    <div class="form-field-label">Mobile Number:</div>
+    <div class="form-field-value">{{contact.mobileNumber}}</div>
+  </div>
+  {{/if}} {{#if contact.telephoneNumber}}
+  <div class="form-field">
+    <div class="form-field-label">Telephone Number:</div>
+    <div class="form-field-value">{{contact.telephoneNumber}}</div>
+  </div>
+  {{/if}} {{#if contact.fax}}
+  <div class="form-field">
+    <div class="form-field-label">Fax:</div>
+    <div class="form-field-value">{{contact.fax}}</div>
+  </div>
+  {{/if}}
+</div>
+
+<div class="section">
+  <div class="section-header">3. Mailing Address</div>
+
+  {{#if completeMailingAddress}}
+  <div class="form-field">
+    <div class="form-field-label">Detailed Mailing Address:</div>
+    <div class="form-field-value">
+      **Street:** {{completeMailingAddress.street}}\ **Barangay:**
+      {{completeMailingAddress.barangay}}\ **District:**
+      {{completeMailingAddress.district}}\ **City/Municipality:**
+      {{completeMailingAddress.city}}\ **Province:**
+      {{completeMailingAddress.province}}\ **Region:**
+      {{completeMailingAddress.region}}\ **Zip Code:**
+      {{completeMailingAddress.zipCode}}
+    </div>
+  </div>
+  {{/if}}
+</div>
+
+<div class="section">
+  <div class="section-header">4. Parents' Information</div>
+
+  {{#if mother}}
+  <div class="form-field">
+    <div class="form-field-label">Mother's Name:</div>
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">Last Name:</div>
+        <div class="form-field-value">{{mother.lastName}}</div>
+      </div>
+      <div class="form-field">
+        <div class="form-field-label">First Name:</div>
+        <div class="form-field-value">{{mother.firstName}}</div>
+      </div>
+      <div class="form-field">
+        <div class="form-field-label">Middle Name:</div>
+        <div class="form-field-value">{{mother.middleName}}</div>
+      </div>
+    </div>
+  </div>
+  {{/if}} {{#if father}}
+  <div class="form-field">
+    <div class="form-field-label">Father's Name:</div>
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-field-label">Last Name:</div>
+        <div class="form-field-value">{{father.lastName}}</div>
+      </div>
+      <div class="form-field">
+        <div class="form-field-label">First Name:</div>
+        <div class="form-field-value">{{father.firstName}}</div>
+      </div>
+      <div class="form-field">
+        <div class="form-field-label">Middle Name:</div>
+        <div class="form-field-value">{{father.middleName}}</div>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+</div>
+
+<div class="section">
+  <div class="section-header">5. Personal Information</div>
+
+  <div class="form-row">
+    <div class="form-field">
+      <div class="form-field-label">Sex:</div>
+      <div class="checkbox-group">
+        <div class="checkbox-item {{#if sex.male}}selected{{/if}}">Male</div>
+        <div class="checkbox-item {{#if sex.female}}selected{{/if}}">
+          Female
+        </div>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <div class="form-field-label">Civil Status:</div>
+      <div class="checkbox-group">
+        <div class="checkbox-item {{#if civilStatus.single}}selected{{/if}}">
+          Single
+        </div>
+        <div class="checkbox-item {{#if civilStatus.married}}selected{{/if}}">
+          Married
+        </div>
+        <div class="checkbox-item {{#if civilStatus.widower}}selected{{/if}}">
+          Widow/er
+        </div>
+        <div class="checkbox-item {{#if civilStatus.separated}}selected{{/if}}">
+          Separated
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-row">
+    {{#if birthdate}}
+    <div class="form-field">
+      <div class="form-field-label">Birth Date (mm/dd/yy):</div>
+      <div class="form-field-value">{{birthdate}}</div>
+    </div>
+    {{/if}} {{#if age}}
+    <div class="form-field">
+      <div class="form-field-label">Age:</div>
+      <div class="form-field-value">{{age}}</div>
+    </div>
+    {{/if}}
+  </div>
+
+  {{#if birthPlace}}
+  <div class="form-field">
+    <div class="form-field-label">Birth Place:</div>
+    <div class="form-field-value">{{birthPlace}}</div>
+  </div>
+  {{/if}}
+
+  <div class="form-field">
+    <div class="form-field-label">Highest Educational Attainment:</div>
+    <div class="checkbox-group">
+      <div
+        class="checkbox-item {{#if highestEducationalAttainment.elementaryGraduate}}selected{{/if}}"
+      >
+        Elementary Graduate
+      </div>
+      <div
+        class="checkbox-item {{#if highestEducationalAttainment.highSchoolGraduate}}selected{{/if}}"
+      >
+        High School Graduate
+      </div>
+      <div
+        class="checkbox-item {{#if highestEducationalAttainment.tvetGraduate}}selected{{/if}}"
+      >
+        TVET Graduate
+      </div>
+      <div
+        class="checkbox-item {{#if highestEducationalAttainment.collegeLevel}}selected{{/if}}"
+      >
+        College Level
+      </div>
+      <div
+        class="checkbox-item {{#if highestEducationalAttainment.collegeGraduate}}selected{{/if}}"
+      >
+        College Graduate
+      </div>
+
+      {{#if highestEducationalAttainment.otherSpecify}}
+      <div class="checkbox-item selected">
+        Others: {{highestEducationalAttainment.otherSpecify}}
+      </div>
+      {{/if}}
+    </div>
+  </div>
+
+  <div class="form-field">
+    <div class="form-field-label">Employment Status:</div>
+    <div class="checkbox-group">
+      <div class="checkbox-item {{#if employmentStatus.casual}}selected{{/if}}">
+        Casual
+      </div>
+      <div
+        class="checkbox-item {{#if employmentStatus.jobOrder}}selected{{/if}}"
+      >
+        Job Order
+      </div>
+      <div
+        class="checkbox-item {{#if employmentStatus.probationary}}selected{{/if}}"
+      >
+        Probationary
+      </div>
+      <div
+        class="checkbox-item {{#if employmentStatus.permanent}}selected{{/if}}"
+      >
+        Permanent
+      </div>
+      <div
+        class="checkbox-item {{#if employmentStatus.selfEmployed}}selected{{/if}}"
+      >
+        Self-Employed
+      </div>
+      <div class="checkbox-item {{#if employmentStatus.ofw}}selected{{/if}}">
+        OFW
+      </div>
+    </div>
+  </div>
+</div>
+
+{{#if workExperience}}
+<div class="section">
+  <div class="section-header">
+    6. Work Experience (National Qualification-related)
+  </div>
+  {{#each workExperience}}
+  <div class="form-field">
+    <table>
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Position</th>
+          <th>Inclusive Dates</th>
+          <th>Monthly Salary</th>
+          <th>Appointment Status</th>
+          <th>Years of Work Experience</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{companyName}}</td>
+          <td>{{position}}</td>
+          <td>
+            {{#if inclusiveDates.from}}{{inclusiveDates.from}}{{/if}} - {{#if
+            inclusiveDates.to}}{{inclusiveDates.to}}{{/if}}
+          </td>
+          <td>{{monthlySalary}}</td>
+          <td>{{appointmentStatus}}</td>
+          <td>{{noOfYearsInWork}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  {{/each}}
+  <div class="note">(For more information, please use separate sheet)</div>
+</div>
+{{/if}} {{#if trainingSeminarAttended}}
+<div class="section">
+  <div class="section-header">
+    7. Other Training/Seminars Attended (National Qualification-related)
+  </div>
+  {{#each trainingSeminarAttended}}
+  <div class="form-field">
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Venue</th>
+          <th>Inclusive Dates</th>
+          <th>Number of Hours</th>
+          <th>Conducted By</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{title}}</td>
+          <td>{{venue}}</td>
+          <td>
+            {{#if inclusiveDates.from}}{{inclusiveDates.from}}{{/if}} - {{#if
+            inclusiveDates.to}}{{inclusiveDates.to}}{{/if}}
+          </td>
+          <td>{{numberOfHours}}</td>
+          <td>{{conductedBy}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  {{/each}}
+  <div class="note">(For more information, please use separate sheet)</div>
+</div>
+{{/if}} {{#if licensureExaminationPassed}}
+<div class="section">
+  <div class="section-header">8. Licensure Examination(s) Passed</div>
+  {{#each licensureExaminationPassed}}
+  <div class="form-field">
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Year Taken</th>
+          <th>Examination Venue</th>
+          <th>Rating</th>
+          <th>Expiry Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{title}}</td>
+          <td>{{dateOfExamination}}</td>
+          <td>{{examinationVenue}}</td>
+          <td>{{rating}}</td>
+          <td>{{expiryDate}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  {{/each}}
+  <div class="note">(For more information, please use separate sheet)</div>
+</div>
+{{/if}} {{#if competencyAssessment}}
+<div class="section">
+  <div class="section-header">9. Competency Assessment(s) Passed</div>
+  {{#each competencyAssessment}}
+  <div class="form-field">
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Qualification Level</th>
+          <th>Industry Sector</th>
+          <th>Certificate Number</th>
+          <th>Date of Issuance</th>
+          <th>Expiration Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{title}}</td>
+          <td>{{qualificationLevel}}</td>
+          <td>{{industrySector}}</td>
+          <td>{{certificateNumber}}</td>
+          <td>{{dateIssued}}</td>
+          <td>{{expirationDate}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  {{/each}}
+  <div class="note">(For more information, please use separate sheet)</div>
+</div>
+{{/if}}
+
+<div class="section-divider"></div>
+
+<div class="form-row">
+  <div class="form-field">
+    <div class="form-field-label">Date of Application:</div>
+    <div class="form-field-value">{{applicationDate}}</div>
+  </div>
+  <div class="form-field">
+    <div class="signature-line">Applicant's Signature</div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<div class="admission-slip">
+  <h2 style="text-align: center; margin: 20px 0">ADMISSION SLIP</h2>
+
+  <div class="form-row">
+    <div class="form-field">
+      <div class="form-field-label">Name of Applicant:</div>
+      <div class="form-field-value">{{applicantName}}</div>
+    </div>
+    <div class="form-field">
+      <div class="form-field-label">Tel. Number:</div>
+      <div class="form-field-value">{{contact.telephoneNumber}}</div>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-field">
+      <div class="form-field-label">Assessment Applied for:</div>
+      <div class="form-field-value">{{assessmentTitle}}</div>
+    </div>
+    <div class="form-field">
+      <div class="form-field-label">Official Receipt Number:</div>
+      <div class="form-field-value">{{receiptNumber}}</div>
+    </div>
+  </div>
+
+  <div class="requirements-box">
+    <div style="font-weight: bold; margin-bottom: 10px">
+      Check submitted requirements:
+    </div>
+    <div class="checkbox-group">
+      <div class="checkbox-item">Accomplished Self-Assessment Guide</div>
+      <div class="checkbox-item">Bring own Personal Protective Equipment</div>
+      <div class="checkbox-item">
+        Three (3) pieces colored passport size pictures
+      </div>
+      <div class="checkbox-item">
+        Others. Pls. specify:
+        <div class="form-field-value">{{otherRequirements}}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-field">
+      <div class="form-field-label">Assessment Date:</div>
+      <div class="form-field-value">{{assessmentDate}}</div>
+    </div>
+    <div class="form-field">
+      <div class="form-field-label">Assessment Time:</div>
+      <div class="form-field-value">8:00AM -- 5:00PM</div>
+    </div>
+  </div>
+
+  <div class="signature-section">
+    <div>
+      <div class="signature-line">
+        Printed Name & Signature of Processing Officer
+      </div>
+      <div style="margin-top: 10px">
+        Date: <span class="form-field-value">{{processingOfficerDate}}</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="signature-line">Printed Name & Signature of Applicant</div>
+      <div style="margin-top: 10px">
+        Date: <span class="form-field-value">{{applicantSignatureDate}}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="note" style="text-align: center; margin-top: 20px">
+    Note: Please bring this Admission Slip on your assessment date.
+  </div>
+</div>
