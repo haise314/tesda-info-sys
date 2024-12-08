@@ -10,39 +10,57 @@ import {
   Container,
   Paper,
   Avatar,
+  Stack,
 } from "@mui/material";
-import { SchoolOutlined } from "@mui/icons-material";
+import {
+  SchoolOutlined,
+  AssessmentOutlined,
+  ListAltOutlined,
+} from "@mui/icons-material";
 import { Link } from "react-router-dom";
+
+// Import images (ensure these paths are correct)
 import heroImage from "../../assets/banner.jpg";
 import programsImage from "../../assets/programs.jpg";
 import enrollmentImage from "../../assets/enrollment.jpg";
 import assessmentImage from "../../assets/assessment.jpg";
-import featuredImage from "../../assets/program1.jpg";
+import skillsDevelopmentImage from "../../assets/skills.jpg";
+
+// Import components
 import NewsSection from "./components/NewsSection";
 import FeedbackSection from "./components/FeedbackSection";
 
+// Card configuration
 const cardItems = [
   {
-    title: "Programs",
+    title: "Training Programs",
     description:
-      "Explore TESDA-accredited programs and opportunities for skills development.",
+      "Browse our comprehensive range of TESDA-accredited training programs across various industries and skill levels.",
     imageUrl: programsImage,
+    link: "/programs",
+    icon: <SchoolOutlined />,
   },
   {
     title: "Enrollment",
-    description: "Find out how to enroll in various TESDA training programs.",
+    description:
+      "Start your skills journey with our streamlined online enrollment process. Quick, easy, and accessible.",
     imageUrl: enrollmentImage,
+    link: "/enrollment-process",
+    icon: <ListAltOutlined />,
   },
   {
-    title: "Assessment",
-    description: "Discover TESDA's assessment programs and certifications.",
+    title: "Skills Assessment",
+    description:
+      "Get certified and validate your professional skills through our comprehensive assessment programs.",
     imageUrl: assessmentImage,
+    link: "/assessments",
+    icon: <AssessmentOutlined />,
   },
 ];
 
 const LandingPage = () => {
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: "#f5f5f5" }}>
+    <Box sx={{ flexGrow: 1, bgcolor: "#f5f5f5", minHeight: "100vh" }}>
       {/* Hero Section */}
       <Paper
         sx={{
@@ -54,7 +72,7 @@ const LandingPage = () => {
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
           backgroundImage: `url(${heroImage})`,
-          height: { xs: "300px", md: "auto" },
+          height: { xs: "300px", md: "500px" },
         }}
       >
         <Box
@@ -64,33 +82,85 @@ const LandingPage = () => {
             bottom: 0,
             right: 0,
             left: 0,
-            backgroundColor: "rgba(0,0,0,.3)",
+            backgroundColor: "rgba(0,0,0,.5)",
           }}
         />
-        <Grid container>
-          <Grid item xs={12} md={6}>
+        <Grid
+          container
+          alignItems="center"
+          justifyContent="center"
+          sx={{ height: "100%", position: "relative", zIndex: 1 }}
+        >
+          <Grid item xs={12} md={8} lg={6}>
             <Box
               sx={{
-                position: "relative",
+                textAlign: { xs: "center", md: "left" },
                 p: { xs: 3, md: 6 },
-                pr: { md: 0 },
               }}
             >
               <Typography
                 component="h1"
-                variant="h3"
+                variant="h2"
                 color="inherit"
                 gutterBottom
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: { xs: "2.5rem", md: "3.5rem" },
+                }}
               >
                 Welcome to TESDA
               </Typography>
-              <Typography variant="h5" color="inherit" paragraph>
+              <Typography
+                variant="h5"
+                color="inherit"
+                paragraph
+                sx={{
+                  mb: 3,
+                  fontSize: { xs: "1rem", md: "1.5rem" },
+                }}
+              >
                 Empowering Filipinos with world-class technical education and
                 skills development.
               </Typography>
-              <Button variant="contained" color="primary">
-                Explore Programs
-              </Button>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                justifyContent={{ xs: "center", md: "flex-start" }}
+              >
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  component={Link}
+                  to="/programs"
+                  sx={{
+                    textTransform: "none",
+                    px: 4,
+                    py: 1.5,
+                  }}
+                >
+                  Explore Programs
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  size="large"
+                  component={Link}
+                  to="/about"
+                  sx={{
+                    textTransform: "none",
+                    px: 4,
+                    py: 1.5,
+                    color: "white",
+                    borderColor: "white",
+                    "&:hover": {
+                      backgroundColor: "rgba(255,255,255,0.2)",
+                    },
+                  }}
+                >
+                  Learn More
+                </Button>
+              </Stack>
             </Box>
           </Grid>
         </Grid>
@@ -106,6 +176,11 @@ const LandingPage = () => {
                   height: "100%",
                   display: "flex",
                   flexDirection: "column",
+                  transition: "transform 0.3s ease-in-out",
+                  "&:hover": {
+                    transform: "scale(1.05)",
+                    boxShadow: 3,
+                  },
                 }}
               >
                 <CardMedia
@@ -116,19 +191,22 @@ const LandingPage = () => {
                 />
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Avatar sx={{ bgcolor: "primary.main", mb: 2 }}>
-                    <SchoolOutlined />
+                    {item.icon}
                   </Avatar>
                   <Typography gutterBottom variant="h5" component="h2">
                     {item.title}
                   </Typography>
-                  <Typography>{item.description}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {item.description}
+                  </Typography>
                 </CardContent>
                 <Box sx={{ p: 2 }}>
                   <Button
                     component={Link}
-                    to="/programs"
+                    to={item.link}
                     size="small"
                     color="primary"
+                    variant="outlined"
                   >
                     Learn More
                   </Button>
@@ -138,30 +216,69 @@ const LandingPage = () => {
           ))}
         </Grid>
 
-        {/* News and Featured Program Section */}
+        {/* News and Design Section */}
         <Grid container spacing={4} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={8}>
+          <Grid
+            item
+            xs={12}
+            md={8}
+            sx={{
+              display: "flex",
+              alignItems: "stretch",
+            }}
+          >
             <NewsSection />
           </Grid>
-          <Grid item xs={12} md={4}>
-            <Card>
+          <Grid
+            item
+            xs={12}
+            md={4}
+            sx={{
+              display: "flex",
+              alignItems: "stretch",
+            }}
+          >
+            <Card
+              sx={{
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+                transition: "transform 0.3s ease-in-out",
+                "&:hover": {
+                  transform: "scale(1.05)",
+                  boxShadow: 3,
+                },
+              }}
+            >
               <CardMedia
                 component="img"
                 height="200"
-                image={featuredImage}
-                alt="Featured Program"
+                image={skillsDevelopmentImage}
+                alt="Skills Development"
               />
-              <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
-                  Featured Program
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography
+                  variant="h5"
+                  component="h2"
+                  color="primary"
+                  gutterBottom
+                >
+                  Your Skills, Our Passion
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Discover our latest program in Information Technology,
-                  designed to meet the demands of the digital age.
+                  Transforming potential into professional excellence through
+                  comprehensive skills development and personalized training
+                  approaches.
                 </Typography>
               </CardContent>
               <Box sx={{ p: 2 }}>
-                <Button size="small" color="primary">
+                <Button
+                  component={Link}
+                  to="/about"
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                >
                   Learn More
                 </Button>
               </Box>

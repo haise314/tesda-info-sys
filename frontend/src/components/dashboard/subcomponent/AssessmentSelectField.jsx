@@ -86,7 +86,7 @@ const AssessmentSelectField = ({
               assessments.map((assessment) => (
                 <MenuItem key={assessment._id} value={assessment.name}>
                   {assessment.name} ({assessment.type} - {assessment.duration}{" "}
-                  mins)
+                  hours)
                 </MenuItem>
               ))
             )}

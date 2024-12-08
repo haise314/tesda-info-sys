@@ -7,17 +7,23 @@ import {
   Divider,
   Alert,
   CircularProgress,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import TrainingProgramList from "./components/TrainingProgramList";
 import { useTrainingPrograms } from "./components/useTrainingPrograms";
 
 const TrainingProgram = () => {
+  const primaryColor = "#0038a8";
   const { data: programs, isLoading, error } = useTrainingPrograms();
 
   if (isLoading) {
     return (
       <Container sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-        <CircularProgress />
+        <CircularProgress sx={{ color: primaryColor }} />
       </Container>
     );
   }
@@ -31,25 +37,24 @@ const TrainingProgram = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: 4 }}>
       <Paper
         elevation={3}
         sx={{
           p: 4,
-          background: "linear-gradient(to right bottom, #ffffff, #f8f9fa)",
+          borderTop: `6px solid ${primaryColor}`,
+          borderRadius: 2,
         }}
       >
         <Box sx={{ textAlign: "center", mb: 4 }}>
           <Typography
-            variant="h3"
+            variant="h4"
             component="h1"
             gutterBottom
             sx={{
+              color: primaryColor,
               fontWeight: "bold",
-              background: "linear-gradient(45deg, #1976d2, #9c27b0)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              color: "transparent",
+              textAlign: "center",
             }}
           >
             Provincial Training Center – Iba
@@ -65,37 +70,73 @@ const TrainingProgram = () => {
           </Typography>
         </Box>
 
-        <Divider sx={{ my: 4 }} />
+        <Divider sx={{ my: 3, backgroundColor: primaryColor }} />
 
-        <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
+        <Typography
+          variant="h5"
+          gutterBottom
+          sx={{
+            color: primaryColor,
+            mb: 2,
+            borderBottom: `2px solid ${primaryColor}`,
+            pb: 1,
+          }}
+        >
           Available Training Programs
         </Typography>
 
         <TrainingProgramList programs={programs || []} />
 
-        <Divider sx={{ my: 4 }} />
+        <Divider sx={{ my: 3, backgroundColor: primaryColor }} />
 
         <Box sx={{ mt: 4 }}>
-          <Typography variant="h5" gutterBottom>
-            Basic Requirements
-          </Typography>
-          <Box
+          <Typography
+            variant="h5"
             sx={{
-              backgroundColor: "#f5f5f5",
-              p: 3,
-              borderRadius: 2,
-              boxShadow: 1,
+              color: primaryColor,
+              mb: 2,
+              borderBottom: `2px solid ${primaryColor}`,
+              pb: 1,
             }}
           >
-            <ul style={{ paddingLeft: "20px" }}>
-              <li>At least 18 years of age</li>
-              <li>At least High School Graduate</li>
-              <li>Copy of NSO Birth Certificate</li>
-              <li>With good moral character</li>
-              <li>Undergone a pre-training assessment</li>
-              <li>Can communicate both orally and in written form</li>
-            </ul>
-          </Box>
+            Basic Requirements
+          </Typography>
+
+          <List>
+            {[
+              {
+                primary: "Age Requirement",
+                secondary: "At least 18 years of age",
+              },
+              {
+                primary: "Educational Qualification",
+                secondary: "At least High School Graduate",
+              },
+              {
+                primary: "Documentation",
+                secondary: "Copy of NSO Birth Certificate",
+              },
+              { primary: "Character", secondary: "With good moral character" },
+              {
+                primary: "Assessment",
+                secondary: "Undergone a pre-training assessment",
+              },
+              {
+                primary: "Communication Skills",
+                secondary: "Can communicate both orally and in written form",
+              },
+            ].map((requirement, index) => (
+              <ListItem key={index}>
+                <ListItemIcon>
+                  <CheckCircleOutlineIcon sx={{ color: primaryColor }} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={requirement.primary}
+                  secondary={requirement.secondary}
+                />
+              </ListItem>
+            ))}
+          </List>
         </Box>
       </Paper>
     </Container>

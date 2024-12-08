@@ -56,6 +56,9 @@ import { SelectionsProvider } from "./context/SelectionContext.jsx";
 import Context from "./pages/dashboard/Context.jsx";
 import AssessmentsPage from "./pages/dashboard/AssessmentsPage.jsx";
 import TrainingCenterPage from "./pages/dashboard/TrainingCenterPage.jsx";
+import TesdaAboutPage from "./pages/public/TesdaAboutPage.jsx";
+import EnrollemntProcess from "./pages/public/EnrollmentProcess.jsx";
+import AssessmentsPageLP from "./pages/public/AssessmentsPage.jsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -85,6 +88,10 @@ const router = createBrowserRouter([
         element: <TrainingProgram />,
       },
       {
+        path: "assessments",
+        element: <AssessmentsPageLP />,
+      },
+      {
         path: "MATB",
         element: <MATBform />,
       },
@@ -103,6 +110,14 @@ const router = createBrowserRouter([
       {
         path: "news",
         element: <NewsPage />,
+      },
+      {
+        path: "about",
+        element: <TesdaAboutPage />,
+      },
+      {
+        path: "enrollment-process",
+        element: <EnrollemntProcess />,
       },
       {
         path: "unauthorized",

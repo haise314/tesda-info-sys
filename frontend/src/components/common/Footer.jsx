@@ -12,31 +12,22 @@ import {
   Stack,
 } from "@mui/material";
 import FacebookIcon from "@mui/icons-material/Facebook";
-import TwitterIcon from "@mui/icons-material/Twitter";
-import InstagramIcon from "@mui/icons-material/Instagram";
-import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import { Link as RouterLink } from "react-router-dom";
 
-const Footer = () => {
+const Footer = ({
+  facebookPageUrl = "https://www.facebook.com/TESDAOfficial",
+}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const quickLinks = [
-    { name: "Programs", to: "/programs" },
-    { name: "Register", to: "/register" },
-    { name: "Application", to: "/apply" },
-    { name: "MATB", to: "/MATB" },
-  ];
-
-  const socialLinks = [
-    { icon: <FacebookIcon />, href: "https://facebook.com", label: "Facebook" },
-    { icon: <TwitterIcon />, href: "https://twitter.com", label: "Twitter" },
-    {
-      icon: <InstagramIcon />,
-      href: "https://instagram.com",
-      label: "Instagram",
-    },
-    { icon: <LinkedInIcon />, href: "https://linkedin.com", label: "LinkedIn" },
+    { name: "Courses", to: "/programs" },
+    { name: "Assessments", to: "/assessments" },
+    { name: "Register", to: "/registeruser" },
+    { name: "Login", to: "/login" },
+    { name: "Feedback", to: "/feedback" },
+    { name: "News", to: "/news" },
+    { name: "About", to: "/about" },
   ];
 
   const FooterSection = ({ title, children }) => (
@@ -46,6 +37,7 @@ const Footer = () => {
         gutterBottom
         sx={{
           fontWeight: 600,
+          color: "white",
           position: "relative",
           "&::after": {
             content: '""',
@@ -127,49 +119,55 @@ const Footer = () => {
                     color: "primary.light",
                   },
                   fontSize: "0.9rem",
+                  mb: 2,
                 }}
               >
                 ptciba@tesda.gov.ph
               </Link>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                Provincial Training Center - Iba
+              </Typography>
+              <Typography variant="body2">
+                Tel: (047) 811-1338 / 0919-817-2078
+              </Typography>
             </FooterSection>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <FooterSection title="Follow Us">
-              <Box sx={{ mt: 2 }}>
-                <Stack
-                  direction="row"
-                  spacing={isMobile ? 3 : 2}
-                  justifyContent={{ xs: "center", sm: "flex-start" }}
+            <FooterSection title="Connect With Us">
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Link
+                  href={facebookPageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  {socialLinks.map((link) => (
-                    <IconButton
-                      key={link.label}
-                      component="a"
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={link.label}
-                      sx={{
-                        color: "white",
-                        "&:hover": {
-                          color: "primary.light",
-                          transform: "translateY(-3px)",
-                        },
-                        transition: "all 0.2s",
-                      }}
-                    >
-                      {link.icon}
-                    </IconButton>
-                  ))}
-                </Stack>
+                  <IconButton
+                    color="inherit"
+                    aria-label="facebook"
+                    sx={{
+                      color: "white",
+                      "&:hover": {
+                        bgcolor: "rgba(255,255,255,0.1)",
+                      },
+                    }}
+                  >
+                    <FacebookIcon />
+                  </IconButton>
+                </Link>
+                <Typography variant="body2" sx={{ ml: 1 }}>
+                  Follow us on Facebook
+                </Typography>
               </Box>
             </FooterSection>
           </Grid>
         </Grid>
 
         <Divider
-          sx={{ mt: 4, mb: 4, borderColor: "rgba(255, 255, 255, 0.1)" }}
+          sx={{
+            mt: 4,
+            mb: 4,
+            borderColor: "rgba(255, 255, 255, 0.1)",
+          }}
         />
 
         <Typography
@@ -178,9 +176,11 @@ const Footer = () => {
           sx={{
             opacity: 0.8,
             fontSize: "0.85rem",
+            color: "white",
           }}
         >
-          © {new Date().getFullYear()} TESDA. All Rights Reserved.
+          © {new Date().getFullYear()} TESDA Provincial Training Center - Iba.
+          All Rights Reserved.
         </Typography>
       </Container>
     </Box>

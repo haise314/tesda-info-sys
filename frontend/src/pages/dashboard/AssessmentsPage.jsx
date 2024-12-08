@@ -127,7 +127,7 @@ const AssessmentsPage = () => {
                           >
                             {assessment.type}
                           </Typography>
-                          {` - ${assessment.description} (${assessment.duration} minutes)`}
+                          {` - ${assessment.description} (${assessment.duration} hours)`}
                         </>
                       }
                     />
@@ -197,7 +197,7 @@ const AssessmentsPage = () => {
                 <TextField
                   fullWidth
                   type="number"
-                  label="Duration (minutes)"
+                  label="Duration (hours)"
                   value={newAssessment.duration}
                   onChange={(e) =>
                     setNewAssessment({

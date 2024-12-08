@@ -27,12 +27,15 @@ import {
   Alert,
   InputLabel,
   FormHelperText,
+  Divider,
 } from "@mui/material";
 import axios from "axios";
 import {
   qualityDimensions,
   serviceTypes,
 } from "../../components/utils/enums/citizensCharter.enum.js";
+
+const primaryColor = "#0038a8";
 
 const StyledContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(4),
@@ -41,6 +44,7 @@ const StyledContainer = styled(Container)(({ theme }) => ({
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
+  borderTop: `6px solid ${primaryColor}`,
   borderRadius: theme.shape.borderRadius * 2,
   boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
 }));
@@ -70,8 +74,10 @@ const FormSection = styled(Box)(({ theme }) => ({
 
 const SectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(2),
-  color: theme.palette.primary.main,
+  color: primaryColor,
   fontWeight: 600,
+  borderBottom: `2px solid ${primaryColor}`,
+  paddingBottom: theme.spacing(1),
 }));
 
 const QuestionContainer = styled(Box)(({ theme }) => ({
@@ -92,22 +98,6 @@ const RatingContainer = styled(Box)(({ theme }) => ({
   flexDirection: "column",
   alignItems: "center",
   width: "100%",
-}));
-
-const RatingLegend = styled(Box)(({ theme }) => ({
-  display: "flex",
-  justifyContent: "space-between",
-  width: "80%",
-  marginTop: theme.spacing(1),
-  [theme.breakpoints.down("sm")]: {
-    width: "100%",
-  },
-}));
-
-const RatingLabel = styled(Typography)(({ theme }) => ({
-  fontSize: "0.75rem",
-  color: theme.palette.text.secondary,
-  textAlign: "center",
 }));
 
 const customIcons = {
@@ -176,7 +166,6 @@ const CitizensCharter = () => {
   const transactionType = watch("transactionType");
 
   const createCharter = async (data) => {
-    // Transform ratings to text values based on the number
     const ratingToText = {
       1: "Strongly Disagree",
       2: "Disagree",
@@ -198,12 +187,6 @@ const CitizensCharter = () => {
       ),
     };
 
-    // if (!transformedData.emailAddress) delete transformedData.emailAddress;
-    // if (!transformedData.name) delete transformedData.name;
-    // if (!transformedData.employeeName) delete transformedData.employeeName;
-    // if (!transformedData.suggestions) delete transformedData.suggestions;
-
-    // Clean up optional fields
     const optionalFields = [
       "emailAddress",
       "name",
@@ -214,7 +197,6 @@ const CitizensCharter = () => {
       if (!transformedData[field]) delete transformedData[field];
     });
 
-    // Handle otherTransactionType
     if (transformedData.transactionType !== "Others") {
       delete transformedData.otherTransactionType;
     }
@@ -231,7 +213,7 @@ const CitizensCharter = () => {
         message: "Form submitted successfully!",
         severity: "success",
       });
-      reset(); // Only reset after successful submission
+      reset();
     },
     onError: (error) => {
       setSnackbar({
@@ -259,11 +241,20 @@ const CitizensCharter = () => {
             variant="h4"
             align="center"
             gutterBottom
-            color="primary"
-            sx={{ fontWeight: 700 }}
+            sx={{ color: primaryColor, fontWeight: "bold" }}
           >
             Citizens Charter Form
           </Typography>
+          <Typography
+            variant="body1"
+            align="center"
+            color="text.secondary"
+            gutterBottom
+          >
+            Provincial Training Center – Iba
+          </Typography>
+
+          <Divider sx={{ my: 3, backgroundColor: primaryColor }} />
 
           <FormSection>
             <SectionTitle variant="h6">Personal Information</SectionTitle>
@@ -288,7 +279,7 @@ const CitizensCharter = () => {
               </Grid>
               <Grid item xs={12} sm={4}>
                 <FormControl fullWidth error={!!errors.gender}>
-                  <FormLabel>Gender</FormLabel>
+                  <FormLabel sx={{ color: primaryColor }}>Gender</FormLabel>
                   <Controller
                     name="gender"
                     control={control}
@@ -297,17 +288,17 @@ const CitizensCharter = () => {
                       <RadioGroup {...field} row>
                         <FormControlLabel
                           value="Male"
-                          control={<Radio />}
+                          control={<Radio sx={{ color: primaryColor }} />}
                           label="Male"
                         />
                         <FormControlLabel
                           value="Female"
-                          control={<Radio />}
+                          control={<Radio sx={{ color: primaryColor }} />}
                           label="Female"
                         />
                         <FormControlLabel
                           value="Other"
-                          control={<Radio />}
+                          control={<Radio sx={{ color: primaryColor }} />}
                           label="Other"
                         />
                       </RadioGroup>
@@ -328,13 +319,23 @@ const CitizensCharter = () => {
               </Grid>
               <Grid item xs={12} sm={4}>
                 <FormControl fullWidth error={!!errors.serviceType}>
-                  <InputLabel>Service Type</InputLabel>
+                  <InputLabel sx={{ color: primaryColor }}>
+                    Service Type
+                  </InputLabel>
                   <Controller
                     name="serviceType"
                     control={control}
                     rules={{ required: "Please select a service type" }}
                     render={({ field }) => (
-                      <Select {...field} label="Service Type">
+                      <Select
+                        {...field}
+                        label="Service Type"
+                        sx={{
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: primaryColor,
+                          },
+                        }}
+                      >
                         {serviceTypes.map((type) => (
                           <MenuItem key={type} value={type}>
                             {type}
@@ -558,9 +559,11 @@ const CitizensCharter = () => {
             <Button
               type="submit"
               variant="contained"
-              color="primary"
-              size="large"
               sx={{
+                backgroundColor: primaryColor,
+                "&:hover": {
+                  backgroundColor: `${primaryColor}e6`, // Slightly darker on hover
+                },
                 px: 4,
                 py: 1.5,
                 borderRadius: 2,
@@ -581,7 +584,11 @@ const CitizensCharter = () => {
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
-          sx={{ width: "100%" }}
+          sx={{
+            width: "100%",
+            backgroundColor:
+              snackbar.severity === "success" ? primaryColor : undefined,
+          }}
         >
           {snackbar.message}
         </Alert>

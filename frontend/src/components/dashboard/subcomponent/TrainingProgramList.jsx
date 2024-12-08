@@ -11,8 +11,8 @@ import {
   Grid,
   Alert,
   CircularProgress,
-  Card,
-  CardContent,
+  Paper,
+  Container,
 } from "@mui/material";
 import { Search } from "@mui/icons-material";
 import { useQuery } from "@tanstack/react-query";
@@ -29,6 +29,7 @@ const fetchTrainingPrograms = async () => {
 };
 
 const TrainingProgramList = () => {
+  const primaryColor = "#0038a8";
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
 
@@ -55,84 +56,118 @@ const TrainingProgramList = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-        <CircularProgress />
-      </Box>
+      <Container sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+        <CircularProgress sx={{ color: primaryColor }} />
+      </Container>
     );
   }
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ my: 2 }}>
-        Error loading programs: {error.message}
-      </Alert>
+      <Container sx={{ py: 4 }}>
+        <Alert severity="error">Error loading programs: {error.message}</Alert>
+      </Container>
     );
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h4" gutterBottom>
-            Available Course/Qualifications
-          </Typography>
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          borderTop: `6px solid ${primaryColor}`,
+          borderRadius: 2,
+        }}
+      >
+        <Typography
+          variant="h5"
+          gutterBottom
+          sx={{
+            color: primaryColor,
+            mb: 2,
+            borderBottom: `2px solid ${primaryColor}`,
+            pb: 1,
+          }}
+        >
+          Available Course/Qualifications
+        </Typography>
 
-          {/* Search and Filters */}
-          <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={8}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="Search programs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search />
-                    </InputAdornment>
-                  ),
+        {/* Search and Filters */}
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} md={8}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Search programs..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search sx={{ color: primaryColor }} />
+                  </InputAdornment>
+                ),
+              }}
+              size="small"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "&.Mui-focused fieldset": {
+                    borderColor: primaryColor,
+                  },
+                },
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Filter Programs</InputLabel>
+              <Select
+                value={filter}
+                label="Filter Programs"
+                onChange={(e) => setFilter(e.target.value)}
+                sx={{
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: primaryColor,
+                  },
                 }}
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Filter Programs</InputLabel>
-                <Select
-                  value={filter}
-                  label="Filter Programs"
-                  onChange={(e) => setFilter(e.target.value)}
-                >
-                  <MenuItem value="all">All Programs</MenuItem>
-                  <MenuItem value="scholarship">With Scholarship</MenuItem>
-                  <MenuItem value="available">Available Slots</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+              >
+                <MenuItem value="all">All Programs</MenuItem>
+                <MenuItem value="scholarship">With Scholarship</MenuItem>
+                <MenuItem value="available">Available Slots</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
-        </CardContent>
-      </Card>
+        </Grid>
 
-      {/* Programs List */}
-      <Box sx={{ mt: 2 }}>
-        {filteredPrograms.length === 0 ? (
-          <Card sx={{ p: 4, textAlign: "center" }}>
-            <Typography variant="body1" color="textSecondary">
-              No training programs found matching your criteria.
-            </Typography>
-          </Card>
-        ) : (
-          <Grid container spacing={2}>
-            {filteredPrograms.map((program) => (
-              <Grid item xs={12} key={program._id}>
-                <TrainingProgramCard program={program} />
-              </Grid>
-            ))}
-          </Grid>
-        )}
-      </Box>
-    </Box>
+        {/* Programs List */}
+        <Box sx={{ mt: 2 }}>
+          {filteredPrograms.length === 0 ? (
+            <Box
+              sx={{
+                p: 4,
+                textAlign: "center",
+                backgroundColor: "#f5f5f5",
+                border: `1px solid ${primaryColor}`,
+                borderRadius: 2,
+              }}
+            >
+              <Typography variant="body1" color="textSecondary">
+                No training programs found matching your criteria.
+              </Typography>
+            </Box>
+          ) : (
+            <Grid container spacing={2}>
+              {filteredPrograms.map((program) => (
+                <Grid item xs={12} key={program._id}>
+                  <TrainingProgramCard program={program} />
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 

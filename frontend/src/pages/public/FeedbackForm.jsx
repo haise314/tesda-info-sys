@@ -21,6 +21,7 @@ import {
   Snackbar,
   Alert,
   styled,
+  Divider,
 } from "@mui/material";
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
 import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
@@ -28,36 +29,6 @@ import SentimentSatisfiedIcon from "@mui/icons-material/SentimentSatisfied";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAltOutlined";
 import SentimentVerySatisfiedIcon from "@mui/icons-material/SentimentVerySatisfied";
 import { feedbackSchema } from "../../components/schema/feedback.schema";
-
-const StyledContainer = styled(Container)(({ theme }) => ({
-  marginTop: theme.spacing(4),
-  marginBottom: theme.spacing(4),
-}));
-
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(4),
-  borderRadius: theme.shape.borderRadius * 2,
-  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-}));
-
-const StyledRating = styled(Rating)(({ theme }) => ({
-  display: "flex",
-  justifyContent: "space-between",
-  width: "80%",
-  "& .MuiRating-icon": {
-    transform: "scale(1.5)",
-    margin: theme.spacing(0, 2),
-  },
-  "& .MuiRating-iconEmpty .MuiSvgIcon-root": {
-    color: theme.palette.action.disabled,
-  },
-  [theme.breakpoints.down("sm")]: {
-    "& .MuiRating-icon": {
-      transform: "scale(1.2)",
-      margin: theme.spacing(0, 1),
-    },
-  },
-}));
 
 const FormSection = styled(Box)(({ theme }) => ({
   marginBottom: theme.spacing(4),
@@ -89,51 +60,9 @@ const RatingContainer = styled(Box)(({ theme }) => ({
   width: "100%",
 }));
 
-const RatingLegend = styled(Box)(({ theme }) => ({
-  display: "flex",
-  justifyContent: "space-between",
-  width: "80%",
-  marginTop: theme.spacing(1),
-  [theme.breakpoints.down("sm")]: {
-    width: "100%",
-  },
-}));
-
-const RatingLabel = styled(Typography)(({ theme }) => ({
-  fontSize: "0.75rem",
-  color: theme.palette.text.secondary,
-  textAlign: "center",
-}));
-
-const customIcons = {
-  1: {
-    icon: <SentimentVeryDissatisfiedIcon color="error" />,
-    label: "Very Dissatisfied",
-  },
-  2: {
-    icon: <SentimentDissatisfiedIcon color="error" />,
-    label: "Dissatisfied",
-  },
-  3: {
-    icon: <SentimentSatisfiedIcon color="warning" />,
-    label: "Neutral",
-  },
-  4: {
-    icon: <SentimentSatisfiedAltIcon color="success" />,
-    label: "Satisfied",
-  },
-  5: {
-    icon: <SentimentVerySatisfiedIcon color="success" />,
-    label: "Very Satisfied",
-  },
-};
-
-const IconContainer = (props) => {
-  const { value, ...other } = props;
-  return <span {...other}>{customIcons[value].icon}</span>;
-};
-
 const FeedbackForm = () => {
+  const primaryColor = "#0038a8";
+
   const {
     control,
     handleSubmit,
@@ -193,128 +122,193 @@ const FeedbackForm = () => {
 
   const onSubmit = (data) => mutation.mutate(data);
 
+  const customIcons = {
+    1: {
+      icon: <SentimentVeryDissatisfiedIcon color="error" />,
+      label: "Very Dissatisfied",
+    },
+    2: {
+      icon: <SentimentDissatisfiedIcon color="error" />,
+      label: "Dissatisfied",
+    },
+    3: {
+      icon: <SentimentSatisfiedIcon color="warning" />,
+      label: "Neutral",
+    },
+    4: {
+      icon: <SentimentSatisfiedAltIcon color="success" />,
+      label: "Satisfied",
+    },
+    5: {
+      icon: <SentimentVerySatisfiedIcon color="success" />,
+      label: "Very Satisfied",
+    },
+  };
+
+  const IconContainer = (props) => {
+    const { value, ...other } = props;
+    return <span {...other}>{customIcons[value].icon}</span>;
+  };
+
+  const StyledRating = (props) => (
+    <Rating
+      {...props}
+      IconContainerComponent={IconContainer}
+      getLabelText={(value) => customIcons[value].label}
+      highlightSelectedOnly
+      sx={{
+        marginLeft: "55px",
+        display: "flex",
+        justifyContent: "space-between",
+        width: "80%",
+        "& .MuiRating-icon": {
+          transform: "scale(1.5)",
+          margin: "0 16px",
+        },
+        "& .MuiRating-iconEmpty .MuiSvgIcon-root": {
+          color: "action.disabled",
+        },
+      }}
+    />
+  );
+
   return (
-    <StyledContainer maxWidth="md">
-      <StyledPaper>
-        <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          borderTop: `6px solid ${primaryColor}`,
+          borderRadius: 2,
+        }}
+      >
+        <Box sx={{ textAlign: "center", mb: 4 }}>
           <Typography
             variant="h4"
-            align="center"
+            component="h1"
             gutterBottom
-            color="primary"
-            sx={{ fontWeight: 700 }}
+            sx={{
+              color: primaryColor,
+              fontWeight: "bold",
+              textAlign: "center",
+            }}
           >
             Customer Feedback Form
           </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Provincial Training Center – Iba
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Accredited by TESDA
+          </Typography>
+        </Box>
 
-          <FormSection>
-            <SectionTitle variant="h6">Personal Information</SectionTitle>
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="name"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Name"
-                      error={!!errors.name}
-                      helperText={errors.name?.message}
-                      fullWidth
-                      variant="outlined"
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid item xs={12} sm={3}>
-                <Controller
-                  name="age"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Age"
-                      type="number"
-                      error={!!errors.age}
-                      helperText={errors.age?.message}
-                      fullWidth
-                      variant="outlined"
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === "" ? "" : Number(e.target.value)
-                        )
-                      }
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid item xs={12} sm={3}>
-                <Controller
-                  name="sex"
-                  control={control}
-                  render={({ field }) => (
-                    <FormControl fullWidth variant="outlined">
-                      <InputLabel>Sex</InputLabel>
-                      <Select {...field} label="Sex">
-                        <MenuItem value="Male">Male</MenuItem>
-                        <MenuItem value="Female">Female</MenuItem>
-                        <MenuItem value="Other">Other</MenuItem>
-                      </Select>
-                    </FormControl>
-                  )}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Controller
-                  name="address"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Address"
-                      error={!!errors.address}
-                      helperText={errors.address?.message}
-                      fullWidth
-                      variant="outlined"
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="mobileNumber"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Mobile Number"
-                      error={!!errors.mobileNumber}
-                      helperText={errors.mobileNumber?.message}
-                      fullWidth
-                      variant="outlined"
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="emailAddress"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Email Address"
-                      error={!!errors.emailAddress}
-                      helperText={errors.emailAddress?.message}
-                      fullWidth
-                      variant="outlined"
-                    />
-                  )}
-                />
-              </Grid>
+        <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="name"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Name"
+                    error={!!errors.name}
+                    helperText={errors.name?.message}
+                    fullWidth
+                    variant="outlined"
+                  />
+                )}
+              />
             </Grid>
-          </FormSection>
-
+            <Grid item xs={12} sm={3}>
+              <Controller
+                name="age"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Age"
+                    type="number"
+                    error={!!errors.age}
+                    helperText={errors.age?.message}
+                    fullWidth
+                    variant="outlined"
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === "" ? "" : Number(e.target.value)
+                      )
+                    }
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Controller
+                name="sex"
+                control={control}
+                render={({ field }) => (
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel>Sex</InputLabel>
+                    <Select {...field} label="Sex">
+                      <MenuItem value="Male">Male</MenuItem>
+                      <MenuItem value="Female">Female</MenuItem>
+                      <MenuItem value="Other">Other</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Controller
+                name="address"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Address"
+                    error={!!errors.address}
+                    helperText={errors.address?.message}
+                    fullWidth
+                    variant="outlined"
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="mobileNumber"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Mobile Number"
+                    error={!!errors.mobileNumber}
+                    helperText={errors.mobileNumber?.message}
+                    fullWidth
+                    variant="outlined"
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="emailAddress"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Email Address"
+                    error={!!errors.emailAddress}
+                    helperText={errors.emailAddress?.message}
+                    fullWidth
+                    variant="outlined"
+                  />
+                )}
+              />
+            </Grid>
+          </Grid>
+          <Divider sx={{ my: 3, backgroundColor: primaryColor }} />
           <FormSection>
             <SectionTitle variant="h6" align="center">
               Service Evaluation
@@ -350,45 +344,18 @@ const FeedbackForm = () => {
               </QuestionContainer>
             ))}
           </FormSection>
+          <Divider sx={{ my: 3, backgroundColor: primaryColor }} />
 
-          <FormSection>
-            <Controller
-              name="recommendInstitution"
-              control={control}
-              render={({ field }) => (
-                <FormControlLabel
-                  control={<Checkbox {...field} color="primary" />}
-                  label="Irerekomenda nyo po ba ang TESDA sa inyong kamag-anak at kaibigan?"
-                />
-              )}
-            />
-          </FormSection>
-
-          <FormSection>
-            <Controller
-              name="suggestion"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Suggestions for Improvement"
-                  multiline
-                  rows={4}
-                  fullWidth
-                  variant="outlined"
-                />
-              )}
-            />
-          </FormSection>
-
-          <Box sx={{ display: "flex", justifyContent: "center" }}>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
             <Button
               type="submit"
               variant="contained"
-              color="primary"
               disabled={mutation.isLoading}
-              size="large"
               sx={{
+                backgroundColor: primaryColor,
+                "&:hover": {
+                  backgroundColor: `${primaryColor}cc`, // Slightly transparent on hover
+                },
                 px: 4,
                 py: 1.5,
                 borderRadius: 2,
@@ -399,7 +366,7 @@ const FeedbackForm = () => {
             </Button>
           </Box>
         </Box>
-      </StyledPaper>
+      </Paper>
 
       <Snackbar
         open={snackbar.open}
@@ -415,7 +382,7 @@ const FeedbackForm = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </StyledContainer>
+    </Container>
   );
 };
 

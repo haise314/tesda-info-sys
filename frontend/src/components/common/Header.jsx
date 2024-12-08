@@ -24,7 +24,8 @@ import ReceiptIcon from "@mui/icons-material/Receipt";
 import LoginIcon from "@mui/icons-material/Login";
 import CloseIcon from "@mui/icons-material/Close";
 import { useState } from "react";
-import tesdaIcon from "../../assets/tesda_icon.png";
+import tesdaIcon from "../../assets/tesda_icon2.png";
+import { NewspaperIcon } from "lucide-react";
 
 const Header = () => {
   const theme = useTheme();
@@ -39,9 +40,9 @@ const Header = () => {
 
   const menuItems = [
     { title: "Course/Qualifications", path: "/programs", icon: <SchoolIcon /> },
-    // { title: "Register", path: "/register", icon: <PersonAddIcon /> },
-    // { title: "Application", path: "/apply", icon: <ReceiptIcon /> },
-    // { title: "MATB", path: "/MATB", icon: <ReceiptIcon /> },
+    { title: "Assessments", path: "/assessments", icon: <PersonAddIcon /> },
+    { title: "News", path: "/news", icon: <NewspaperIcon /> },
+    { title: "About", path: "/about", icon: <ReceiptIcon /> },
     { title: "Login", path: "/login", icon: <LoginIcon /> },
   ];
 
