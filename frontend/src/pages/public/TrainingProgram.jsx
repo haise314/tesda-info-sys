@@ -89,7 +89,7 @@ const TrainingProgram = () => {
             {[
               {
                 primary: "Age Requirement",
-                secondary: "At least 18 years of age",
+                secondary: "At least 17 years of age",
               },
               {
                 primary: "Educational Qualification",
