@@ -108,6 +108,10 @@ const TrainingProgram = () => {
                 primary: "Communication Skills",
                 secondary: "Can communicate both orally and in written form",
               },
+              {
+                primary: "Registration Form for Course/Qualification",
+                secondary: "Duly accomplished registration form",
+              },
             ].map((requirement, index) => (
               <ListItem key={index}>
                 <ListItemIcon>
