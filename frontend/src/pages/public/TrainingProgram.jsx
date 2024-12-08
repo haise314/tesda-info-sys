@@ -72,23 +72,6 @@ const TrainingProgram = () => {
 
         <Divider sx={{ my: 3, backgroundColor: primaryColor }} />
 
-        <Typography
-          variant="h5"
-          gutterBottom
-          sx={{
-            color: primaryColor,
-            mb: 2,
-            borderBottom: `2px solid ${primaryColor}`,
-            pb: 1,
-          }}
-        >
-          Available Training Programs
-        </Typography>
-
-        <TrainingProgramList programs={programs || []} />
-
-        <Divider sx={{ my: 3, backgroundColor: primaryColor }} />
-
         <Box sx={{ mt: 4 }}>
           <Typography
             variant="h5"
@@ -138,6 +121,23 @@ const TrainingProgram = () => {
             ))}
           </List>
         </Box>
+
+        <Divider sx={{ my: 3, backgroundColor: primaryColor }} />
+
+        <Typography
+          variant="h5"
+          gutterBottom
+          sx={{
+            color: primaryColor,
+            mb: 2,
+            borderBottom: `2px solid ${primaryColor}`,
+            pb: 1,
+          }}
+        >
+          Available Training Programs
+        </Typography>
+
+        <TrainingProgramList programs={programs || []} />
       </Paper>
     </Container>
   );
