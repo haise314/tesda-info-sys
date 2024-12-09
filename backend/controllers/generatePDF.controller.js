@@ -597,7 +597,7 @@ export const generateApplicantPDF = asyncHandler(async (req, res) => {
         .setText(firstAssessment.assessmentTitle || "");
     }
 
-    // Dynamic Radio Button Selections
+    // Handle Radio Groups
     const handleRadioSelection = (radioGroup, value, options, customField) => {
       const radio = form.getRadioGroup(radioGroup);
       const matchedOption = options.find((opt) => opt === value);
@@ -610,7 +610,11 @@ export const generateApplicantPDF = asyncHandler(async (req, res) => {
       }
     };
 
-    // Handle Radio Groups
+    // Insert the sex radio group handling here
+    const sexOptions = ["male", "female"];
+    const sexValue = mergedData.sex.toLowerCase();
+    handleRadioSelection("sex", sexValue, sexOptions, "sexCustom");
+
     handleRadioSelection(
       "clientType",
       mergedData.clientClassification,
