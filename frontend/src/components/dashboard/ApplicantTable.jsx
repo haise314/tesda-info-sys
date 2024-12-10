@@ -36,9 +36,15 @@ import { useAuth } from "../../context/AuthContext.jsx";
 
 const fetchApplicants = async () => {
   const response = await axios.get("/api/applicants");
-  return Array.isArray(response.data.data)
+  const processedData = Array.isArray(response.data.data)
     ? response.data.data.map(flattenApplicantData)
     : [flattenApplicantData(response.data.data)];
+
+  // Add debugging logs
+  console.log("Raw response data:", response.data.data);
+  console.log("Processed applicants:", processedData);
+
+  return processedData;
 };
 
 const getDefaultColumnVisibility = (columns) => {
@@ -141,18 +147,36 @@ const ApplicantTable = () => {
     },
   ];
 
+  const debugFormatAddress = (addressLocation) => {
+    console.log("Input addressLocation:", addressLocation);
+    return addressLocation || "";
+  };
+
   const handleExportExcel = () => {
-    // Filter out unnecessary fields and prepare data for export
-    const exportData = rows.map((row) => ({
-      ULI: row.uli || "",
-      "Training Center": row.trainingCenterName || "",
-      "Address Location": row.addressLocation || "",
-      "Number of Assessments": Array.isArray(row.assessments)
-        ? row.assessments.length
-        : 0,
-      "Created At": row.createdAt || "",
-      "Updated By": row.updatedBy || "",
-    }));
+    console.log("Starting Excel export");
+    console.log("Number of rows:", rows.length);
+
+    const exportData = rows.map((row, index) => {
+      console.log(`Processing row ${index}:`, row);
+
+      const mappedRow = {
+        ULI: row.uli || "",
+        "Training Center": row.trainingCenterName || "",
+        "Address Location": debugFormatAddress(
+          row.addressLocation || row.completeMailingAddress
+        ),
+        "Number of Assessments": Array.isArray(row.assessments)
+          ? row.assessments.length
+          : 0,
+        "Created At": row.createdAt
+          ? new Date(row.createdAt).toLocaleDateString()
+          : "",
+        "Updated By": row.updatedBy || "",
+      };
+
+      console.log(`Mapped row ${index}:`, mappedRow);
+      return mappedRow;
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
@@ -161,8 +185,9 @@ const ApplicantTable = () => {
   };
 
   const handleExportPDF = () => {
-    const doc = new jsPDF();
+    console.log("Starting PDF export");
 
+    const doc = new jsPDF();
     const relevantColumns = [
       "uli",
       "trainingCenterName",
@@ -171,7 +196,6 @@ const ApplicantTable = () => {
       "createdAt",
       "updatedBy",
     ];
-
     const tableColumn = [
       "ULI",
       "Training Center",
@@ -181,14 +205,22 @@ const ApplicantTable = () => {
       "Updated By",
     ];
 
-    const tableRows = rows.map((row) =>
-      relevantColumns.map((key) => {
+    const tableRows = rows.map((row, index) => {
+      console.log(`Processing PDF row ${index}:`, row);
+
+      return relevantColumns.map((key) => {
         if (key === "assessments") {
           return Array.isArray(row[key]) ? row[key].length.toString() : "0";
         }
+        if (key === "addressLocation") {
+          return debugFormatAddress(row[key] || row.completeMailingAddress);
+        }
+        if (key === "createdAt") {
+          return row[key] ? new Date(row[key]).toLocaleDateString() : "";
+        }
         return row[key]?.toString() || "";
-      })
-    );
+      });
+    });
 
     doc.text("Applicants List", 14, 15);
     doc.autoTable({
@@ -198,7 +230,6 @@ const ApplicantTable = () => {
       styles: { fontSize: 8 },
       margin: { top: 30 },
     });
-
     doc.save("applicants_export.pdf");
   };
 
@@ -302,6 +333,7 @@ const ApplicantTable = () => {
               uli: true,
               fullName: true,
               assessments: true,
+              addressLocation: true,
               createdAt: !isMobile,
               updatedBy: !isMobile,
               actions: true,

@@ -84,83 +84,105 @@ const useRegistrantQueries = () => {
   };
 };
 
-const exportToExcel = (rows) => {
-  const exportData = rows.map((row) => ({
-    "Disability Type": row.disabilityType || "",
-    "Disability Cause": row.disabilityCause || "",
-    Courses: row.course?.map((c) => c.courseName).join(", ") || "",
-    "Registration Status":
-      row.course?.map((c) => c.registrationStatus).join(", ") || "",
-    "Has Scholarship":
-      row.course?.map((c) => (c.hasScholarType ? "Yes" : "No")).join(", ") ||
-      "",
-    "Scholarship Types":
-      row.course
-        ?.map((c) =>
-          c.hasScholarType
-            ? c.scholarType === "Others"
-              ? c.otherScholarType
-              : c.scholarType
-            : ""
-        )
-        .filter(Boolean)
-        .join(", ") || "",
-  }));
+const exportToExcel = (registrants) => {
+  // Early return if no data
+  if (!registrants || registrants.length === 0) return;
 
-  const worksheet = XLSX.utils.json_to_sheet(exportData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Registrants");
-  XLSX.writeFile(workbook, "registrants_export.xlsx");
-};
+  const exportData = registrants.map((registrant) => {
+    // Get first course if it exists
+    const courseData = registrant.course?.[0] || {};
 
-const exportToPDF = (rows) => {
-  const doc = new jsPDF();
-  const tableColumn = [
-    "Disability Type",
-    "Disability Cause",
-    "Courses",
-    "Registration Status",
-    "Has Scholarship",
-    "Scholarship Types",
-  ];
-
-  const tableRows = rows.map((row) => [
-    row.disabilityType || "",
-    row.disabilityCause || "",
-    row.course?.map((c) => c.courseName).join(", ") || "",
-    row.course?.map((c) => c.registrationStatus).join(", ") || "",
-    row.course?.map((c) => (c.hasScholarType ? "Yes" : "No")).join(", ") || "",
-    row.course
-      ?.map((c) =>
-        c.hasScholarType
-          ? c.scholarType === "Others"
-            ? c.otherScholarType
-            : c.scholarType
-          : ""
-      )
-      .filter(Boolean)
-      .join(", ") || "",
-  ]);
-
-  doc.text("Registrants List", 14, 15);
-  doc.autoTable({
-    head: [tableColumn],
-    body: tableRows,
-    startY: 25,
-    styles: { fontSize: 8 },
-    margin: { top: 30 },
-    columnStyles: {
-      0: { cellWidth: 30 },
-      1: { cellWidth: 30 },
-      2: { cellWidth: 35 },
-      3: { cellWidth: 30 },
-      4: { cellWidth: 25 },
-      5: { cellWidth: 40 },
-    },
+    return {
+      ULI: registrant.uli || "",
+      "Disability Type": registrant.disabilityType || "None",
+      "Disability Cause": registrant.disabilityCause || "None",
+      "Course Name": courseData.courseName || "No course",
+      "Registration Status": courseData.registrationStatus || "None",
+      Scholarship: courseData.hasScholarType
+        ? courseData.scholarType === "Others"
+          ? courseData.otherScholarType
+          : courseData.scholarType
+        : "None",
+    };
   });
 
-  doc.save("registrants_export.pdf");
+  try {
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Registrants");
+    XLSX.writeFile(workbook, "registrants_export.xlsx");
+  } catch (error) {
+    console.error("Error exporting to Excel:", error);
+    // You might want to add a toast notification here
+  }
 };
+
+const exportToPDF = (registrants) => {
+  // Early return if no data
+  if (!registrants || registrants.length === 0) return;
+
+  try {
+    const doc = new jsPDF("landscape", "mm", "a4");
+
+    const tableColumn = [
+      "ULI",
+      "Disability Type",
+      "Disability Cause",
+      "Course Name",
+      "Registration Status",
+      "Scholarship",
+    ];
+
+    const tableRows = registrants.map((registrant) => {
+      const courseData = registrant.course?.[0] || {};
+
+      return [
+        registrant.uli || "",
+        registrant.disabilityType || "None",
+        registrant.disabilityCause || "None",
+        courseData.courseName || "No course",
+        courseData.registrationStatus || "None",
+        courseData.hasScholarType
+          ? courseData.scholarType === "Others"
+            ? courseData.otherScholarType
+            : courseData.scholarType
+          : "None",
+      ];
+    });
+
+    doc.text("Registrants Report", 14, 15);
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+      styles: { fontSize: 8 },
+      margin: { top: 20 },
+      columnStyles: {
+        0: { cellWidth: 35 }, // ULI
+        1: { cellWidth: 35 }, // Disability Type
+        2: { cellWidth: 35 }, // Disability Cause
+        3: { cellWidth: 35 }, // Course Name
+        4: { cellWidth: 35 }, // Registration Status
+        5: { cellWidth: 35 }, // Scholarship
+      },
+      didDrawPage: function (data) {
+        doc.text(
+          `Page ${doc.internal.getNumberOfPages()}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      },
+    });
+
+    doc.save("registrants_report.pdf");
+  } catch (error) {
+    console.error("Error exporting to PDF:", error);
+    // You might want to add a toast notification here
+  }
+};
+
+export { exportToExcel, exportToPDF };
 
 const RegistrantsTable = () => {
   const [openDialog, setOpenDialog] = useState(false);

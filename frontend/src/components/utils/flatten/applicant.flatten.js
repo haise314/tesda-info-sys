@@ -11,6 +11,8 @@ export const flattenApplicantData = (applicant) => {
     lastName: applicant.name?.lastName,
     extension: applicant.name?.extension,
 
+    addressLocation: applicant.addressLocation,
+
     // Flatten mailing address fields
     mailingStreet: applicant.completeMailingAddress?.street,
     mailingBarangay: applicant.completeMailingAddress?.barangay,

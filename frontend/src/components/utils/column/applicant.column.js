@@ -46,6 +46,12 @@ export const applicantColumns = [
     editable: true,
   },
   {
+    field: "addressLocation",
+    headerName: "Location",
+    width: 150,
+    editable: true,
+  },
+  {
     field: "mailingDistrict",
     headerName: "District",
     width: 150,
