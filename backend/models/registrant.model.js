@@ -66,7 +66,7 @@ const registrantSchema = new mongoose.Schema(
     },
     updatedBy: {
       type: String,
-      required: true,
+      required: false,
     },
   },
   {
