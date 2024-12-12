@@ -64,6 +64,9 @@ const TaskScheduler = () => {
         remarks: "",
       });
     },
+    onError: () => {
+      alert("Date entered is invalid");
+    },
   });
 
   const deleteEventMutation = useMutation({
